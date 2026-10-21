@@ -1,0 +1,332 @@
+{
+  "id": 39613990793,
+  "head_sha": "55167699123f310e224c400234accaa11bdef41b",
+  "status": "completed",
+  "conclusion": "success",
+  "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793",
+  "updated_at": "2026-10-21T14:10:44Z",
+  "jobs": [
+    {
+      "id": 119269984738,
+      "name": "document-scanner",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793/job/119269984738",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install maintained ClamAV engine and current official definitions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify actual clean and infected scans with freshness enforcement",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119269985018,
+      "name": "postgresql",
+      "status": "in_progress",
+      "conclusion": null,
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793/job/119269985018",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install matching PostgreSQL 18 backup and restore client",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create restricted disposable-database test role",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q -m postgresql --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 4 workflow and archive races under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 5 document lifecycle and recovery under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish safe failed-test classifications",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119269985212,
+      "name": "sqlite",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793/job/119269985212",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database sqlite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database sqlite --junitxml=.verification/sqlite-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119269985248,
+      "name": "native-postgresql",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793/job/119269985248",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native manager unit safety checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Provision and verify native PostgreSQL without Docker",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12351847751,
+      "name": "native-postgresql-verification",
+      "size_in_bytes": 4049,
+      "expired": false,
+      "created_at": "2026-10-21T14:09:45Z"
+    },
+    {
+      "id": 12351633280,
+      "name": "postgresql-verification",
+      "size_in_bytes": 4048,
+      "expired": false,
+      "created_at": "2026-10-21T14:10:37Z"
+    },
+    {
+      "id": 12351602772,
+      "name": "document-scanner-verification",
+      "size_in_bytes": 635,
+      "expired": false,
+      "created_at": "2026-10-21T14:07:45Z"
+    },
+    {
+      "id": 12351383171,
+      "name": "sqlite-verification",
+      "size_in_bytes": 4118,
+      "expired": false,
+      "created_at": "2026-10-21T14:08:14Z"
+    }
+  ],
+  "artifact_contents_downloaded": false,
+  "observation_note": "Run completed success. Service job API status was still in_progress at retrieval, but every actual test, artifact and Complete job step reported success. Run/job metadata retained as observed.",
+  "previous_attempts": [
+    {
+      "run": 39612505495,
+      "source": "264890089b7901066f1e80c4134594a3864420b0",
+      "result": "failure",
+      "detail": "PostgreSQL service full suite failed; other three jobs succeeded. Authenticated logs unavailable; original traceback not established."
+    },
+    {
+      "run": 39613427742,
+      "source": "b4e514dba08583ef1090eac28a90132d0ccf1c98",
+      "result": "failure",
+      "detail": "Explicit PostgreSQL 18 client installation failed before application tests. Final source configures official signed PGDG packages and all provisioning/test steps succeeded."
+    }
+  ]
+}

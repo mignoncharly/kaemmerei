@@ -219,9 +219,82 @@ queue automation and concurrent throughput/load testing remain Phase 9 work.
 
 ## Verification evidence and limits
 
-Final full-suite, explicit PostgreSQL, hosted and cleanup results are appended
-after execution; see `docs/evidence/phase5-local.json` and U013. No skipped check
-is counted as a passing scanner, RLS, filesystem or production verification.
+| Exit requirement | Executable evidence |
+|---|---|
+| Unsupported containers/active content fail closed | Disguised ZIP, macro/entity/external relationship cases, valid container controls, UTF-16/32 entity rejection |
+| Scanner outage/infection never exposes content | Five classified non-clean outcomes, download/range denial and persisted job state; separate required real ClamAV clean/EICAR job |
+| Staging/scan/finalization/commit failures recover safely | Interrupted upload stream cleanup, four processing fault points, initial metadata commit failure, repeated recovery |
+| Scope and availability apply to bytes | Restricted PostgreSQL fixture logins, existing cross-department/API regressions, range/hash corruption checks, unavailable review approval denied |
+| Slow scans do not block other requests or defeat archive | Actual concurrent HTTP upload and archive; archive finishes while scanner is paused and publication remains quarantined |
+| Reconciliation is non-destructive | Missing/orphan/mismatch reporting and preserved unknown files |
+| Supersession/holds/DMS history survive | Retained old bytes/hold, changed content revision, blocked old download, retained original DMS URL and approved-host validation |
+| Real restored metadata matches authorized bytes | SQLite backup and native PostgreSQL custom dump/restore; restored SHA-256 and allowed/denied downloads |
+| Legacy migration is honest | Populated initial-schema upgrade preserves old metadata and explicitly asserts unverified state and absent scanner/hash/time evidence |
+
+These cases are in `tests/test_phase5.py`, `tests/test_phase1.py` and the preserved
+Phase 2–4 authorization/workflow suites. No xfail is used to accept a security defect.
+
+### Final executed results
+
+Published implementation: `55167699123f310e224c400234accaa11bdef41b`.
+Local Windows/Python 3.14.3/pytest 9.1.1/native PostgreSQL 18.3:
+
+| Selection | Collected items | Passed | Skipped | Failed/errors/xfails | Seconds |
+|---|---:|---:|---:|---:|---:|
+| Full PostgreSQL | 130 | 128 | 2 | 0 / 0 / 0 | 295.41 |
+| Full SQLite | 130 | 116 | 14 | 0 / 0 / 0 | 85.16 |
+| Phase 5 PostgreSQL, actual restricted logins | 31 | 29 | 2 | 0 / 0 / 0 | 62.10 |
+| Phase 5 SQLite | 31 | 29 | 2 | 0 / 0 / 0 | 16.96 |
+| Explicit PostgreSQL security/lifecycle | 12 | 12 | 0 | 0 / 0 / 0 | 57.54 |
+
+Both full suites also passed 15 subtests. Explicit PostgreSQL selection deselected
+118 other items; the Phase 5 selections separately executed real application
+operations and the genuine dump/restore. Clean, populated and repeated migrations
+through 0018 pass. Final read-only catalog check: zero harness databases and zero
+generated temporary roles. JUnit hashes/counts are in
+[local evidence](evidence/phase5-local.json); ignored XML is retained locally.
+
+Local Phase 5 skips are real ClamAV installation and actual Windows symlink
+creation privileges. SQLite additionally skips 12 PostgreSQL-only items. These
+are not counted as passing scanner/RLS/filesystem verifications. Two warnings
+remain unsuppressed: Starlette/AnyIO deprecation and managed Windows pytest-cache
+ACL. Production private Windows storage provisioning remains unverified.
+
+Actual hosted [run 39613990793](https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793)
+completed successfully for the exact source above. SQLite, native PostgreSQL,
+PostgreSQL 18 service tests and the required real ClamAV clean/EICAR/fresh-definition
+steps succeeded. Dependencies, clean/populated migrations, full tests, explicit
+security and Phase 4/5 selections were inspected through GitHub API step metadata.
+Four artifact metadata records were inspected; archives were not downloaded, so
+no claim is made about their unseen contents or exact hosted test counts.
+The service job-level API status briefly lagged the successful run and all its
+successful steps, including Complete job; the observed fields are preserved in
+[hosted evidence](evidence/phase5-ci-39613990793.json).
+
+Earlier hosted attempts are retained in the evidence: 39612505495 failed in the
+service suite while three other jobs passed; authenticated failure logs could not
+be retrieved, so its exact traceback is unconfirmed. Attempt 39613427742 failed
+installing the required matching PostgreSQL 18 client. Final CI pins that service
+runner to Ubuntu 24.04, configures the official signed PostgreSQL repository and
+installs matching dump/restore clients; provisioning and all application checks
+then succeeded. No failed check was converted to a skip or xfail.
+
+### Acceptance checklist
+
+- [x] P05-T01–T08 implementation and operator/retention design delivered.
+- [x] New content unavailable until successful validation, scan and commit.
+- [x] Staging/scan/finalization/commit failures, retry and reconciliation verified.
+- [x] Authorized web/API/range downloads retain scope and exact-byte integrity.
+- [x] Replacement/DMS history and holds preserved; current unverified files block approval.
+- [x] Actual database-and-blob restore recovers hashes and allowed/denied access.
+- [x] Full local suites and successful hosted run, including required real scanner.
+- [x] Existing native cluster/services/passfiles and unrelated user edit preserved.
+- [ ] D05/D06 security/operations/records/privacy owner approval.
+- [ ] Production scanner/signature management and Windows private ACL provisioning.
+- [ ] Business-data migration, scheduled retries/alerts, operational restore RPO/RTO and release approval.
+
+**Phase 5 engineering verification is established; production acceptance is not.**
+Next technical phase: P06-T01 API compatibility and reliable synchronization.
 
 Development Windows issue discovered during verification: Python 0700 mkdir
 created a DACL inaccessible to this managed restricted token. Development now

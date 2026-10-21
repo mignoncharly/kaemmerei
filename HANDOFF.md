@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 5 P05-T01-T08 implemented; full/targeted local tests and hosted verification being finalized. D05/D06 and production acceptance pending. See U013 and docs/PHASE5_DOCUMENT_LIFECYCLE.md.\
+Current stage: Phase 5 P05-T01-T08 technically verified locally and in successful hosted run 39613990793. See U013 and docs/PHASE5_DOCUMENT_LIFECYCLE.md. D05/D06 and production acceptance remain pending.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -27,13 +27,13 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Latest migration observed | `0018_document_lifecycle`; synthetic isolated databases only |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
-| Tests | Phase 5 full SQLite 114 passed + 14 explicit skips; PostgreSQL final run in progress. Final evidence appended in U013. |
-| PostgreSQL/migrations | Native Windows 18.3; clean/populated head 0016 and restricted runtime roles pass in isolated databases. Error 87 historical; independent launcher ACL limitation unchanged. Production roles not deployed. |
+| Tests | Phase 5: 130 collected; PostgreSQL 128 passed + 2 local skips, SQLite 116 passed + 14 skips; 15 subtests each. Dedicated Phase 5: 29 passed + 2 local skips; explicit PostgreSQL: 12 passed. Hosted real ClamAV gate passed. |
+| PostgreSQL/migrations | Native Windows 18.3; clean/populated head 0018, restricted runtime roles and real dump/restore pass in isolated databases. Error 87 historical; launcher ACL limitation unchanged. Production migration/grants not deployed. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main; Phase 4 implementation f0d998f862941e04cbe5f120c2fa18de6c1986b7 passed all three jobs in run 39606147120. Earlier evidence retained. |
+| Source commit/branch | main; Phase 5 final implementation 55167699123f310e224c400234accaa11bdef41b passed hosted run 39613990793. Run/job/step observations and four artifact metadata retained; archives not downloaded. |
 | Completed deliverables | Plan/handoff; Phase 1 harness, isolated storage/configuration, migration fixtures, stdlib runner, CI definitions, baseline/matrix docs, corrected German project status |
-| Application remediation | Document storage now per app instance; migrations accept explicit test connections. Business authorization/workflow findings remain open |
+| Application remediation | Phases 1-5 technical changes verified; synchronization/reporting/frontend/operations and owner acceptance remain in their planned phases |
 
 ## 3. Status definitions
 
@@ -58,7 +58,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 2 — Authorization and identities | Verified technically; owner acceptance pending | P02-T01–T08 | 66 PostgreSQL passed; 65 SQLite passed + one PostgreSQL-only skip; hosted three jobs passed for 9fde6c0 | Engineering: Codex; municipal owners unassigned | Next technical phase: P03-T01; municipal D01/D02 acceptance required before production |
 | 3 — Schema, roles, RLS, audit | Verified technically; DBA/security acceptance pending | P03-T01–T08 | PostgreSQL 81 passed; SQLite 69 passed + 12 PG-only skips; explicit PostgreSQL 12 passed; all three hosted jobs passed | Engineering: Codex; DBA/security owner unassigned | Next technical phase P04-T01; review D03 before business deployment |
 | 4 — Workflow/archive/concurrency | Verified technically; D04 owner acceptance pending | P04-T01–T08 | PostgreSQL 99 passed; SQLite 87 passed + 12 PG skips; Phase 4 actual restricted-login selection 18 passed; all three CI jobs passed | Engineering: Codex; municipal approval owners unassigned | Next technical phase P05-T01; D04 adoption before business deployment |
-| 5 - Document lifecycle | Implemented; final verification in progress | P05-T01-T08 | SQLite/PG lifecycle and real PG dump/restore pass; hosted real scanner pending | Engineering: Codex; security/records owners unassigned | Finish verification; D05/D06 approval before production |
+| 5 - Document lifecycle | Verified technically; D05/D06 owner acceptance pending | P05-T01-T08 | PostgreSQL 128 passed + 2 local skips; SQLite 116 + 14; real PG restore; successful hosted run including required real ClamAV | Engineering: Codex; security/records owners unassigned | Next technical phase P06-T01; production setup and owner decisions pending |
 | 6 — Integration synchronization | Not started | None | Not run | Unassigned | Specify versioned cursor/feed/scope-removal contract |
 | 7 — Reports/dates/Excel | Not started | None | Not run | Unassigned | Agree finance/history/date/interchange semantics |
 | 8 — Frontend and navigation | Not started | None | Not run | Unassigned | Repair CSP-compatible charts and form state |
@@ -84,7 +84,7 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R10 — Inactive department | Medium | Corrected and verified | U009; session/login/object permissions and scoped API tokens |
 | R09, R13, R14 — RLS, audit, schema | Medium | Phase 3 implemented and locally verified; production acceptance pending | U011; restricted-role SQL, audit protection and schema regressions |
 | R11, R12 — Concurrency and tax | Medium | Implemented and locally verified | U012; expected child versions, concurrent/archive races, restricted tax completion and cleared reopen metadata |
-| R15/R16 - Document trust/recovery | Medium | Implemented; final verification in progress | U013; docs/PHASE5_DOCUMENT_LIFECYCLE.md |
+| R15/R16 - Document trust/recovery | Medium | Corrected and technically verified; D05 production policy pending | U013; real restore, recovery, integrity/authorization and hosted actual scanner |
 | R17–R20 — Financial/date correctness | Medium | Open | None |
 | R21–R22 — Capacity/operations | Medium | Open | None |
 | R23–R28 — Frontend correctness | Medium | Open | None |
@@ -92,7 +92,9 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R32 — Department lifecycle | Scope gap | Audited administration delivered | U010; rename/suspend/reactivate, stable IDs, session revocation and token suspension |
 | R34 — Account recovery/password/MFA | Scope gap | Password change and audited recovery delivered; MFA/SSO remains Phase 9 | U010; temporary passwords force replacement; session/CSRF rotation and rate limiting |
 | R29–R30, R35–R36 — Other integration/lifecycle scope gaps | Scope decisions required | Open | Original phase assignments |
-| R37–R41 — Maintainability/usability/token policy | Nice to fix/have | Backlog | None |
+| R37/R38/R40/R41 - Maintainability/usability/token policy | Nice to fix/have | Backlog | Original phase assignments |
+| R39 - Document correction/supersession | Nice to fix/have | Implemented and technically verified | U013; retained predecessors, DMS correction, approval invalidation and hold preservation |
+| R33 - Retention/disposal | Scope gap | Design and non-destructive hold defaults implemented; D06 pending | U013; no destructive disposal |
 
 ## 6. Decisions and dependencies
 
@@ -150,8 +152,8 @@ For future updates, record schema revisions, backfill counts, legacy exceptions,
 ## 9. Immediate next work
 
 1. Preserve U009/U010 evidence and match every hosted result to its implementation SHA.
-2. Next technical phase after Phase 4 verification: P05-T01 private storage boundary, then document states/quarantine/recovery. Preserve tested mutation, RLS and provenance gates.
-3. Review D01–D04 with municipal identity/approval/security owners before production; labels and assignment never implicitly expand read scope. Phase 4 defaults are technical implementation, not municipal policy acceptance.
+2. After Phase 5 technical verification, continue P06-T01 API compatibility/feed contract. Preserve private storage, scan, mutation, RLS and provenance gates.
+3. Review D01–D06 with municipal identity/approval/security/records owners before production; implemented defaults do not establish municipal policy acceptance.
 4. Use the existing native cluster; do not reinitialize it. Branch protection, production backup/restore and deployment approval remain separate account/operations work. No business database has been migrated by this update.
 
 The user authorized Phase 1 implementation and repository/CI setup on 2026-10-21. Technical artifacts and local/hosted database verification are delivered. Agent launcher permissions, branch-rule administration and production acceptance remain separately recorded.
@@ -312,7 +314,9 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Investigation:** Windows 0700 special DACL excluded the managed token; development inherits workspace ACL while production requires private operator-provisioned root/subdirectories. One empty inaccessible synthetic fixture remains. SQLite restore handle cleanup fixed with explicit connection closing; FORCE RLS pg_dump now uses full-scope trusted test owner and explicit row security. Two earlier failed synthetic fixture directories remain because automatic approval review rejected recursive cleanup (sandbox approval disabled). Exact paths and limits in Phase 5 report; no alternate deletion bypass, cluster change or credential output.
 - **Boundaries:** D05/D06 municipal acceptance, production scanner installation/definitions/private Windows ACLs, business migration, scheduled retries/capacity alerts, operational RPO/RTO and release remain pending. No Docker local dependency. No independent owner acceptance inferred.
 - **Documentation:** docs/PHASE5_DOCUMENT_LIFECYCLE.md covers settings, content policy, state/transaction/recovery behavior, retention/disposal design, backup/restore, shared storage and limits. README, ARBEITSPLAN, CHANGELOG, plan and verification matrix updated.
-- **Next action:** Complete local and hosted gates, record actual source/results, then Phase 6 P06-T01 when authorized.
+- **Final verification:** Final implementation 55167699123f310e224c400234accaa11bdef41b: 130 items collected; full PostgreSQL 128 passed + 2 explicit local skips (295.41s), SQLite 116 passed + 14 explicit skips (85.16s), 15 subtests each. Final Phase 5 selections 29 passed + 2 local skips on each backend (PG 62.10s; SQLite 16.96s). Explicit actual PostgreSQL security/lifecycle 12 passed, 118 deselected (57.54s). No failures/errors/xfails. Clean/populated/repeated migrations through 0018 and actual PG dump/restore passed. Final read-only catalog: zero harness databases and zero generated roles. Warnings remain Starlette/AnyIO and managed pytest cache ACL; no suppression. Hashes in docs/evidence/phase5-local.json.
+- **Hosted final:** [Run 39613990793](https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793) completed success for 5516769. SQLite, native PostgreSQL, service PostgreSQL full/explicit selections and real ClamAV clean/EICAR/current definitions succeeded. Four artifact metadata inspected, contents not downloaded. Service job API status briefly lagged the completed successful run and all successful steps; exact observed fields retained in docs/evidence/phase5-ci-39613990793.json. Initial service-suite failure traceback could not be retrieved through unauthenticated logs; later explicit matching-client installation failed until the official signed PGDG repository was configured. Final provisioning and tests pass; no skip/xfail workaround. Earlier failed runs retained in evidence.
+- **State/next:** Phase 5 technically verified; production acceptance remains open. Publish evidence, then P06-T01 API compatibility and reliable synchronization when authorized. D05/D06 owners, production scanner/signatures/ACLs, retry/alert scheduling and operational restore remain separate; no deployment approval inferred.
 
 ### Update entry template — copy for the next update
 

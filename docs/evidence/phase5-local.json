@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-21",
+  "implementation_source": "55167699123f310e224c400234accaa11bdef41b",
+  "environment": {
+    "platform": "Windows",
+    "python": "3.14.3",
+    "pytest": "9.1.1",
+    "postgresql": "18.3 native on 127.0.0.1:55432"
+  },
+  "runs": {
+    "phase5-sqlite-full.xml": {
+      "collected_items": 130,
+      "passed_items": 116,
+      "skipped_items": 14,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 85.16,
+      "junit_testcase_count": 145,
+      "sha256": "132de29e86da5492f9e0a4ef8d66621ffc0b6f9c694e708cfa47bf6cad96cb9a"
+    },
+    "phase5-postgresql-full.xml": {
+      "collected_items": 130,
+      "passed_items": 128,
+      "skipped_items": 2,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 295.413,
+      "junit_testcase_count": 145,
+      "sha256": "51016af16c0316966c8fe6194a123fc4271041c21defc62e0da93c9ef19b28a9"
+    },
+    "phase5-sqlite-documents.xml": {
+      "collected_items": 31,
+      "passed_items": 29,
+      "skipped_items": 2,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 16.963,
+      "junit_testcase_count": 31,
+      "sha256": "0da919beaea5a8801957ec617457aac74e024562385e572d5e50b1358fef8c88"
+    },
+    "phase5-postgresql-documents.xml": {
+      "collected_items": 31,
+      "passed_items": 29,
+      "skipped_items": 2,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 62.101,
+      "junit_testcase_count": 31,
+      "sha256": "8728935c21acccc9c11778a43a7e903888f7c9f2c575b887dac8505239cf149c"
+    },
+    "phase5-postgresql-security.xml": {
+      "collected_items": 12,
+      "passed_items": 12,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 57.539,
+      "junit_testcase_count": 12,
+      "sha256": "5955791cd46e2f44868ffe1b8d8e6e010094971659670d405fa058276730d772"
+    }
+  },
+  "cleanup": {
+    "harness_databases": 0,
+    "generated_roles": 0
+  },
+  "warnings": [
+    "Starlette/AnyIO deprecated BlockingPortal alias",
+    "Managed Windows pytest cache ACL; unsuppressed"
+  ],
+  "local_unverified": [
+    "Real ClamAV installation/official definitions absent",
+    "Actual symlink creation not permitted for managed Windows token",
+    "Production Windows storage ACL provisioning",
+    "Operational business backup/RPO/RTO"
+  ],
+  "filesystem_residuals": [
+    ".verification/tmp/ohvr-test-b759c159c20640fba62b270da31292cf/documents (empty, ACL inaccessible)",
+    ".verification/tmp/ohvr-test-56ef7cdaa45a4cdaa9067d62e93034cf (failed synthetic fixture; cleanup review rejected)",
+    ".verification/tmp/ohvr-document-restore-f608d2338d404f8180d987543699761b (failed synthetic fixture; cleanup review rejected)"
+  ],
+  "migration_evidence": "Clean and populated upgrade through 0018; legacy document state/hash/scanner/hold preservation assertions and idempotent head upgrade passed in both final full suites.",
+  "supplemental_previous_targeted": "Before final thread-pool/XML hardening, phase5 + MigrationTests selection: 31 passed, 2 skipped on each backend. Final full suites repeat migration assertions; final document selections exercise final hardening."
+}

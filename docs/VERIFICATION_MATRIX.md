@@ -100,3 +100,13 @@ scanner is not real malware detection evidence. A separate hosted job requires
 real ClamAV and current official definitions; Windows local scanner/symlink skips
 remain explicit. Final local and hosted results are recorded in U013/evidence.
 D05/D06 and production rollout are separate acceptance gates.
+
+Final Phase 5 source 5516769: full PostgreSQL 128 passed + 2 local skips,
+SQLite 116 passed + 14 skips; 130 items collected, 15 subtests each. Final document
+selection 29 passed + 2 local skips per backend; explicit PostgreSQL 12 passed,
+118 deselected. Hosted run 39613990793 completed success, including real ClamAV
+clean/EICAR/current official definitions, service/native PostgreSQL and SQLite.
+[Local evidence](evidence/phase5-local.json) and
+[hosted observations](evidence/phase5-ci-39613990793.json) retain exact source,
+counts/hashes and API state. Local ClamAV and actual Windows symlink privileges,
+production ACLs, D05/D06 and operational release acceptance remain separate.

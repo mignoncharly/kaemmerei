@@ -1,7 +1,7 @@
 # Arbeitsplan Vertragsregister
 
 **Stand: 21. Oktober 2026**\
-**Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1–4 technisch geprüft, einschließlich echter eingeschränkter PostgreSQL-Logins und drei erfolgreicher CI-Jobs. Produktivfreigabe und fachliche Rollen-/Workflowfreigabe offen.**
+**Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1–5 technisch geprüft, einschließlich eingeschränkter PostgreSQL-Logins, echter Dokumentwiederherstellung und erfolgreicher CI mit ClamAV. Produktivfreigabe und fachliche Entscheidungen offen.**
 
 ## Ziel
 
@@ -23,7 +23,7 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 | 2 | Anwendungsberechtigungen und Identitäten | P02-T01–T08 implementiert und lokal SQLite/PostgreSQL geprüft; technische Rollenmatrix und CI-Nachweis in PHASE2_AUTHORIZATION.md. Fachliche Freigabe bleibt offen. |
 | 3 | Datenbankrollen, Constraints, RLS und geschützte Auditablage | P03-T01–T08 technisch verifiziert: PostgreSQL 81 bestanden, SQLite 69 + 12 PG-Skips, drei CI-Jobs erfolgreich; DBA-/Produktivfreigabe offen. [Phase 3](PHASE3_DATABASE_SECURITY.md) |
 | 4 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit | P04-T01–T08 technisch verifiziert: PostgreSQL 99 bestanden, SQLite 87 + 12 PG-Skips, 18 Workflow-/Rennprüfungen und drei CI-Jobs erfolgreich. D04 fachlich offen. [Phase 4](PHASE4_WORKFLOW.md) |
-| 5 | Dokumentensicherheit und Speicherlebenszyklus | P05-T01–T08 implementiert: private Quarantäne, ClamAV, Wiederholung, Ersatz/Versionen, nicht destruktive Inventur und echte DB-/Dateiwiederherstellung. Abschließende Nachweise und Grenzen: [Phase 5](PHASE5_DOCUMENT_LIFECYCLE.md). D05/D06 und Produktivfreigabe offen. |
+| 5 | Dokumentensicherheit und Speicherlebenszyklus | P05-T01–T08 technisch verifiziert: PostgreSQL 128 bestanden + 2 lokale Skips, SQLite 116 + 14 Skips; CI 39613990793 erfolgreich mit echter ClamAV-Prüfung. [Phase 5](PHASE5_DOCUMENT_LIFECYCLE.md). D05/D06 und Produktivfreigabe offen. |
 | 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
 | 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |
 | 10 | Fachliche/technische Abnahme, Pilot und expliziter Integrationsumfang | Nicht begonnen |
