@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 8 technically verified locally and in all five hosted jobs. See U016 and docs/PHASE8_FRONTEND_NAVIGATION.md. Local browser is permission-limited; manual usability, earlier owner decisions and production acceptance remain pending.\
+Current stage: Phase 9 in progress (U018). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -24,14 +24,14 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Documents reviewed | README and ARBEITSPLAN updated to distinguish prototype behavior, known defects, verification, and outstanding approvals |
 | Application | FastAPI, SQLAlchemy, Jinja templates, local static CSS/JS |
 | Database | SQLite development default; production configuration requires PostgreSQL/psycopg |
-| Latest migration observed | `0020_financial_reports`; synthetic isolated databases only |
+| Latest migration observed | `0022_read_admission`; statement-scoped SELECT admission and archived/end index tested in disposable databases only. Rerun runtime-role configuration in a reviewed maintenance window before serving traffic. |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
-| Tests | Phase 8: 178 collected; PG 176 passed + 2 local skips; SQLite 160 passed + 18 explicit skips; 15 subtests each. Phase 8 8/8 on both backends; explicit PostgreSQL 16 passed. Five hosted jobs, including real browser, passed. |
-| PostgreSQL/migrations | Native Windows 18.3; no Phase 8 schema migration, head 0020 clean/populated/repeated upgrades, restricted roles and restore preserved. Final read-only catalog: zero harness databases/generated roles; control privileges unchanged. No business migration/grants or cluster change. |
+| Tests | U017 adopted environment: 199 collected; PostgreSQL 197 passed + 2 explicit local skips; SQLite 181 passed + 18 skips; 15 subtests each. Phase 9 21/21 on both; explicit PostgreSQL 16/16. Five exact-source hosted jobs passed for 1649b15. See docs/evidence/phase9-local.json. |
+| PostgreSQL/migrations | Native Windows 18.3; head 0021_availability verified in disposable databases; existing role/restore regressions passed. Final read-only catalog: zero harness databases/generated roles; control privileges unchanged. No business migration/grants or cluster change. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main; final Phase 8 implementation 6ebcaad00e8dae84f41a5b0480c3793598541f5a passed all five jobs in run 39635885108. Five artifact metadata entries inspected; archives/screenshots not downloaded or manually inspected. |
+| Source commit/branch | main; Phase 9 base b962824 and advisory guards 1cecc54 and patched dependencies 1649b15 committed/pushed. Initial push failed through configured network proxy; retry succeeded. Hosted run 39644065729 for 1cecc54 passed five jobs; upgraded-source run 39645201928 for 1649b15 passed all five jobs. Final results in U017. Prior Phase 8 evidence remains recorded in U016. |
 | Completed deliverables | Phases 1-8 technical implementations/tests/evidence; HTML/browser/navigation contracts included. Owner, usability and production acceptance remain separate. |
 | Application remediation | Phases 1-8 technically verified. P07-T01 finance agreement, availability/deployment/operations, remaining adapters and owner/usability acceptance remain open. |
 
@@ -62,7 +62,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 6 - Integration synchronization | Verified technically; D07 owner acceptance pending | P06-T01-T08 | PG 149 + 2 local skips; SQLite 134 + 17; 21 actual PG integration regressions; all four CI jobs passed | Engineering: Codex; integration/security owners unassigned | Next P07-T01; D07 consumer profiles/transition and retention before production |
 | 7 - Reports/dates/Excel | Verified technically; D08-D10 unapproved | P07-T02-T09 technical defaults; T01 owner agreement pending | PG 168 + 2 local skips; SQLite 152 + 18; Phase 7 PG 19; explicit PG 16; four hosted jobs passed | Engineering: Codex; municipal owners unassigned | Next technical phase P08-T01; obtain D08-D10 before business deployment |
 | 8 - Frontend and navigation | Verified technically; manual usability/AT and production acceptance pending | P08-T01-T09 | PG 176 + 2 local skips; SQLite 160 + 18; Phase 8 eight on both; real browser and all five hosted jobs passed | Engineering: Codex; usability owner unassigned | Next P09-T01; establish operational targets and release acceptance owners |
-| 9 — Operations and availability | Not started | None | Not run | Unassigned | Define ingress limits, workload, and deployment targets |
+| 9 - Operations and availability | In progress; no exit acceptance | Partial P09-T01-T04, T07-T08; dashboard-only reminder limit documented | U017; 21 Phase 9 checks on each backend, full PG 197 passed + 2 skips, five hosted jobs passed | Engineering: Codex; operations/identity owners unassigned | Complete T03/T05 scheduling/queues and T04 representative workload; implement approved D12 TOTP/recovery; encrypted recovery, alert ownership and release gates |
 | 10 — Acceptance and release | Not started | None | Not run | Unassigned | Assign acceptance owners and release scope |
 
 No phase is complete merely because this plan has been written.
@@ -79,15 +79,15 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R04 — Archive mutation | High | Corrected and verified | U009; locked parent, 409 and persisted review/history checks |
 | R05 - Incremental synchronization | High | Reliable v2 implemented and technically verified; v1 consumer transition remains D07 work | U014; late commits, fixed snapshot/history, minimal removal, restart and replay |
 | R06 - Historical financial population | High | Corrected and technically verified; D08 adoption pending | U015; actual archive/transfer ledger under restricted roles, independent historical population |
-| R07 — Availability controls | High | Open | None |
+| R07 - Availability controls | High | Partially implemented; remains open | U017: ingress/shared budgets/workers; deployment/load/job/monitoring gates remain |
 | R08 — Test foundation/coverage | High | Phase 1 foundation verified; later coverage remains open | U003/U006: original harness and PostgreSQL/pytest/CI gates pass; later feature/RLS/concurrency coverage remains assigned to target phases |
 | R10 — Inactive department | Medium | Corrected and verified | U009; session/login/object permissions and scoped API tokens |
 | R09, R13, R14 — RLS, audit, schema | Medium | Phase 3 implemented and locally verified; production acceptance pending | U011; restricted-role SQL, audit protection and schema regressions |
 | R11, R12 — Concurrency and tax | Medium | Implemented and locally verified | U012; expected child versions, concurrent/archive races, restricted tax completion and cleared reopen metadata |
 | R15/R16 - Document trust/recovery | Medium | Corrected and technically verified; D05 production policy pending | U013; real restore, recovery, integrity/authorization and hosted actual scanner |
 | R17-R20 - Financial/date correctness | Medium | Corrected and technically verified; D08/D09 adoption pending | U015; unknown basis/direction/missing counts and anchored bounded calendar regressions |
-| R21 - Loading/export/truncation | Medium | Pagination and row-bounded export technically corrected; broader loading/byte/time/performance controls remain Phase 9 | U016; 507-record authorized navigation and export parity; no production capacity claim |
-| R22 - Operations | Medium | Open | Phase 9/10 |
+| R21 - Loading/export/truncation | Medium | Pagination and row/byte/cooperative completion bounds implemented; scoped population optimization and workload acceptance remain | U016/U017; no production capacity claim |
+| R22 - Operations | Medium | Partial TLS/proxy/health/correlation controls; scheduled jobs/recovery/alerts/deployment remain open | U017; Phase 9/10 |
 | R23-R28 - Frontend correctness | Medium | Corrected and technically verified | U016; final local suites, eight restricted-role/frontend regressions and hosted Chromium gate |
 | R31 — Contact/deputy identities | Scope gap | Maintained scoped catalog delivered; labels grant no access | U010; no implicit delegation; delegation requires a separate accepted policy |
 | R32 — Department lifecycle | Scope gap | Audited administration delivered | U010; rename/suspend/reactivate, stable IDs, session revocation and token suspension |
@@ -95,6 +95,7 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R29-R30 - Integration/reminder scope | Scope decisions required | Open | Original phase assignments |
 | R35 - Excel identity/update semantics | Scope gap | Explicit create-only identity technically verified; D10 adoption pending | U015; generated-number rejection, scoped references, atomic concurrent import and provenance |
 | R37/R40 - Maintainability/distribution | Nice to fix/have | Remaining backlog | Original phase assignments; shared list/export filter specification delivered U016 |
+| R42 - Newly reviewed dependency advisories | High (identified U017) | Reviewed affected ranges corrected: FastAPI 0.158.0 / Starlette 1.9.0 / multipart 0.0.32 adopted; current runtime OSV query zero matches | U017; five exact-source hosted jobs passed for 1649b15; wider tool/OS/release checks remain P09-T11 |
 | R38 - Navigation/order/inbox | Nice to fix/have | Implemented and technically verified | U016; stable paging, filter-preserving links, scoped actionable inbox; manual usability acceptance pending |
 | R39 - Document correction/supersession | Nice to fix/have | Implemented and technically verified | U013; retained predecessors, DMS correction, approval invalidation and hold preservation |
 | R33 - Retention/disposal | Scope gap | Design and non-destructive hold defaults implemented; D06 pending | U013; no destructive disposal |
@@ -371,6 +372,20 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Final state:** P08-T01-T09 technically verified; five exact-source hosted jobs passed. Browser/scanner/Linux link checks have hosted coverage. Two local full-PG skips are existing ClamAV absence and Windows symlink permission. Starlette/AnyIO and managed pytest cache warnings remain unsuppressed. Local browser WinError 5, manual AT/WCAG/usability, earlier D08-D10/other owners, R21 broader workload controls and R22 operations remain explicit. No production deployment or owner acceptance inferred.
 - **Next:** P09-T01 under the existing plan. Obtain workload/deployment/security/recovery targets and owners; preserve all current authorization, workflow, document, synchronization and frontend safeguards.
 
+### U017 - 2026-10-21 - Phase 9 first availability implementation batch
+
+- **Plan/source:** P09-T01-T04, T07-T08 and T11 partial; base b962824, guards 1cecc54, dependency source 1649b15. Phase 9 remains in progress, all exit criteria and incomplete plan boxes remain open. Phase 10 not started.
+- **Changes:** Pre-parser streamed byte/deadline/part/concurrency admission; private-storage quota including orphan/legacy bytes; shared login/API work reservations; synchronous POST workers; bounded PostgreSQL pools/timeouts; export byte/completion checks plus eager department loading; trusted proxy/HTTPS/DB TLS configuration; redacted correlation and basic health checks.
+- **Schema/privileges:** Additive 0021 indexes and fixed-budget SECURITY DEFINER API reservation. Reapply explicit runtime grants after authorized migration. No broad integration table grants, no business backfill/deletion. Existing role provisioning script now checks actual Alembic head instead of obsolete 0019.
+- **Development defects corrected:** Multipart exception/cancellation cleanup, authorization priority with stricter form counts, and v2 reauthentication opening a second SQLite writer. Failed intermediate runs remain failed evidence, superseded only by subsequent completed tests.
+- **Verification:** Final results appended below after execution. Explicit restricted-role PostgreSQL selection is required, not SQLite substitution. Existing native cluster/Unicode/lock/startup infrastructure preserved. No production deployment or external message delivery.
+- **CI verified:** Initial push failed, normal retry succeeded. Runs 39644065729 (guarded 1cecc54) and 39645201928 (patched dependencies 1649b15) each passed all five jobs. Actual job/step/artifact metadata inspected; archives/screenshots not manually inspected. Evidence docs/evidence/phase9-ci-39645201928.json. No deployment or Phase 9 exit inferred.
+- **Remaining engineering:** Durable background job claims/retries/coordinator/schedules, scoped workload optimization and agreed benchmarks, full metrics/alert delivery, encrypted scheduled backup/restore/RPO-RTO evidence, identity/MFA/provider implementation after D12, current dependency advisory/release-artifact review. Proxy/volume quota/actual TLS/service checks outstanding. R07/R21/R22 remain open.
+- **Owner decisions:** D11 hosting/load/recovery/alert owners and D12 identity policy unapproved; D13 dashboard/manual-only default not product acceptance. D06/D07 prohibit inventing destructive retention rules.
+- **Safety:** Existing user whitespace change in scripts/Start-TestDatabase.ps1 preserved and excluded from commit. Never reinitialize/delete the cluster, bypass managed ACLs, stop unrelated services, print secrets or apply tests to a business DB.
+- **Advisory follow-up (new R42; original R41 preserved):** Reviewed initial affected Starlette 0.50.0 / multipart 0.0.29 ranges against maintainer sources. Added parser/UNC/Host guards and raw ASGI security paths; adopted compatible FastAPI 0.158.0, Starlette 1.9.0, multipart 0.0.32 and required OpenTelemetry API 1.44.0 from SHA-verified wheels. No SDK/exporter, third-party source patch, proxy/TLS/ACL weakening or real message delivery. Initial partial offline install repaired by normal retry; obsolete pip backups preserved outside site-packages. pip check passes. Actual OSV query returned zero matches for 28 adopted runtime versions; broader tool/OS review and release lock remain open.
+- **Next:** Continue Phase 9 P09-T03/T05 durable jobs/scheduling and P09-T11 release artifacts from docs/PHASE9_OPERATIONS.md; do not skip to Phase 10 or report Phase 9 complete.
+
 ### Update entry template — copy for the next update
 
 ```markdown
@@ -406,3 +421,19 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - [ ] Required privacy/domain/security/operations acceptance recorded.
 - [ ] README, ARBEITSPLAN, CHANGELOG, API/operator documentation match actual behavior.
 - [ ] Release version, deployment state, residual backlog, ownership, and next maintenance date recorded.
+
+### U017 verification checkpoint and owner decisions (2026-10-21)
+
+Final adopted-environment results: PostgreSQL 197 passed/2 skipped, SQLite 181 passed/18 skipped (199 collected; 15 passing subtests each); explicit PostgreSQL 16 passed; Phase 9 selection 21 passed on each backend. Zero failures, errors or xfails. See `docs/evidence/phase9-local.json`; JUnit suite totals include subtests whereas testcase elements count main items. Catalog cleanup confirmed zero harness databases/generated roles. Hosted exact-source 1649b15 run 39645201928 passed all five jobs; metadata inspected, artifacts not downloaded.
+
+D11 platform selected by user: native Windows, PostgreSQL and a TLS reverse proxy. D12 selected by user: existing local accounts, TOTP MFA and audited administrator recovery. These select implementation scope; neither deployment nor unimplemented MFA is accepted. Proposed workload/RPO/RTO targets remain awaiting reply. Operations/identity owners and production acceptance remain pending.
+
+### U018 - Phase 9 operations, approved decisions and measured workload (2026-10-21)
+
+- User selected native Windows/PostgreSQL/TLS proxy and local TOTP with audited administrator recovery. Approved initial targets: 10 concurrent users, 10,000 contracts, 50,000 document metadata rows; page p95 <2s, bounded export <15s; RPO 24h, RTO 4h. No deployment authorization inferred. Human MFA remains unimplemented and is a production blocker.
+- Production scans now use durable quarantine jobs; explicit operator scan-pending has a database-wide session lock, fixed batch/launch deadline, persisted crash reservations, bounded backoff/five attempts, unchanged publication/hash safeguards and live uploader revalidation. Automated legacy recovery is excluded. Web/limited-maintenance roles cannot execute coordinator operations. No deletion, cluster/service change or new privileged web grant.
+- Added review-only Windows launcher, nonsecret configuration example, redacted rotating logs, native TLS proxy example and disabled Task Scheduler XML renderer. Native PowerShell syntax and structural template tests pass; no service/task/proxy installed or live-tested. OS ACL/quota/firewall/certificate/service acceptance remains pending.
+- Initial approved-size synthetic read load failed: list p95 10.35s with ten 503s, reports 6.80s; detail/export passed. Failure retained in docs/evidence/phase9-workload-before.json. Dataset has undated drafts and external metadata only, without revision histories/tasks/reviews or file bodies; representative mixed load remains a separate gate.
+- Added scoped SQL status/approval counts, dated-only reminder candidates and department eager loading. Migration 0022 evaluates the exact existing department SELECT rule via an uncorrelated statement InitPlan. Mutation policies unchanged; helper PUBLIC execute revoked. Actual-role rule-equivalence/plan tests pass 2/2 after correcting EXPLAIN to VERBOSE; original assertion failure retained in verification history.
+- Existing document/operations/Windows PostgreSQL selection: 46 passed + 2 explicit local skips (before query optimization); Windows/operations SQLite selection: 13 passed + 3 PG-only skips (before later added uploader recheck test). Final frozen-source full tests, benchmark rerun, cleanup and hosted results must be appended below before acceptance claims.
+- Remaining Phase 9 work: MFA enrollment/challenge/replay/seed protection/recovery, encrypted consistent backups and measured RPO/RTO, representative dates/history/mixed-load benchmark, remaining schedules/queue admission/monitoring/alert ownership, live native proxy/service/ACL/storage validation and reproducible release gate. U017 exact-source CI is historical evidence, not CI for these new operations changes.

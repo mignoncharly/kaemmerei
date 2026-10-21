@@ -1,5 +1,7 @@
 # OPEN.HERZ Vertragsregister
 
+Phase 9 U017 checkpoint: bounded ingress, shared database throttling, synchronous request workers, capacity/TLS checks and correlation implemented in b962824, with parser/path guards and patched compatible dependencies in 1649b15. [Controls, limits and remaining operations work](docs/PHASE9_OPERATIONS.md). All five hosted jobs passed for 1649b15; Phase 9 exit and production deployment remain open.
+
 Phase 8 U016: frontend/navigation technically verified for 6ebcaad: 178 collected; PG 176 passed + 2 local skips, SQLite 160 passed + 18; eight Phase 8 tests pass on both backends, all five hosted jobs including Chromium passed. [Behavior, browser constraints and evidence](docs/PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
 
 Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel technically verified: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18; 15 subtests each. Phase 7 restricted PostgreSQL 19 passed; all four hosted jobs passed for 2fd1bf8. [Definitions, migration and verification](docs/PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
@@ -141,7 +143,7 @@ Die Befehle im Projektordner mit derselben Python-Umgebung ausführen:
 .\.venv\Scripts\python.exe -m app.cli purge-sessions
 ```
 
-`init-db` wendet versionierte Alembic-Migrationen an. Vor Migrationen einer vorhandenen Datenbank eine Sicherung anlegen. Aktueller Kopf: `0020_financial_reports`; eine vorhandene Geschäftsdatenbank wurde hier nicht migriert. `schema-inventory` liefert ausschließlich Strukturabweichungen und IDs ungültiger Datensätze. Frühere optionale Fachbereichszuordnungen von Administrator-/Prüferkonten stoppen Migration 0015 und benötigen eine ausdrücklich geprüfte Korrektur. Fachbereichskonten benötigen einen aktiven Fachbereich. Start-/Wiederherstellungspasswörter müssen nach der Anmeldung unter „Passwort ändern“ ersetzt werden. Bei aktivierter Datenbanksicherheit verwenden CLI/Alembic ausschließlich den expliziten Betreiberzugang `MIGRATION_DATABASE_URL`; `purge-sessions` verwendet `MAINTENANCE_DATABASE_URL` und die eng begrenzte Wartungsfunktion. Einrichtung und Grenzen stehen im Phase-3-Bericht.
+`init-db` wendet versionierte Alembic-Migrationen an. Vor Migrationen einer vorhandenen Datenbank eine Sicherung anlegen. Aktueller Kopf: `0021_availability`; eine vorhandene Geschäftsdatenbank wurde hier nicht migriert. `schema-inventory` liefert ausschließlich Strukturabweichungen und IDs ungültiger Datensätze. Frühere optionale Fachbereichszuordnungen von Administrator-/Prüferkonten stoppen Migration 0015 und benötigen eine ausdrücklich geprüfte Korrektur. Fachbereichskonten benötigen einen aktiven Fachbereich. Start-/Wiederherstellungspasswörter müssen nach der Anmeldung unter „Passwort ändern“ ersetzt werden. Bei aktivierter Datenbanksicherheit verwenden CLI/Alembic ausschließlich den expliziten Betreiberzugang `MIGRATION_DATABASE_URL`; `purge-sessions` verwendet `MAINTENANCE_DATABASE_URL` und die eng begrenzte Wartungsfunktion. Einrichtung und Grenzen stehen im Phase-3-Bericht.
 
 ## Dokumente und Daten
 
@@ -197,3 +199,5 @@ Vor einem dienstlichen Produktivbetrieb sind fachliche Abnahme, Datenschutzprüf
 - `alembic/versions/`: versionierte Datenbankmigrationen
 - `tests/`: automatisierte Tests
 - `docs/ARBEITSPLAN.md`: Umsetzungsstand, offene fachliche Fragen und nächste Schritte
+
+Phase 9 U018 continues with durable scan batches, review-only native Windows operations templates, approved workload/recovery targets and statement-scoped RLS/read optimizations (head 0022). Initial workload failures are preserved in docs/evidence/phase9-workload-before.json. Full current-source verification and remaining MFA/backup/deployment gates are tracked in HANDOFF.md and docs/PHASE9_OPERATIONS.md. No Phase 9 exit or deployment acceptance.

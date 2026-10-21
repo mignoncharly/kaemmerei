@@ -130,6 +130,7 @@ class Contract(Base):
     __tablename__ = "contracts"
     __table_args__ = (
         Index("ix_contracts_department_archived", "department_id", "archived_at"),
+        Index('ix_contracts_archived_end', 'archived_at', 'end_date'),
         Index("ux_contracts_contract_number", "contract_number", unique=True),
         Index('ux_contracts_department_external', 'department_id', 'external_reference', unique=True),
         CheckConstraint("value_basis IN ('net','gross','unknown')", name='contract_value_basis'),

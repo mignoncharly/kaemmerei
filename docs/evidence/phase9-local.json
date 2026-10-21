@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-21",
+  "source": "1649b1537433c05e43baeb8a59dfa229fbfd5cd6",
+  "environment": "adopted project virtual environment; no candidate overlay",
+  "results": [
+    {
+      "selection": "sqlite",
+      "collected": 199,
+      "passed": 181,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 18,
+      "xfailed": 0,
+      "subtests_passed": 15,
+      "seconds": 141.935,
+      "junit_sha256": "fcf8f3f33e1ddd84cf248d60244a5d84d11ff49ed631250b4f72b28db275d967"
+    },
+    {
+      "selection": "postgresql",
+      "collected": 199,
+      "passed": 197,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 2,
+      "xfailed": 0,
+      "subtests_passed": 15,
+      "seconds": 441.266,
+      "junit_sha256": "e4c293342a33774af1dc927fc3d2f57190a80a3338a5ae34f30f790c98e94d26"
+    },
+    {
+      "selection": "explicit-postgresql",
+      "collected": 16,
+      "passed": 16,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "subtests_passed": 0,
+      "seconds": 54.864,
+      "junit_sha256": "672f7f5d5027d51c7d9b92065956923f49a173be84afb44a47b7804137fa8828"
+    },
+    {
+      "selection": "targeted-sqlite",
+      "collected": 21,
+      "passed": 21,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "subtests_passed": 0,
+      "seconds": 12.382,
+      "junit_sha256": "58da6fe8d327eb738ca3acf696815b1d75b9a535c5bd49657313390db3fff156"
+    },
+    {
+      "selection": "targeted-postgresql",
+      "collected": 21,
+      "passed": 21,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "subtests_passed": 0,
+      "seconds": 20.08,
+      "junit_sha256": "3d32f6cc8588b78c102f256db4f02739d234e8fe81213ae9b930ebffe3405a78"
+    }
+  ],
+  "migration_head": "0021_availability",
+  "catalog": {
+    "server_version": "18.3",
+    "guarded_test_databases": 0,
+    "generated_runtime_roles": 0,
+    "control_privileges_unchanged": true
+  },
+  "warnings": [
+    "HTTPX test-client compatibility deprecation",
+    "Managed pytest cache ACL warning"
+  ],
+  "scope": "Synthetic isolated databases/storage only; no production deployment acceptance"
+}

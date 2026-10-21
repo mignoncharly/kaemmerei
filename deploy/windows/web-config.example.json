@@ -1,0 +1,18 @@
+{
+  "APP_ENV": "production",
+  "ENFORCE_DATABASE_SECURITY": "1",
+  "DATABASE_URL": "postgresql+psycopg://ohvr_web@db.example.invalid/ohvr?sslmode=verify-full&sslrootcert=C%3A%2Fohvr-private%2Fpostgres-ca.pem",
+  "INTEGRATION_DATABASE_URL": "postgresql+psycopg://ohvr_integration@db.example.invalid/ohvr?sslmode=verify-full&sslrootcert=C%3A%2Fohvr-private%2Fpostgres-ca.pem",
+  "ALLOWED_HOSTS": "contracts.example.invalid",
+  "TRUSTED_PROXY_NETWORKS": "127.0.0.1/32",
+  "PGPASSFILE": "C:\\ohvr-private\\web.pgpass",
+  "DOCUMENT_STORAGE_DIR": "D:\\ohvr-private\\documents",
+  "TEMP": "D:\\ohvr-private\\multipart",
+  "TMP": "D:\\ohvr-private\\multipart",
+  "CLAMAV_EXECUTABLE": "C:\\Program Files\\ClamAV\\clamscan.exe",
+  "CLAMAV_DATABASE_DIR": "D:\\ohvr-private\\clamav",
+  "REQUEST_MAX_BYTES": "33554432",
+  "REQUEST_TIMEOUT_SECONDS": "30",
+  "REQUEST_CONCURRENCY": "16",
+  "UPLOAD_CONCURRENCY": "4"
+}

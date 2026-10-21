@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-8 technically verified; final Phase 8 evidence in HANDOFF U016 and docs/PHASE8_FRONTEND_NAVIGATION.md. P07-T01 finance agreement, earlier owner decisions, manual usability and production acceptance remain pending. Next technical phase P09.\
+Plan status: Phases 1-8 technically verified; Phase 9 in progress (U017, final implementation 1649b15). Operations/identity/recovery, release tooling, earlier owner decisions and production acceptance remain pending.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -82,6 +82,7 @@ IDs stabilize the review findings for implementation tracking. Related findings 
 | R38 | Nice | Missing filter-preserving navigation, sorting, and personal inbox | 8 |
 | R39 | Nice | No document correction/supersession workflow | 5 |
 | R40 | Nice | Temporary package files and duplicate environments in workspace/distribution | 9 |
+| R42 (new U017) | High | Maintainer framework/parser advisories identified U017; compatible patched dependencies and 28-package runtime OSV review verified for 1649b15; broader release checks remain | 9 (P09-T11) |
 | R41 | Nice | Token owner, rotation, and deactivation semantics unspecified | 6 |
 
 Scope gaps become release blockers when required by the accepted release scope. Record that decision rather than assigning them an unsupported vulnerability severity.
@@ -324,9 +325,11 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 ## Phase 9 — Harden availability, deployment, and operations
 
-**Priority:** High for availability. **Findings:** R07, R13, R21, R22, R30, R34, R40. **Entry:** Core behavior stable.
+**Priority:** High for availability. **Findings:** R07, R13, R21, R22, R30, R34, R40, R42. **Entry:** Core behavior stable.
 
 ### Tasks
+
+**U017 implementation note:** Phase 9 in progress, base b962824, guards 1cecc54 and compatible patched dependencies 1649b15. Application ingress/shared budgets/synchronous handlers and partial capacity/TLS/health controls are implemented. All task and exit boxes stay open pending remaining work and evidence. See [Phase 9 report](docs/PHASE9_OPERATIONS.md). Five hosted jobs passed for 1649b15; no production deployment or Phase 9 exit.
 
 - [ ] P09-T01: Enforce configurable total request bytes before multipart spooling, plus file counts, per-file bytes, field sizes, parse timeouts, upload concurrency, and storage quotas. Configure the reverse proxy and application boundary consistently. Handle streamed/chunked requests; do not trust Content-Length alone.
 - [ ] P09-T02: Add shared/distributed login and API throttling with account, IP/network, principal, and global dimensions. Protect against password spraying and expensive unknown-user hashing without enabling easy permanent account lockout. Define trusted proxy sources before honoring forwarded client IPs.
@@ -414,3 +417,7 @@ For each task or coherent change, add an update to HANDOFF with:
 7. Exact next action and owner.
 
 Task implementation, verification, deployment, and acceptance are separate states. Completion requires the relevant phase exit evidence, not just merged code or a checked box.
+
+### Phase 9 owner decisions recorded 2026-10-21 (U018)
+
+D11: user selected native Windows, PostgreSQL and TLS reverse proxy. Initial acceptance targets approved: 10 concurrent users, 10,000 contracts, 50,000 document metadata rows; ordinary page p95 <2s, bounded export <15s; RPO 24h, RTO 4h. Actual measurements, custodians and alert ownership remain pending. D12: user selected local accounts with TOTP MFA and audited administrator recovery. Implementation and verification remain required. These decisions do not authorize production deployment or close Phase 9.

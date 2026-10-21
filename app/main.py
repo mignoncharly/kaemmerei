@@ -17,7 +17,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import delete, func, select, update, text
+from sqlalchemy import case, delete, func, select, update, text
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.exc import IntegrityError, TimeoutError as PoolTimeout, OperationalError
 from sqlalchemy.orm import Session, joinedload
@@ -37,7 +37,7 @@ from app.db import make_engine, make_session_factory
 from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, read_xlsx
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.dates import add_months, calculate_notice_deadline, calculate_next_end_date, contract_dates
-from app.financial import aggregate, inventory_trend, amount as metadata_amount
+from app.financial import current_groups, inventory_trend
 from app.listing import normalize_filters, filtered_contracts, EXPORT_MAX_ROWS
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
@@ -299,7 +299,8 @@ def listing_spec(db, user, values):
     filters = normalize_filters(values)
     upcoming_ids = []
     if filters['focus'] == 'expiring':
-        population = db.scalars(contract_query(user).where(Contract.archived_at.is_(None))).all()
+        population = db.scalars(contract_query(user).where(
+            Contract.archived_at.is_(None), Contract.end_date.is_not(None))).all()
         _, upcoming = split_deadline_reminders(population, date.today())
         upcoming_ids = [item['contract'].id for item in upcoming]
     return filters, filtered_contracts(user, filters, upcoming_ids=upcoming_ids).order_by(Contract.updated_at.desc(), Contract.id.desc())
@@ -960,23 +961,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         today = date.today()
         department_filter = ([Contract.department_id == user.department_id]
                              if user.role == "department" else [])
-        contracts = db.scalars(contract_query(user).where(
+        population = contract_query(user).where(
             Contract.archived_at.is_(None), *department_filter
-        ).order_by(Contract.designation)).all()
-        contract_ids = [contract.id for contract in contracts]
-        contract_by_id = {contract.id: contract for contract in contracts}
+        )
+        contract_ids = population.with_only_columns(Contract.id)
+        # Only dated records can produce contract reminders. All inventory
+        # amounts/counts below are database aggregates, not full ORM snapshots.
+        contracts = db.scalars(population.where(Contract.end_date.is_not(None))
+            .options(joinedload(Contract.department)).order_by(Contract.designation)).all()
         departments = db.scalars(select(Department).where(
             *([Department.id == user.department_id] if user.role == "department" else [])
         ).order_by(Department.name)).all()
         department_by_id = {department.id: department for department in departments}
 
         tasks = (db.scalars(select(ContractTask).where(
-            ContractTask.contract_id.in_(contract_ids)
-        )).all() if contract_ids else [])
-        reviews = (db.scalars(select(ContractReview).where(
+            ContractTask.contract_id.in_(contract_ids),ContractTask.status!='done'
+        ).options(joinedload(ContractTask.contract).joinedload(Contract.department))).all())
+        review_counts = db.execute(select(Contract.department_id,func.count(ContractReview.id))
+            .join(ContractReview,ContractReview.contract_id==Contract.id).where(
             ContractReview.contract_id.in_(contract_ids),
             ContractReview.status.in_(("open", "in_review"))
-        )).all() if contract_ids else [])
+        ).group_by(Contract.department_id)).all()
         by_department = {department.id: {
             "department": department, "contract_count": 0,
             "annual_expenses": Decimal("0"), "annual_income": Decimal("0"),
@@ -986,24 +991,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "overdue_deadlines": 0, "upcoming_deadlines": 0,
         } for department in departments}
 
-        def amount(value):
-            return metadata_amount(value) or Decimal('0')
-
-        for contract in contracts:
-            row = by_department.get(contract.department_id)
+        financial_groups = current_groups(db,user)
+        for group in financial_groups:
+            row = by_department.get(group['department_id'])
             if row is None:
                 continue
-            row["contract_count"] += 1
-            annual = amount(contract.annual_value)
-            if contract.financial_direction == "income":
-                row["annual_income"] += annual
-            elif contract.financial_direction == "expense":
-                row["annual_expenses"] += annual
-            else:
-                row["annual_unknown"] += annual
-            row["missing_annual"] += metadata_amount(contract.annual_value) is None
-            row["missing_contract_value"] += metadata_amount(contract.contract_value) is None
-            row["contract_value"] += amount(contract.contract_value)
+            row['contract_count'] += group['record_count']
+            field={'income':'annual_income','expense':'annual_expenses','unknown':'annual_unknown'}[group['direction']]
+            row[field] += group['annual'] or Decimal('0')
+            row['missing_annual'] += group['record_count']-group['known_count']
+        known_contract_value=case((Contract.contract_value.between(0,Decimal('9999999999.99')),
+                                   Contract.contract_value),else_=None)
+        for department_id,total,known,count in db.execute(select(Contract.department_id,
+                func.sum(known_contract_value),func.count(known_contract_value),func.count())
+                .where(Contract.id.in_(contract_ids)).group_by(Contract.department_id)):
+            row=by_department.get(department_id)
+            if row:
+                row['contract_value']=total or Decimal('0')
+                row['missing_contract_value']=count-known
 
         overdue_deadlines, upcoming_deadlines = split_deadline_reminders(contracts, today)
         for reminder in overdue_deadlines:
@@ -1017,7 +1022,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         overdue_tasks, upcoming_tasks = [], []
         window_end = today + timedelta(days=REMINDER_WINDOW_DAYS)
         for task in tasks:
-            contract = contract_by_id.get(task.contract_id)
+            contract = task.contract
             if not contract or task.status == "done":
                 continue
             row = by_department.get(contract.department_id)
@@ -1031,10 +1036,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 upcoming_tasks.append({"task": task, "contract": contract})
                 if row:
                     row["upcoming_tasks"] += 1
-        for review in reviews:
-            row = by_department.get(contract_by_id[review.contract_id].department_id)
+        for department_id,count in review_counts:
+            row = by_department.get(department_id)
             if row:
-                row["open_reviews"] += 1
+                row["open_reviews"] += count
 
         annual_expenses = sum((row["annual_expenses"] for row in by_department.values()), Decimal("0"))
         annual_income = sum((row["annual_income"] for row in by_department.values()), Decimal("0"))
@@ -1043,7 +1048,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         open_review_count = sum(row["open_reviews"] for row in by_department.values())
 
         trend, trend_peak = inventory_trend(db, user, today)
-        financial_groups = aggregate([snapshot(c) for c in contracts])
 
         overdue_deadlines = [{**item, "kind": "Vertragsfrist", "title": item["contract"].designation}
                              for item in overdue_deadlines]
@@ -1059,7 +1063,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         upcoming_items = sorted(upcoming_deadlines + upcoming_tasks, key=lambda item: item["due_date"])
         return html(request, "reports.html", {**base_context(request, user, csrf),
                     "report_rows": list(by_department.values()),
-                    "contract_count": len(contracts), "annual_expenses": annual_expenses,
+                    "contract_count": sum(row['contract_count'] for row in by_department.values()), "annual_expenses": annual_expenses,
                     "annual_income": annual_income, "total_contract_value": total_contract_value,
                     "open_task_count": open_task_count, "open_review_count": open_review_count,
                     "overdue_items": overdue_items, "upcoming_items": upcoming_items,
@@ -1228,23 +1232,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         dashboard_stmt = contract_query(user).where(Contract.archived_at.is_(None))
         if user.role == "department":
             dashboard_stmt = dashboard_stmt.where(Contract.department_id == user.department_id)
-        dashboard_contracts = db.scalars(dashboard_stmt.order_by(Contract.end_date, Contract.id)).all()
+        status_counts = dict(db.execute(dashboard_stmt.with_only_columns(
+            Contract.status,func.count()).group_by(Contract.status)).all())
+        # Undated contracts cannot produce a reminder. Do not materialize the
+        # whole inventory just to count statuses or paginate fifty list rows.
+        dashboard_contracts = db.scalars(dashboard_stmt.where(Contract.end_date.is_not(None))
+            .order_by(Contract.end_date, Contract.id)).all()
         overdue_reminders, upcoming_reminders = split_deadline_reminders(dashboard_contracts, date.today())
-        upcoming_ids = [item["contract"].id for item in upcoming_reminders]
         total_count = db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
         page_count = max(1, (total_count + page_size - 1) // page_size)
         page = min(page, page_count)
-        items = db.scalars(stmt.limit(page_size).offset((page - 1) * page_size)).all()
+        items = db.scalars(stmt.options(joinedload(Contract.department))
+            .limit(page_size).offset((page - 1) * page_size)).all()
         def page_url(number):
             return '/?' + urlencode({**filters, 'page':number, 'page_size':page_size})
         focus_counts = {
-            "active": sum(contract.status == "active" for contract in dashboard_contracts),
+            "active": status_counts.get('active',0),
             "expiring": len(upcoming_reminders),
-            "review": sum(contract.status in ("draft", "in_progress") for contract in dashboard_contracts),
-            "approval": len(db.scalars(select(ContractReview.contract_id).distinct().join(Contract).where(
+            "review": status_counts.get('draft',0)+status_counts.get('in_progress',0),
+            "approval": db.scalar(select(func.count(func.distinct(ContractReview.contract_id))).join(Contract).where(
                 Contract.archived_at.is_(None), ContractReview.status.in_(("open", "in_review")), contract_scope(user),
-                *([Contract.department_id == user.department_id] if user.role == "department" else []))).all()),
-            "ended": sum(contract.status in ("terminated", "ended") for contract in dashboard_contracts),
+                *([Contract.department_id == user.department_id] if user.role == "department" else []))),
+            "ended": status_counts.get('terminated',0)+status_counts.get('ended',0),
         }
         departments = db.scalars(select(Department).order_by(Department.name)).all() if user.role != "department" else []
         metadata_scope = [contract_scope(user)]
@@ -1332,7 +1341,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                                     "size_bytes": stored["size_bytes"],
                                                     "uploaded_at": document.uploaded_at.isoformat()}))
             db.commit()
-            for pending_id in pending_ids:
+            for pending_id in (() if request.app.state.config.queued_document_scans else pending_ids):
                 try:
                     process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
                 except Exception:
@@ -1555,7 +1564,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                                     "size_bytes": stored["size_bytes"],
                                                     "uploaded_at": document.uploaded_at.isoformat()}))
             db.commit()
-            for pending_id in pending_ids:
+            for pending_id in (() if request.app.state.config.queued_document_scans else pending_ids):
                 try:
                     process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
                 except Exception:

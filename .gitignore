@@ -15,3 +15,5 @@ data/
 .venv-no-pip/
 .wheelhouse/
 .tmp_*.json
+logs/
+deploy/windows/*.local.json

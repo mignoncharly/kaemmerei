@@ -163,3 +163,37 @@ Final Phase 8 source 6ebcaad: full PG 176 passed + two local skips; SQLite 160 +
 explicit PG 16 passed, 162 deselected. Five exact-source hosted jobs passed. Final
 catalog: zero harness databases/generated roles, unchanged restricted control role.
 [Local evidence](evidence/phase8-local.json). No production/usability acceptance.
+
+
+## Phase 9 availability work started - U017
+
+Base b962824, guards 1cecc54 and patched dependency source 1649b15 add pre-parser streamed byte/deadline/form/admission controls,
+shared database login/API work budgets, synchronous POST workers, pool/export bounds,
+private storage quotas, TLS/proxy validation, redacted request correlation and basic
+health checks. Additive migration 0021 and actual restricted integration reservations
+are covered by tests/test_phase9.py. Full results and evidence will be appended to
+[Phase 9 operations](PHASE9_OPERATIONS.md) after local verification finishes.
+
+Phase 9 is **in progress**. Scheduler/jobs, workload targets/optimization, metrics and
+alert delivery, encrypted scheduled recovery, identity/MFA policy, broader tool/OS and reproducible release
+artifact checks and actual deployment are not verified or delivered
+by this first batch. A local implementation commit is not a hosted CI pass: the initial push
+failed through the configured network proxy; a normal retry succeeded. Runs 39644065729 (guards) and 39645201928
+(patched dependencies 1649b15) passed all five jobs. Existing Phase 8 hosted evidence applies
+to its own revision only. No Docker or business DB migration/cleanup was introduced.
+
+U017 final adopted-environment evidence: [phase9-local.json](evidence/phase9-local.json): 199 collected, PG 197 passed/2 skipped; SQLite 181 passed/18 skipped; 15 passing subtests each; explicit PG 16 passed; Phase 9 each backend 21 passed. Zero failures/errors/xfails. Hosted run 39645201928 passed all five jobs for 1649b15; this verifies that source checkpoint, not subsequent operations work or production deployment.
+
+
+## Phase 9 U018 operations and read-load evidence
+
+Production scan deferral, bounded operator coordinator, crash reservations,
+backoff/exhaustion, uploader revocation, archive and non-overlap are covered by
+`tests/test_phase9_operations.py`. Windows task/config structural checks and actual
+Windows PowerShell parsing are covered by `tests/test_windows_operations.py`.
+Statement-scoped RLS equivalence and SQL aggregation are covered by
+`tests/test_phase9_queries.py`. CI explicit Phase 9 selections now include these
+files as well as existing availability regressions. Actual native service/TLS,
+MFA, backup, alert and release acceptance are separate outstanding gates.
+Initial workload failures remain in `phase9-workload-before.json` and
+`phase9-workload-read-optimized.json`; do not replace them with a success claim.

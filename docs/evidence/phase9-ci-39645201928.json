@@ -1,0 +1,329 @@
+{
+  "run": {
+    "id": 39645201928,
+    "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39645201928",
+    "head_sha": "1649b1537433c05e43baeb8a59dfa229fbfd5cd6",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-21T17:35:49Z",
+    "updated_at": "2026-10-21T17:41:19Z"
+  },
+  "jobs": [
+    {
+      "name": "postgresql",
+      "id": 119378809695,
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install matching PostgreSQL 18 backup and restore client",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create restricted disposable-database test role",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database postgresql",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q -m postgresql --database postgresql",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 4 workflow and archive races under restricted PostgreSQL logins",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 5 document lifecycle and recovery under restricted PostgreSQL logins",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 6 snapshots, publication and token regression under restricted PostgreSQL logins",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 7 recorded history, calendar and Excel under restricted PostgreSQL logins",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 8 frontend contracts under restricted PostgreSQL logins",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 9 ingress and shared availability controls",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish safe failed-test classifications",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "document-scanner",
+      "id": 119378810018,
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install maintained ClamAV engine and current official definitions",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify actual clean and infected scans with freshness enforcement",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "frontend-browser",
+      "id": 119378810174,
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-browser.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m playwright install --with-deps chromium",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real browser CSP, recovery, keyboard and responsive checks",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "sqlite",
+      "id": 119378810335,
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database sqlite",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database sqlite --junitxml=.verification/sqlite-pytest.xml",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "native-postgresql",
+      "id": 119378810364,
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native manager unit safety checks",
+          "conclusion": "success"
+        },
+        {
+          "name": "Provision and verify native PostgreSQL without Docker",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12367835384,
+      "name": "native-postgresql-verification",
+      "size_in_bytes": 8780,
+      "expired": false
+    },
+    {
+      "id": 12367067860,
+      "name": "postgresql-verification",
+      "size_in_bytes": 8783,
+      "expired": false
+    },
+    {
+      "id": 12367051948,
+      "name": "document-scanner-verification",
+      "size_in_bytes": 636,
+      "expired": false
+    },
+    {
+      "id": 12366577604,
+      "name": "sqlite-verification",
+      "size_in_bytes": 5768,
+      "expired": false
+    },
+    {
+      "id": 12365839514,
+      "name": "phase8-browser-verification",
+      "size_in_bytes": 883729,
+      "expired": false
+    }
+  ],
+  "inspection": "Actual API run/job/step/artifact metadata inspected; artifact archives/screenshots not downloaded or manually inspected"
+}

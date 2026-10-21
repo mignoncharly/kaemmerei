@@ -1,0 +1,65 @@
+{
+  "dataset": {
+    "contracts": 10000,
+    "documents": 50000,
+    "concurrent_users": 10
+  },
+  "profile": "Undated draft contracts, no revision history/tasks/reviews, external-link metadata without files; initial read-load baseline only",
+  "source_hashes": {
+    "app\\main.py": "97e0f0db77a62f89f069bda2d6a9bfc74a27bda83db37191afad847ff2f4cfff",
+    "app\\models.py": "ef15bad70b81abbc96ab087ead5d42d2c2ce208f77c10b94792f7cf15e67b6fb",
+    "scripts\\benchmark_phase9.py": "11c9b22d7fc3043bb23deb5f40cb37f803216d06919775f03e528477d91785c8"
+  },
+  "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+  "targets": {
+    "page_p95_seconds": 2,
+    "export_seconds": 15
+  },
+  "selections": [
+    {
+      "operation": "/",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 0.3282776999985799,
+      "max_seconds": 0.35325050000392366,
+      "max_response_bytes": 34213,
+      "passed": true
+    },
+    {
+      "operation": "/reports",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 5.14093629999843,
+      "max_seconds": 5.288443400000688,
+      "max_response_bytes": 6884,
+      "passed": false
+    },
+    {
+      "operation": "/contracts/1",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 0.5443576999969082,
+      "max_seconds": 0.5697224999894388,
+      "max_response_bytes": 17910,
+      "passed": true
+    },
+    {
+      "operation": "bounded_export",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 2.67488880000019,
+      "max_seconds": 3.2475430999911623,
+      "max_response_bytes": 81675,
+      "passed": true
+    }
+  ],
+  "passed": false
+}

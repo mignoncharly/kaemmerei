@@ -2,8 +2,8 @@
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from sqlalchemy import select, text
-from app.models import Revision, now_utc
+from sqlalchemy import case, func, select, text
+from app.models import Contract, Revision, now_utc
 
 
 def amount(value):
@@ -31,6 +31,18 @@ def aggregate(states):
             group['annual'] += value
     return [dict(department_id=k[0], direction=k[1], basis=k[2], **{**v,
             'annual':v['annual'] if v['known_count'] else None}) for k,v in sorted(groups.items())]
+
+
+def current_groups(db, user):
+    """Same known/unknown semantics as aggregate(), scoped and grouped in SQL."""
+    from app.authorization import contract_scope
+    direction=case((Contract.financial_direction.in_(('expense','income')),Contract.financial_direction),else_='unknown')
+    basis=case((Contract.value_basis.in_(('net','gross')),Contract.value_basis),else_='unknown')
+    annual=case((Contract.annual_value.between(0,Decimal('9999999999.99')),Contract.annual_value),else_=None)
+    query=select(Contract.department_id.label('department_id'),direction.label('direction'),basis.label('basis'),
+        func.count().label('record_count'),func.count(annual).label('known_count'),func.sum(annual).label('annual'))
+    return [dict(row) for row in db.execute(query.where(contract_scope(user),Contract.archived_at.is_(None))
+        .group_by(Contract.department_id,direction,basis).order_by(Contract.department_id,direction,basis)).mappings()]
 
 
 def historical_groups(db, user, cutoff):

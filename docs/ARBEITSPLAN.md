@@ -1,5 +1,7 @@
 # Arbeitsplan Vertragsregister
 
+Phase 9 U017 checkpoint: bounded ingress, shared database throttling, synchronous request workers, capacity/TLS checks and correlation implemented in b962824, with parser/path guards and patched compatible dependencies in 1649b15. [Controls, limits and remaining operations work](PHASE9_OPERATIONS.md). All five hosted jobs passed for 1649b15; Phase 9 exit and production deployment remain open.
+
 Phase 8 U016: frontend/navigation technically verified for 6ebcaad: 178 collected; PG 176 passed + 2 local skips, SQLite 160 passed + 18; eight Phase 8 tests pass on both backends, all five hosted jobs including Chromium passed. [Behavior, browser constraints and evidence](PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
 
 Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel technically verified: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18; 15 subtests each. Phase 7 restricted PostgreSQL 19 passed; all four hosted jobs passed for 2fd1bf8. [Definitions, migration and verification](PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
@@ -31,7 +33,7 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 | 6 | Zuverlässige API-Synchronisierung und Token-Verantwortung | P06-T01–T08 technisch verifiziert: PostgreSQL 149 + 2 lokale Skips, SQLite 134 + 17 Skips; 21 PG-Synchronisationsprüfungen und vier CI-Jobs erfolgreich. [Phase 6](PHASE6_INTEGRATION_SYNC.md). v1 bleibt verfügbar; D07 fachlich offen. |
 | 7 | Finanzhistorie, Datums- und Excel-Regeln | P07-T02-T09 technisch geprüft, einschließlich historischer Fachbereichszuordnung, unbekannter Werte und atomarer Importidentität. P07-T01/D08-D10 fachlich offen. [Phase 7](PHASE7_FINANCE_DATES_EXCEL.md) |
 | 8 | Bedienoberfläche und Navigation | P08-T01-T09 technisch geprüft für 6ebcaad: PostgreSQL 176 + 2 lokale Skips, SQLite 160 + 18; acht Phase-8-Prüfungen je Backend und fünf CI-Jobs einschließlich Chromium erfolgreich. [Phase 8](PHASE8_FRONTEND_NAVIGATION.md). Manuelle Bedien-/Screenreader-Abnahme offen. |
-| 9 | Verfügbarkeit und Betrieb | Nicht begonnen; Phase-9-Ziele und Betriebsverantwortung festlegen |
+| 9 | Verfügbarkeit und Betrieb | In Bearbeitung (U017): request limits/shared throttling/workers; scheduling, workload, encrypted recovery, alerting, D11/D12 and production acceptance open. [Phase 9](PHASE9_OPERATIONS.md) |
 | 10 | Fachliche/technische Abnahme, Pilot und expliziter Integrationsumfang | Nicht begonnen |
 
 Die [Prüfmatrix](VERIFICATION_MATRIX.md) benennt Rollen, Direktzugriffe, Kindobjekte und noch fehlende Prüfungen. [PHASE1_BASELINE.md](PHASE1_BASELINE.md) hält Umgebung, Befehle, Ergebnisse und Einschränkungen fest. Fachbereichsfremde Filterwerte (R01), veränderbare archivierte Prüfvorgänge (R04) und Zugriff bei deaktiviertem Fachbereich (R10) sind korrigiert und auf SQLite sowie PostgreSQL geprüft. Weitere Befunde werden in den jeweiligen Phasen behoben und geprüft.
@@ -60,3 +62,5 @@ Der ursprüngliche PostgreSQL-/pytest-CI-Nachweis bleibt im [Linux-CI-Lauf 39571
 Die vorhandene Schnittstellen-API liest Vertragsdaten und Dokumente, nimmt aber keine Änderungen entgegen. H&H-, LDAP/SSO- und produktspezifische DMS-Konnektoren, externe Benachrichtigungen und die automatische Übernahme von Dokumenten sind noch nicht integriert. Der §-2b-Prüfbereich dokumentiert Status und Ergebnis; er ersetzt keine fachliche oder rechtsverbindliche Prüfung.
 
 Die Anwendung ist eine Arbeitsversion und noch keine freigegebene kommunale Produktivlösung. Code allein ersetzt keine fachliche Abnahme, Datenschutz- oder Sicherheitsfreigabe.
+
+Phase 9 U018 continues with durable scan batches, review-only native Windows operations templates, approved workload/recovery targets and statement-scoped RLS/read optimizations (head 0022). Initial workload failures are preserved in docs/evidence/phase9-workload-before.json. Full current-source verification and remaining MFA/backup/deployment gates are tracked in HANDOFF.md and docs/PHASE9_OPERATIONS.md. No Phase 9 exit or deployment acceptance.

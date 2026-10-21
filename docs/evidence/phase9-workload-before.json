@@ -1,0 +1,64 @@
+{
+  "dataset": {
+    "contracts": 10000,
+    "documents": 50000,
+    "concurrent_users": 10
+  },
+  "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+  "targets": {
+    "page_p95_seconds": 2,
+    "export_seconds": 15
+  },
+  "selections": [
+    {
+      "operation": "/",
+      "requests": 50,
+      "statuses": {
+        "200": 40,
+        "503": 10
+      },
+      "p95_seconds": 10.354117399998358,
+      "max_seconds": 10.642737399990438,
+      "max_response_bytes": 34213,
+      "passed": false
+    },
+    {
+      "operation": "/reports",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 6.798068500007503,
+      "max_seconds": 7.578473799992935,
+      "max_response_bytes": 6884,
+      "passed": false
+    },
+    {
+      "operation": "/contracts/1",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 0.5543374999979278,
+      "max_seconds": 0.578169499989599,
+      "max_response_bytes": 17910,
+      "passed": true
+    },
+    {
+      "operation": "bounded_export",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 5.244556900011958,
+      "max_seconds": 5.320779300003778,
+      "max_response_bytes": 81675,
+      "passed": true
+    }
+  ],
+  "passed": false,
+  "date": "2026-10-21",
+  "stage": "Operations working tree before statement-scoped RLS/read-query optimization; not the adopted dependency baseline",
+  "profile": "Undated drafts; external-link metadata only; no revision history/tasks/reviews/files; not a complete representative production workload",
+  "cleanup": "Existing harness completed normal database/role teardown; final catalog confirmation recorded separately"
+}

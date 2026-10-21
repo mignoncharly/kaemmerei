@@ -1,0 +1,416 @@
+{
+  "date": "2026-10-21",
+  "environment": "Windows Python 3.14.3 development/test environment; not a release lock or exhaustive vulnerability scan",
+  "reviewed_advisories": [
+    {
+      "id": "GHSA-5rvq-cxj2-64vf",
+      "package": "python-multipart",
+      "affected": "<0.0.30",
+      "patched": "0.0.30",
+      "severity": "High",
+      "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-5rvq-cxj2-64vf",
+      "initial_version": "0.0.29",
+      "current_version": "0.0.32",
+      "initial_application_control": "URL-encoded forms use bounded standard parse_qsl instead of the affected QuerystringParser; dependency remains affected",
+      "resolution": "Repository pins and adopted environment now outside the reported affected ranges; final regression/CI evidence recorded separately"
+    },
+    {
+      "id": "GHSA-82w8-qh3p-5jfq",
+      "package": "starlette",
+      "affected": ">=0.4.1,<1.3.1",
+      "patched": "1.3.1",
+      "severity": "High",
+      "url": "https://github.com/Kludex/starlette/security/advisories/GHSA-82w8-qh3p-5jfq",
+      "initial_version": "0.50.0",
+      "current_version": "1.9.0",
+      "initial_application_control": "Pre-parser byte/field bounds and standard URL-encoded parser; dependency remains affected",
+      "resolution": "Repository pins and adopted environment now outside the reported affected ranges; final regression/CI evidence recorded separately"
+    },
+    {
+      "id": "GHSA-wqp7-x3pw-xc5r",
+      "package": "starlette",
+      "affected": "<1.1.0 on Windows",
+      "patched": "1.1.0",
+      "severity": "High",
+      "url": "https://github.com/Kludex/starlette/security/advisories/GHSA-wqp7-x3pw-xc5r",
+      "initial_version": "0.50.0",
+      "current_version": "1.9.0",
+      "initial_application_control": "Reject decoded UNC/backslash/drive paths before StaticFiles/filesystem access; dependency remains affected",
+      "resolution": "Repository pins and adopted environment now outside the reported affected ranges; final regression/CI evidence recorded separately"
+    },
+    {
+      "id": "GHSA-86qp-5c8j-p5mr",
+      "package": "starlette",
+      "affected": "<=1.0.0",
+      "patched": "1.0.1",
+      "severity": "Moderate",
+      "url": "https://github.com/Kludex/starlette/security/advisories/GHSA-86qp-5c8j-p5mr",
+      "initial_version": "0.50.0",
+      "current_version": "1.9.0",
+      "initial_application_control": "Reject ambiguous Host; raw ASGI security path checks; dependency remains affected",
+      "resolution": "Repository pins and adopted environment now outside the reported affected ranges; final regression/CI evidence recorded separately"
+    },
+    {
+      "id": "GHSA-jp82-jpqv-5vv3",
+      "package": "starlette",
+      "affected": "<1.3.0",
+      "patched": "1.3.0",
+      "severity": "Low",
+      "url": "https://github.com/Kludex/starlette/security/advisories/GHSA-jp82-jpqv-5vv3",
+      "initial_version": "0.50.0",
+      "current_version": "1.9.0",
+      "initial_application_control": "Require slash-prefixed canonical path; dependency remains affected",
+      "resolution": "Repository pins and adopted environment now outside the reported affected ranges; final regression/CI evidence recorded separately"
+    },
+    {
+      "id": "GHSA-pp6c-gr5w-3c5g",
+      "package": "python-multipart",
+      "affected": "<0.0.27",
+      "patched": "0.0.27",
+      "severity": "High",
+      "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-pp6c-gr5w-3c5g",
+      "initial_version": "0.0.29",
+      "current_version": "0.0.32",
+      "initial_application_control": "Installed version outside reported range; not a clean full scan",
+      "resolution": "Repository pins and adopted environment now outside the reported affected ranges; final regression/CI evidence recorded separately"
+    }
+  ],
+  "release_gate": "Reviewed dependency ranges patched; OSV runtime scan zero matches for 28 package versions. Transitive hash lock/release manifest and broader operational acceptance remain open.",
+  "installed_fastapi_starlette_requirement": "starlette<0.51.0,>=0.40.0",
+  "initial_packages": [
+    {
+      "name": "alembic",
+      "version": "1.18.4"
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1"
+    },
+    {
+      "name": "argon2-cffi",
+      "version": "25.1.0"
+    },
+    {
+      "name": "argon2-cffi-bindings",
+      "version": "26.1.0"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.2.25"
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0"
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.128.2"
+    },
+    {
+      "name": "greenlet",
+      "version": "3.5.6"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1"
+    },
+    {
+      "name": "idna",
+      "version": "3.20"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.1"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "Mako",
+      "version": "1.4.3"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.4"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3"
+    },
+    {
+      "name": "pip",
+      "version": "25.3"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.7.0"
+    },
+    {
+      "name": "psycopg",
+      "version": "3.3.6"
+    },
+    {
+      "name": "psycopg-binary",
+      "version": "3.3.6"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.11"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.50.1"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0"
+    },
+    {
+      "name": "pytest",
+      "version": "9.1.1"
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.29"
+    },
+    {
+      "name": "SQLAlchemy",
+      "version": "2.0.50"
+    },
+    {
+      "name": "starlette",
+      "version": "0.50.0"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.5"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.48.0"
+    }
+  ],
+  "packages": [
+    {
+      "name": "alembic",
+      "version": "1.18.4"
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1"
+    },
+    {
+      "name": "argon2-cffi",
+      "version": "25.1.0"
+    },
+    {
+      "name": "argon2-cffi-bindings",
+      "version": "26.1.0"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.2.25"
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0"
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.158.0"
+    },
+    {
+      "name": "greenlet",
+      "version": "3.5.6"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1"
+    },
+    {
+      "name": "idna",
+      "version": "3.20"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.1"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "Mako",
+      "version": "1.4.3"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.4"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.44.0"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3"
+    },
+    {
+      "name": "pip",
+      "version": "25.3"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.7.0"
+    },
+    {
+      "name": "psycopg",
+      "version": "3.3.6"
+    },
+    {
+      "name": "psycopg-binary",
+      "version": "3.3.6"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.11"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.50.1"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0"
+    },
+    {
+      "name": "pytest",
+      "version": "9.1.1"
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32"
+    },
+    {
+      "name": "SQLAlchemy",
+      "version": "2.0.50"
+    },
+    {
+      "name": "starlette",
+      "version": "1.9.0"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.5"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.48.0"
+    }
+  ],
+  "current_source": "1649b15",
+  "current_fastapi_starlette_requirement": "starlette>=0.46.0",
+  "verified_wheels": [
+    {
+      "name": "fastapi",
+      "version": "0.158.0",
+      "filename": "fastapi-0.158.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/ea/df/f273d102d6ee50c5de3e56023a3e69bad30c209f8002e8d2efeecbeb114c/fastapi-0.158.0-py3-none-any.whl",
+      "sha256": "c5127864026eca80a419047caba7760d561160904445fd825a60b6285b86ed0b"
+    },
+    {
+      "name": "starlette",
+      "version": "1.9.0",
+      "filename": "starlette-1.9.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/f3/93/181df62699d9b5aca1d87e5cfda131dac87e3cdaebf668662f7206ca3470/starlette-1.9.0-py3-none-any.whl",
+      "sha256": "fd3f159936e882d06c1108f84688f7cda2cf85fc6a592a50edbd175e882c2ddc"
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "filename": "python_multipart-0.0.32-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl",
+      "sha256": "ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.44.0",
+      "filename": "opentelemetry_api-1.44.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/ca/6f/a04e900f465ff3221ccc395522503e2d10e79fa21f2723c8e177aae1e0d1/opentelemetry_api-1.44.0-py3-none-any.whl",
+      "sha256": "94b98c893a91b88657eaac1e3ba89618cdb85be6918196705354f34728b2cdef"
+    }
+  ]
+}

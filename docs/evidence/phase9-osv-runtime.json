@@ -1,0 +1,236 @@
+{
+  "date": "2026-10-21",
+  "source": "1649b15",
+  "endpoint": "https://api.osv.dev/v1/querybatch",
+  "scope": "28 Windows runtime package/version pairs; not OS/Python/browser/development dependencies or proof of absence of unknown vulnerabilities",
+  "queries": [
+    {
+      "package": {
+        "name": "alembic",
+        "ecosystem": "PyPI"
+      },
+      "version": "1.18.4"
+    },
+    {
+      "package": {
+        "name": "annotated-doc",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.0.5"
+    },
+    {
+      "package": {
+        "name": "annotated-types",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.8.0"
+    },
+    {
+      "package": {
+        "name": "anyio",
+        "ecosystem": "PyPI"
+      },
+      "version": "4.15.1"
+    },
+    {
+      "package": {
+        "name": "argon2-cffi",
+        "ecosystem": "PyPI"
+      },
+      "version": "25.1.0"
+    },
+    {
+      "package": {
+        "name": "argon2-cffi-bindings",
+        "ecosystem": "PyPI"
+      },
+      "version": "26.1.0"
+    },
+    {
+      "package": {
+        "name": "cffi",
+        "ecosystem": "PyPI"
+      },
+      "version": "2.1.1"
+    },
+    {
+      "package": {
+        "name": "click",
+        "ecosystem": "PyPI"
+      },
+      "version": "8.5.0"
+    },
+    {
+      "package": {
+        "name": "fastapi",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.158.0"
+    },
+    {
+      "package": {
+        "name": "greenlet",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.5.6"
+    },
+    {
+      "package": {
+        "name": "h11",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.16.0"
+    },
+    {
+      "package": {
+        "name": "idna",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.20"
+    },
+    {
+      "package": {
+        "name": "jinja2",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.1.6"
+    },
+    {
+      "package": {
+        "name": "mako",
+        "ecosystem": "PyPI"
+      },
+      "version": "1.4.3"
+    },
+    {
+      "package": {
+        "name": "markupsafe",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.0.4"
+    },
+    {
+      "package": {
+        "name": "opentelemetry-api",
+        "ecosystem": "PyPI"
+      },
+      "version": "1.44.0"
+    },
+    {
+      "package": {
+        "name": "psycopg",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.3.6"
+    },
+    {
+      "package": {
+        "name": "psycopg-binary",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.3.6"
+    },
+    {
+      "package": {
+        "name": "pycparser",
+        "ecosystem": "PyPI"
+      },
+      "version": "3.11"
+    },
+    {
+      "package": {
+        "name": "pydantic",
+        "ecosystem": "PyPI"
+      },
+      "version": "2.14.1"
+    },
+    {
+      "package": {
+        "name": "pydantic-core",
+        "ecosystem": "PyPI"
+      },
+      "version": "2.50.1"
+    },
+    {
+      "package": {
+        "name": "python-multipart",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.0.32"
+    },
+    {
+      "package": {
+        "name": "sqlalchemy",
+        "ecosystem": "PyPI"
+      },
+      "version": "2.0.50"
+    },
+    {
+      "package": {
+        "name": "starlette",
+        "ecosystem": "PyPI"
+      },
+      "version": "1.9.0"
+    },
+    {
+      "package": {
+        "name": "typing-extensions",
+        "ecosystem": "PyPI"
+      },
+      "version": "4.16.0"
+    },
+    {
+      "package": {
+        "name": "typing-inspection",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.4.4"
+    },
+    {
+      "package": {
+        "name": "tzdata",
+        "ecosystem": "PyPI"
+      },
+      "version": "2026.5"
+    },
+    {
+      "package": {
+        "name": "uvicorn",
+        "ecosystem": "PyPI"
+      },
+      "version": "0.48.0"
+    }
+  ],
+  "response": {
+    "results": [
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {}
+    ]
+  }
+}

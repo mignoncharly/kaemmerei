@@ -266,7 +266,8 @@ def new_document(db,contract,user,stored,*,replaces=None):
     return document
 
 
-def process_document(db,settings,scanner,document_id,*,user=None,fault=lambda point:None):
+def process_document(db,settings,scanner,document_id,*,user=None,fault=lambda point:None,
+                     count_attempt=True,enforce_upload_authority=False):
     from app.models import Contract,ContractDocument,DocumentJob,now_utc
     from app.workflow import begin_mutation
     from app.identity_service import lock_identities,audit
@@ -304,12 +305,20 @@ def process_document(db,settings,scanner,document_id,*,user=None,fault=lambda po
         if contract is None or contract.archived_at is not None:
             db.rollback();return 'archived'
     document=db.get(ContractDocument,document_id)
+    if enforce_upload_authority:
+        from app.logic import active_access,can_write
+        # Automated processing is not manual privileged legacy recovery. Recheck
+        # the live uploader and current parent scope after the external scan.
+        if (document.provenance!='upload' or not active_access(document.uploaded_by)
+                or not can_write(document.uploaded_by,contract)):
+            db.rollback();return 'suspended'
     if document.state in ('available','rejected','superseded','disposed','link'):
         state=document.state;db.rollback();return state
     job=db.get(DocumentJob,document_id)
     if job is None:
         job=DocumentJob(document_id=document.id,contract_id=contract_id);db.add(job)
-    job.attempts+=1;job.updated_at=now_utc()
+    if count_attempt:job.attempts+=1
+    job.updated_at=now_utc()
     document.scan_result=result.outcome;document.scanner_version=result.version;document.scanned_at=now_utc()
     try:
         if data is None or document.storage_key!=key or (document.sha256 and document.sha256!=digest):

@@ -32,6 +32,9 @@ def main():
     subs.add_parser('integration-status', help='Read-only outbox, publication, snapshot/cursor and legacy-token counts')
     recovery=subs.add_parser('document-recover', help='Retry staged jobs or explicitly review legacy files; no deletion')
     recovery.add_argument('--document-id',required=True,type=int)
+    scans=subs.add_parser('scan-pending', help='Bounded durable PostgreSQL scan retries; explicit schema operator')
+    scans.add_argument('--limit',type=int,default=10)
+    scans.add_argument('--seconds',type=int,default=120)
     d = subs.add_parser("add-department", help="Fachbereich anlegen")
     d.add_argument("name")
     subs.add_parser("list-departments")
@@ -104,6 +107,18 @@ def main():
                     db.rollback()
                     raise SystemExit('Recovery failed safely; preserve storage and inspect reconciliation without exposing credentials') from None
                 print(json.dumps({'document_id':args.document_id,'state':state}))
+            return
+        if args.command=='scan-pending':
+            from app.operations import scan_batch
+            from app.documents import ClamAVScanner
+            try:
+                result=scan_batch(engine,SessionFactory,settings,ClamAVScanner(settings),
+                                  limit=args.limit,seconds=args.seconds)
+            except Exception:
+                raise SystemExit('Scan batch failed safely; inspect operator configuration without exposing secrets') from None
+            print(json.dumps(result))
+            if result['errors'] or result['exhausted'] or result['retry'] or result['suspended']:
+                raise SystemExit(2)
             return
         if args.command == 'purge-sessions' and settings.enforce_database_security:
             from app.db_roles import validate_runtime_engine

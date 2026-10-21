@@ -1,5 +1,22 @@
 # Änderungen
 
+## 2026-10-21 - Phase 9 U018: native operations and measured read load
+
+- User approved native Windows/TLS platform, local TOTP/recovery scope and initial workload/RPO/RTO targets.
+- Durable scan coordinator: serialized batches, persisted crash reservations, bounded retries and live uploader checks; production HTTP scans deferred.
+- Review-only Windows configuration/task generation and redacted rotating request logs; no deployment.
+- Initial large read-load failure retained; scoped SQL counts/eager loading and additive 0022 statement-scoped SELECT RLS optimization implemented.
+- TOTP/recovery implementation, encrypted backup/recovery and other Phase 9 gates remain open; see HANDOFF U018.
+
+## 2026-10-21 - Phase 9: availability implementation started
+
+- Bounded streamed ingress before multipart spooling, parser/file cleanup and storage quotas.
+- Shared DB-backed login/API budgets, synchronous POST workers and bounded PostgreSQL pools/timeouts.
+- Additive 0021 admission/index migration; role provisioning uses current Alembic head.
+- Trusted proxy/HTTPS/DB TLS checks, redacted correlation, health probes and export byte/completion bounds.
+- Reviewed current primary dependency advisories; guarded URL-encoded parser/Windows UNC/Host path surfaces. Adopted FastAPI 0.158.0 / Starlette 1.9.0 / multipart 0.0.32 and required OpenTelemetry API; 28-version runtime OSV query has zero matches.
+- Phase 9 remains in progress; scheduling, benchmarks, encrypted recovery, alerts, identity policy and release review remain open. See HANDOFF U017 and docs/PHASE9_OPERATIONS.md. Five exact-source hosted jobs passed for 1649b15; no deployment or Phase 9 exit.
+
 ## 2026-10-21 - Phase 8: frontend behavior and navigation
 
 - CSP-compatible chart classes; persistent notifications and safe checkbox/form recovery.

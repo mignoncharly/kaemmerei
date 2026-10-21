@@ -1,0 +1,36 @@
+# REVIEW TEMPLATE. Supply the three nonsecret OHVR_* deployment values locally.
+# Do not expose this configuration before Phase 9 identity/recovery gates pass.
+{
+    admin off
+    servers {
+        max_header_size 32KB
+        timeouts {
+            read_header 10s
+            read_body 30s
+            idle 2m
+        }
+    }
+}
+
+https://{$OHVR_PUBLIC_HOST} {
+    tls {$OHVR_TLS_CERT_FILE} {$OHVR_TLS_KEY_FILE}
+    request_body {
+        max_size 33554432
+    }
+    # No URI/query/body access log: the application's redacted request log is used.
+    reverse_proxy 127.0.0.1:8000 {
+        # First and only proxy; discard caller-supplied identity headers.
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto https
+        header_up -Forwarded
+        header_up -X-Forwarded-Host
+        transport http {
+            dial_timeout 5s
+            response_header_timeout 120s
+        }
+    }
+}
+
+http://{$OHVR_PUBLIC_HOST} {
+    redir https://{$OHVR_PUBLIC_HOST}{uri} 308
+}

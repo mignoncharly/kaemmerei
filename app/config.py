@@ -34,6 +34,13 @@ class Settings:
     database_statement_timeout_ms: int = 15000
     document_storage_quota_bytes: int = 10 * 1024**3
     document_storage_reserve_bytes: int = 256 * 1024**2
+    defer_document_scans: bool = False
+
+    @property
+    def queued_document_scans(self) -> bool:
+        # Production never waits for antivirus in the HTTP worker. Development
+        # preserves the existing immediate synthetic scanner workflow by default.
+        return self.production or self.defer_document_scans
 
     @property
     def production(self) -> bool:
@@ -113,6 +120,7 @@ def get_settings() -> Settings:
                         database_statement_timeout_ms=int(os.getenv('DATABASE_STATEMENT_TIMEOUT_MS','15000')),
                         document_storage_quota_bytes=int(os.getenv('DOCUMENT_STORAGE_QUOTA_BYTES',str(10*1024**3))),
                         document_storage_reserve_bytes=int(os.getenv('DOCUMENT_STORAGE_RESERVE_BYTES',str(256*1024**2))),
+                        defer_document_scans=os.getenv('DEFER_DOCUMENT_SCANS','0')=='1',
                         clamav_executable=Path(os.environ['CLAMAV_EXECUTABLE']) if os.getenv('CLAMAV_EXECUTABLE') else None,
                         clamav_database_dir=Path(os.environ['CLAMAV_DATABASE_DIR']) if os.getenv('CLAMAV_DATABASE_DIR') else None,
                         scanner_timeout=int(os.getenv('SCANNER_TIMEOUT','60')),
