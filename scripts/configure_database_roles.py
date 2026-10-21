@@ -28,7 +28,7 @@ def main():
         with engine.begin() as connection:
             if connection.scalar(text('SELECT current_database()'))!=args.database:
                 raise RuntimeError('Database identity mismatch')
-            if connection.scalar(text('SELECT version_num FROM alembic_version'))!='0018_document_lifecycle':
+            if connection.scalar(text('SELECT version_num FROM alembic_version'))!='0019_integration_sync':
                 raise RuntimeError('Migrate and review inventory before grants')
             configure_runtime_roles(connection,web=args.web,integration=args.integration,
                                     maintenance=args.maintenance,audit_owner=args.audit_owner)

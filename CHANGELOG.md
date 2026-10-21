@@ -1,5 +1,18 @@
 # Änderungen
 
+## 21. Oktober 2026 — Phase 6: API-v2-Synchronisierung und Token-Verantwortung
+
+- P06-T01–T08: transaktionale Outbox, serialisierte Veröffentlichung, gespeicherter
+  Anfangsbestand und token-/rechtegebundene Cursor statt Zeitstempel als Wasserstand.
+- Fachbereichswechsel liefern minimale Entfernungsmeldungen; v2-Leserechte sind
+  explizit. Bestehende v1-Tokens werden nicht erweitert und v1 bleibt verfügbar.
+- Verantwortliches Konto/Dienst, befristete v2-Tokens, überlappende Rotation,
+  auditierter Widerruf und getrennte, gedrosselte Nutzungsmetadaten nach dem Abruf.
+- Additive Migration 0019, zusätzliche FORCE-RLS-Tabellen und enge Feed-Funktionen;
+  neue API-/Wiederanlaufdokumentation und maschinenlesbares Antwortschema.
+- Synthetische lokale und gehostete Verifikation: siehe HANDOFF U014 und
+  docs/PHASE6_INTEGRATION_SYNC.md. D07 und Produktivfreigabe bleiben offen.
+
 ## 21. Oktober 2026 — Phase 5: Private Dokumente, Quarantäne und Wiederherstellung
 
 - P05-T01–T08: begrenzte Inhaltsprüfung, fail-closed ClamAV-Anbindung, Hashprüfung,

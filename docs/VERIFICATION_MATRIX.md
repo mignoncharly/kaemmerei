@@ -110,3 +110,14 @@ clean/EICAR/current official definitions, service/native PostgreSQL and SQLite.
 [hosted observations](evidence/phase5-ci-39613990793.json) retain exact source,
 counts/hashes and API state. Local ClamAV and actual Windows symlink privileges,
 production ACLs, D05/D06 and operational release acceptance remain separate.
+
+## Phase 6 integration synchronization (U014)
+
+[Contract, state/publication design, owner policy and recovery](PHASE6_INTEGRATION_SYNC.md).
+Tests exercise materialized pagination, current-scope minimal removal, capability
+and v1 isolation, opaque cursor tamper/cross-token/expiry/retirement, revoked or
+inactive owners/departments, rollback, concurrent publication, document/task/review
+changes, deferred usage, audited overlapping rotation, rescope/revoke races,
+equal timestamps/application restart and genuine PostgreSQL late commits and
+writer/snapshot lock waits. Initial checks pass; final evidence is appended after
+execution. D07 and production operations remain separate acceptance gates.

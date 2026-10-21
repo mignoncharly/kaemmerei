@@ -20,7 +20,9 @@ Phase 5 implementiert private Quarantäne, Inhaltsprüfung und ClamAV-Anbindung,
 
 Phase-5-Prüfstand: PostgreSQL 128 bestanden und 2 lokale Skips, SQLite 116 bestanden und 14 Skips; jeweils 15 Unterprüfungen bestanden. [CI 39613990793](https://github.com/mignoncharly/kaemmerei/actions/runs/39613990793) ist erfolgreich, einschließlich echter ClamAV-Prüfung mit aktuellen offiziellen Signaturen. Fachliche Entscheidungen D05/D06 und Produktivfreigabe bleiben offen.
 
-Offen bleiben unter anderem unvollständige Änderungsabrufe der API und historische Finanzsummen. R01/R04/R10 bleiben durch reguläre Tests abgesichert. Eine fachliche oder betriebliche Produktivfreigabe ist damit nicht verbunden.
+Phase 6 ergänzt eine getrennte v2-Synchronisierung mit festem Anfangsbestand, dauerhaftem Änderungsfeed, fachbereichssicheren Entfernungsmeldungen, tokengebundenen Cursorn und ausdrücklich vergebenen Leserechten. v1 bleibt verfügbar; bestehende Tokens erhalten keine zusätzlichen v2-Rechte. Migration `0019_integration_sync`, Betreiber-/Verbraucherregeln und Nachweise: [Phase 6](docs/PHASE6_INTEGRATION_SYNC.md). D07 und Produktivfreigabe bleiben offen.
+
+Offen bleiben unter anderem historische Finanzsummen und die fachlichen Datums-/Excel-Regeln der Phase 7. R01/R04/R10 bleiben durch reguläre Tests abgesichert. Eine fachliche oder betriebliche Produktivfreigabe ist damit nicht verbunden.
 
 Aktueller Zustand und jede Arbeitsänderung stehen in [HANDOFF.md](HANDOFF.md). [Prüfmatrix](docs/VERIFICATION_MATRIX.md) und [Phase-1-Nachweis](docs/PHASE1_BASELINE.md) trennen bestandene Prüfungen, bekannte Fehler und noch nicht ausgeführte Prüfungen. H&H-/LDAP-/produktspezifische DMS-Anbindungen und externe Erinnerungen bleiben ausdrücklich außerhalb des bisher gelieferten Umfangs.
 
@@ -61,6 +63,10 @@ Fachbereichsnutzer sind auf ihren zugewiesenen Fachbereich beschränkt. Prüfer 
 ## Schnittstellen-API F15
 
 API-Tokens werden unter `/admin/integrations` durch Administratoren verwaltet. Ein Token kann auf einen Fachbereich begrenzt, auf 90 Tage oder ein Jahr befristet oder ohne Ablaufdatum angelegt werden. Der vollständige Token wird nur beim Erstellen angezeigt. Er kann jederzeit widerrufen werden; gespeichert wird nur sein Hash.
+
+Für v2 sind ein verantwortliches Konto, ein benannter Dienst und ein endliches Ablaufdatum erforderlich. Rechte für Finanzen, Dokumentmetadaten/-inhalt, Steuerprüfung, Aufgaben und sensible Historie werden einzeln vergeben. Rotation stellt ein neues Geheimnis einmalig bereit; nach eigener Anfangssynchronisierung wird der Vorgänger ausdrücklich widerrufen. Der bisherige breite v1-Umfang bleibt ein separates Profil.
+
+Neue Verbraucher verwenden `/api/v2/snapshot` und anschließend `/api/v2/changes`. Cursor sind undurchsichtige, an Token und Berechtigungen gebundene Werte. 410 verlangt einen neuen Anfangsbestand; bei 401/403 darf der Verbraucher seine alten Zugriffsrechte nicht weiter voraussetzen. [Vollständiger API-Vertrag](docs/PHASE6_INTEGRATION_SYNC.md), [Antwortschema](app/static/api-v2.schema.json). v1-Zeitfilter/Offsets ersetzen diesen Änderungsfeed nicht.
 
 Alle API-Anfragen verwenden den Header `Authorization: Bearer <Token>`.
 

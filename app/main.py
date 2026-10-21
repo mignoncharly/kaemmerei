@@ -151,8 +151,17 @@ def require_integration_token(request: Request, db: Session) -> IntegrationToken
     if token.department_id is not None and (token.department is None or not token.department.is_active):
         raise HTTPException(status_code=401, detail="Integrationstoken deaktiviert",
                             headers={"WWW-Authenticate": "Bearer"})
-    token.last_used_at = now_utc()
-    db.commit()
+    if db.info.get('enforce_rls'):
+        if db.scalar(text("SELECT ohvr_security.resolve_principal()->>'id'"))!=str(token.id):
+            raise HTTPException(401,'Token owner or grant suspended')
+    elif token.owner_user_id is not None:
+        owner=db.get(User,token.owner_user_id)
+        if owner is None or not active_access(owner):raise HTTPException(401,'Token owner suspended')
+    if token.revoked_at is not None:raise HTTPException(401,'Token revoked')
+    if request.url.path.startswith('/api/v1/') and token.api_scopes!='legacy_v1':
+        raise HTTPException(403,'This capability token must use API v2')
+    request.state.usage_token_id=token.id
+    request.state.usage_context=dict(db.info.get('request_context',{}))
     return token
 
 
@@ -593,6 +602,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                  .order_by(Department.name)).all()
         return html(request, "integrations.html", {**base_context(request, user, csrf),
                     "tokens": tokens, "departments": departments,
+                    "owner_users":db.scalars(select(User).where(User.is_active.is_(True)).order_by(User.username)).all(),
                     "new_token": new_token, "error": error, "now": now_utc(),
                     "notice": "Der API-Token wurde erstellt. Kopiere ihn aus dem grünen Feld." if new_token else ""}, status_code)
 
@@ -606,8 +616,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def create_integration(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_admin(user)
-        form = await request.form(max_fields=6)
+        form = await request.form(max_fields=20)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        lock_actor(db,user)
+        check_admin(user)
         name = str(form.get("name", "")).strip()
         department_text = str(form.get("department_id", "")).strip()
         expires_in = str(form.get("expires_in", "90"))
@@ -627,12 +639,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             error = "Bitte eine gültige Laufzeit auswählen."
         if error:
             return render_integrations(request, user, csrf, db, error=error, status_code=422)
+        from app.token_service import grant_fields
+        try:grant=grant_fields(db,form,user)
+        except ValueError as exc:return render_integrations(request,user,csrf,db,error=str(exc),status_code=422)
         raw_token = "ohvr_" + secrets.token_urlsafe(32)
         expires_at = (now_utc() + timedelta(days=int(expires_in))
                       if expires_in != "never" else None)
-        db.add(IntegrationToken(name=name, token_prefix=raw_token[:16],
+        token=IntegrationToken(name=name, token_prefix=raw_token[:16],
                                 token_hash=hash_value(raw_token), department_id=department_id,
-                                created_by_id=user.id, expires_at=expires_at))
+                                created_by_id=user.id, expires_at=expires_at,**grant)
+        db.add(token);db.flush()
+        audit(db,user.id,'integration_created',f'token:{token.id}',scopes=token.api_scopes,owner_user_id=token.owner_user_id)
         db.commit()
         return render_integrations(request, user, csrf, db, new_token=raw_token)
 
@@ -642,10 +659,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         check_admin(user)
         form = await request.form(max_fields=2)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        lock_actor(db,user)
+        check_admin(user)
         token = db.get(IntegrationToken, token_id)
         if not token:
             raise HTTPException(status_code=404, detail="Integrationstoken nicht gefunden")
         token.is_active = False
+        reason=str(form.get('reason','administrator_revocation'))
+        if reason not in ('administrator_revocation','rotation_complete','service_retired','security_incident'):
+            raise HTTPException(422,'Invalid revocation reason')
+        token.revoked_at=now_utc();token.revocation_reason=reason
+        audit(db,user.id,'integration_revoked',f'token:{token.id}',reason=token.revocation_reason)
         db.commit()
         return redirect("/admin/integrations?notice=integration_revoked")
 
@@ -1705,6 +1729,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     from app.document_routes import install_document_routes
     install_document_routes(app,get_db=get_db,user_csrf=user_csrf)
+    from app.integration import install_integration_routes
+    install_integration_routes(app,get_db=get_db,authenticate=require_integration_token)
+    from app.token_service import install_token_routes,install_usage_recording
+    install_token_routes(app,get_db=get_db,user_csrf=user_csrf,render=render_integrations)
+    install_usage_recording(app)
     from app.identity_routes import install_identity_routes
     install_identity_routes(app, get_db=get_db, html=html, base_context=base_context,
                             user_csrf=user_csrf, check_admin=check_admin)

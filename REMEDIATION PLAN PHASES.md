@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-5 technically verified; Phase 5 evidence in HANDOFF U013 and docs/PHASE5_DOCUMENT_LIFECYCLE.md. Phases 6-10 and owner/production acceptance remain pending.\
+Plan status: Phases 1-5 technically verified; Phase 6 P06-T01-T08 implemented with final verification pending. D07 and production acceptance remain open.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -245,14 +245,14 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 ### Tasks
 
-- [ ] P06-T01: Specify the API compatibility contract. Keep v1 available during an announced transition; introduce v2 if cursor/event semantics or fields would break existing consumers. Document included fields, permissions, errors, timestamps, retention, and removal semantics.
-- [ ] P06-T02: Emit aggregate change events transactionally for contract, document availability/link/supersession, archive, review/tax, and relevant task changes. Update aggregate `updated_at` in the same mutation transaction where v1 relies on it.
-- [ ] P06-T03: Implement stable event cursors and an initial-snapshot handshake. Do not use a raw sequence allocation as a commit-order watermark: concurrent transactions can commit out of order. Use a proven serialized publication stage/outbox publisher that assigns externally visible sequence numbers after committed changes, with idempotent publication and a resumable snapshot boundary.
-- [ ] P06-T04: Persist old/new department scope and minimal removal events on transfer, deletion/disposal, or grant changes. A former scope receives only the identifier and removal reason needed to purge its copy, never the new department or private payload. Explain how consumers reconcile access changes and expired event history through a fresh snapshot.
-- [ ] P06-T05: Bind opaque cursors to token/principal scope and API version; reject tampering and cross-scope reuse. Recheck current token and authorization state on each request. Specify behavior for concurrent snapshot changes, event replay, duplicates, and revoked access.
-- [ ] P06-T06: Define endpoint/field capabilities for metadata, finance, documents, tax, tasks, and decision/history access. Add omitted fields/endpoints only where accepted scope requires them; do not expand every existing token automatically.
-- [ ] P06-T07: Add token ownership, accountable service owner, expiry/rotation, explicit scopes, revocation reason, and audit trail. Use overlapping rotation where needed. Decide whether a disabled creator suspends a service token; avoid undocumented inheritance from personal account status.
-- [ ] P06-T08: Avoid committing a token usage timestamp before business reads. Batch or independently record last-used metadata so read requests do not create avoidable write contention or erase RLS transaction context.
+- [x] P06-T01: Specify the API compatibility contract. Keep v1 available during an announced transition; introduce v2 if cursor/event semantics or fields would break existing consumers. Document included fields, permissions, errors, timestamps, retention, and removal semantics.
+- [x] P06-T02: Emit aggregate change events transactionally for contract, document availability/link/supersession, archive, review/tax, and relevant task changes. Update aggregate `updated_at` in the same mutation transaction where v1 relies on it.
+- [x] P06-T03: Implement stable event cursors and an initial-snapshot handshake. Do not use a raw sequence allocation as a commit-order watermark: concurrent transactions can commit out of order. Use a proven serialized publication stage/outbox publisher that assigns externally visible sequence numbers after committed changes, with idempotent publication and a resumable snapshot boundary.
+- [x] P06-T04: Persist old/new department scope and minimal removal events on transfer, deletion/disposal, or grant changes. A former scope receives only the identifier and removal reason needed to purge its copy, never the new department or private payload. Explain how consumers reconcile access changes and expired event history through a fresh snapshot.
+- [x] P06-T05: Bind opaque cursors to token/principal scope and API version; reject tampering and cross-scope reuse. Recheck current token and authorization state on each request. Specify behavior for concurrent snapshot changes, event replay, duplicates, and revoked access.
+- [x] P06-T06: Define endpoint/field capabilities for metadata, finance, documents, tax, tasks, and decision/history access. Add omitted fields/endpoints only where accepted scope requires them; do not expand every existing token automatically.
+- [x] P06-T07: Add token ownership, accountable service owner, expiry/rotation, explicit scopes, revocation reason, and audit trail. Use overlapping rotation where needed. Decide whether a disabled creator suspends a service token; avoid undocumented inheritance from personal account status.
+- [x] P06-T08: Avoid committing a token usage timestamp before business reads. Batch or independently record last-used metadata so read requests do not create avoidable write contention or erase RLS transaction context.
 
 ### Verification and exit criteria
 

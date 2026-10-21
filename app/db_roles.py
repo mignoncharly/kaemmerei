@@ -37,7 +37,7 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
     connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.lock_contract(integer) FROM {i}')
     tables=inspect(connection).get_table_names()
     for table in tables:
-        if table in ('alembic_version','security_events'):
+        if table in ('alembic_version','security_events') or table.startswith('sync_'):
             continue
         cols=[col['name'] for col in inspect(connection).get_columns(table) if col['name'] not in ('password_hash','token_hash') or table=='login_sessions']
         # token_hash on LoginSession is an opaque lookup key, restricted by RLS;
@@ -58,6 +58,10 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
         connection.exec_driver_sql(f'GRANT SELECT ON public.{table} TO {i}')
     token_cols=','.join(quote(c['name']) for c in inspect(connection).get_columns('integration_tokens') if c['name']!='token_hash')
     connection.exec_driver_sql(f'GRANT SELECT ({token_cols}), UPDATE (last_used_at) ON public.integration_tokens TO {i}')
+    connection.exec_driver_sql(f'GRANT SELECT ON public.sync_cursors,public.sync_snapshot_items,public.contract_tasks,public.contract_reviews,public.review_decisions,public.revisions TO {i}')
+    connection.exec_driver_sql(f'GRANT INSERT ON public.sync_cursors,public.sync_snapshot_items TO {i}')
+    connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.sync_barrier() FROM {w},{a}')
+    connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.sync_events_page(integer,integer) FROM {w},{a}')
     connection.exec_driver_sql("""CREATE OR REPLACE FUNCTION ohvr_security.purge_expired() RETURNS void LANGUAGE plpgsql SECURITY DEFINER
      SET search_path=pg_catalog,pg_temp AS $$
       DECLARE sessions_count integer; attempts_count integer;
@@ -91,6 +95,6 @@ def validate_runtime_engine(engine, expected_kind):
             raise ValueError('Database runtime role registry mismatch')
         if connection.scalar(text("SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','ohvr_security') AND pg_has_role(current_user,c.relowner,'MEMBER')")):
             raise ValueError('Runtime role owns or inherits schema objects')
-        row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events','review_decisions','document_jobs')")).one()
-        if row[0]!=9 or not row[1]:
+        row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events','review_decisions','document_jobs','sync_state','sync_outbox','sync_events','sync_cursors','sync_snapshot_items')")).one()
+        if row[0]!=14 or not row[1]:
             raise ValueError('Required forced RLS policies are missing')

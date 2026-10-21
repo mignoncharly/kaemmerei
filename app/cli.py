@@ -29,6 +29,7 @@ def main():
     subs.add_parser('schema-inventory', help='Read-only schema and legacy exception inventory')
     subs.add_parser('workflow-inventory', help='IDs requiring legacy approval/tax reconciliation')
     subs.add_parser('document-reconcile', help='Read-only IDs/keys for missing, orphan or mismatched storage')
+    subs.add_parser('integration-status', help='Read-only outbox, publication, snapshot/cursor and legacy-token counts')
     recovery=subs.add_parser('document-recover', help='Retry staged jobs or explicitly review legacy files; no deletion')
     recovery.add_argument('--document-id',required=True,type=int)
     d = subs.add_parser("add-department", help="Fachbereich anlegen")
@@ -79,6 +80,19 @@ def main():
             from app.documents import reconcile
             with SessionFactory() as db:
                 print(json.dumps(reconcile(db,settings.document_storage_dir)))
+            return
+        if args.command=='integration-status':
+            with engine.connect() as connection:
+                state=connection.execute(text('SELECT next_seq,floor FROM sync_state WHERE id=1')).mappings().one()
+                result=dict(state)
+                for key,query in {
+                    'unpublished':"SELECT count(*) FROM sync_outbox WHERE published_seq IS NULL",
+                    'published':"SELECT count(*) FROM sync_events",
+                    'cursors':"SELECT count(*) FROM sync_cursors",
+                    'snapshot_items':"SELECT count(*) FROM sync_snapshot_items",
+                    'legacy_without_owner':"SELECT count(*) FROM integration_tokens WHERE owner_user_id IS NULL"}.items():
+                    result[key]=connection.scalar(text(query))
+                print(json.dumps(result))
             return
         if args.command=='document-recover':
             from app.documents import process_document,ClamAVScanner

@@ -1,0 +1,589 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPEN.HERZ API v2 responses",
+  "description": "Optional contract sections require explicit capabilities; see docs/PHASE6_INTEGRATION_SYNC.md. Monetary values remain recorded decimal strings, not payments. History is an explicitly privileged capability.",
+  "$defs": {
+    "Contract": {
+      "type": "object",
+      "properties": {
+        "designation": {
+          "type": "string"
+        },
+        "contract_type": {
+          "type": "string"
+        },
+        "contract_partner": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "contact_person": {
+          "type": "string"
+        },
+        "deputy_contact_person": {
+          "type": "string"
+        },
+        "relevant_date": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "department_id": {
+          "type": "integer"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "content_revision": {
+          "type": "integer"
+        },
+        "notice_period_months": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "renewal_period_months": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "contract_number": {
+          "type": "string"
+        },
+        "end_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "archived_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "automatic_renewal": {
+          "type": "boolean"
+        },
+        "finance": {
+          "type": "object",
+          "properties": {
+            "annual_value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "contract_value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "financial_direction": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "payment_interval": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "budget_assignment": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "annual_value",
+            "contract_value",
+            "financial_direction",
+            "payment_interval",
+            "budget_assignment"
+          ],
+          "additionalProperties": false
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "filename": {
+                "type": "string"
+              },
+              "state": {
+                "enum": [
+                  "legacy_unverified",
+                  "pending",
+                  "quarantined",
+                  "available",
+                  "rejected",
+                  "superseded",
+                  "disposed",
+                  "link"
+                ]
+              },
+              "content_type": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "size_bytes": {
+                "type": "integer"
+              },
+              "replaces_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "legal_hold": {
+                "type": "boolean"
+              },
+              "external_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "download_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "filename",
+              "state",
+              "content_type",
+              "sha256",
+              "size_bytes",
+              "replaces_id",
+              "legal_hold",
+              "external_url",
+              "download_url"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              },
+              "due_date": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "assigned_user_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "title",
+              "kind",
+              "status",
+              "id",
+              "version",
+              "due_date",
+              "assigned_user_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "history_url": {
+          "type": "string"
+        },
+        "reviews": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "recipient": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "result_text": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "content_revision": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "version": {
+                "type": "integer"
+              },
+              "assigned_user_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "recipient",
+              "subject",
+              "status",
+              "result_text",
+              "id",
+              "content_revision",
+              "version",
+              "assigned_user_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "decided_at": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "review_id": {
+                "type": "integer"
+              },
+              "content_revision": {
+                "type": "integer"
+              },
+              "actor_id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "status",
+              "reason",
+              "decided_at",
+              "id",
+              "review_id",
+              "content_revision",
+              "actor_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "tax": {
+          "type": "object",
+          "properties": {
+            "tax_review_status": {
+              "type": "string"
+            },
+            "tax_review_result": {
+              "type": "string"
+            },
+            "tax_reviewed_by_id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "tax_reviewed_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tax_provenance": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "tax_review_status",
+            "tax_review_result",
+            "tax_reviewed_by_id",
+            "tax_reviewed_at",
+            "tax_provenance"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "designation",
+        "contract_type",
+        "contract_partner",
+        "status",
+        "contact_person",
+        "deputy_contact_person",
+        "relevant_date",
+        "updated_at",
+        "id",
+        "department_id",
+        "version",
+        "content_revision",
+        "notice_period_months",
+        "renewal_period_months",
+        "contract_number",
+        "end_date",
+        "archived_at",
+        "automatic_renewal"
+      ],
+      "additionalProperties": false
+    },
+    "SnapshotPage": {
+      "type": "object",
+      "properties": {
+        "api_version": {
+          "const": 2
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Contract"
+          }
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "changes_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "snapshot_expires_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "api_version",
+        "data",
+        "next_cursor",
+        "changes_cursor",
+        "snapshot_expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "ChangesPage": {
+      "type": "object",
+      "properties": {
+        "api_version": {
+          "const": 2
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "event_id": {
+                    "type": "string"
+                  },
+                  "contract_id": {
+                    "type": "integer"
+                  },
+                  "operation": {
+                    "const": "remove"
+                  },
+                  "reason": {
+                    "const": "no_longer_authorized"
+                  }
+                },
+                "required": [
+                  "event_id",
+                  "contract_id",
+                  "operation",
+                  "reason"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "event_id": {
+                    "type": "string"
+                  },
+                  "contract_id": {
+                    "type": "integer"
+                  },
+                  "operation": {
+                    "const": "upsert"
+                  },
+                  "resource_url": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "enum": [
+                      "contract",
+                      "document",
+                      "task",
+                      "review",
+                      "decision",
+                      "history"
+                    ]
+                  }
+                },
+                "required": [
+                  "event_id",
+                  "contract_id",
+                  "operation",
+                  "resource_url",
+                  "category"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "next_cursor": {
+          "type": "string"
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "api_version",
+        "data",
+        "next_cursor",
+        "has_more"
+      ],
+      "additionalProperties": false
+    },
+    "ContractResponse": {
+      "type": "object",
+      "properties": {
+        "api_version": {
+          "const": 2
+        },
+        "data": {
+          "$ref": "#/$defs/Contract"
+        }
+      },
+      "required": [
+        "api_version",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "HistoryPage": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "action": {
+                "type": "string"
+              },
+              "actor_id": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "before": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "after": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "action",
+              "actor_id",
+              "created_at",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_after_id": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "data",
+        "next_after_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SnapshotPage"
+    },
+    {
+      "$ref": "#/$defs/ChangesPage"
+    },
+    {
+      "$ref": "#/$defs/ContractResponse"
+    },
+    {
+      "$ref": "#/$defs/HistoryPage"
+    }
+  ]
+}

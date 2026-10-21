@@ -56,8 +56,65 @@ class IntegrationToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    api_scopes: Mapped[str] = mapped_column(String(300),default='legacy_v1',server_default='legacy_v1',nullable=False)
+    grant_version: Mapped[int] = mapped_column(Integer,default=1,server_default='1',nullable=False)
+    service_owner: Mapped[str | None] = mapped_column(String(120))
+    owner_user_id: Mapped[int | None] = mapped_column(ForeignKey('users.id',ondelete='RESTRICT'))
+    rotated_from_id: Mapped[int | None] = mapped_column(ForeignKey('integration_tokens.id',ondelete='RESTRICT'))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime)
+    revocation_reason: Mapped[str | None] = mapped_column(String(200))
     department: Mapped[Department | None] = relationship()
-    created_by: Mapped[User] = relationship()
+    created_by: Mapped[User] = relationship(foreign_keys=[created_by_id])
+    owner_user: Mapped[User | None] = relationship(foreign_keys=[owner_user_id])
+
+
+class SyncState(Base):
+    __tablename__='sync_state'
+    id: Mapped[int] = mapped_column(Integer,primary_key=True,autoincrement=False)
+    next_seq: Mapped[int] = mapped_column(Integer,nullable=False)
+    floor: Mapped[int] = mapped_column(Integer,nullable=False)
+
+
+class SyncOutbox(Base):
+    __tablename__='sync_outbox'
+    id: Mapped[int] = mapped_column(Integer,primary_key=True)
+    event_key: Mapped[str] = mapped_column(String(36),unique=True,nullable=False)
+    contract_id: Mapped[int] = mapped_column(Integer,nullable=False)
+    old_department_id: Mapped[int | None] = mapped_column(Integer)
+    new_department_id: Mapped[int | None] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String(24),nullable=False)
+    published_seq: Mapped[int | None] = mapped_column(Integer)
+
+
+class SyncEvent(Base):
+    __tablename__='sync_events'
+    seq: Mapped[int] = mapped_column(Integer,primary_key=True,autoincrement=False)
+    event_key: Mapped[str] = mapped_column(String(36),unique=True,nullable=False)
+    contract_id: Mapped[int] = mapped_column(Integer,nullable=False)
+    old_department_id: Mapped[int | None] = mapped_column(Integer)
+    new_department_id: Mapped[int | None] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String(24),nullable=False)
+
+
+class SyncCursor(Base):
+    __tablename__='sync_cursors'
+    key_hash: Mapped[str] = mapped_column(String(64),primary_key=True)
+    token_id: Mapped[int] = mapped_column(ForeignKey('integration_tokens.id',ondelete='RESTRICT'),nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String(64),nullable=False)
+    mode: Mapped[str] = mapped_column(String(16),nullable=False)
+    snapshot_id: Mapped[str | None] = mapped_column(String(36))
+    position: Mapped[int] = mapped_column(Integer,nullable=False)
+    boundary: Mapped[int] = mapped_column(Integer,nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime,nullable=False)
+
+
+class SyncSnapshotItem(Base):
+    __tablename__='sync_snapshot_items'
+    snapshot_id: Mapped[str] = mapped_column(String(36),primary_key=True)
+    position: Mapped[int] = mapped_column(Integer,primary_key=True,autoincrement=False)
+    token_id: Mapped[int] = mapped_column(ForeignKey('integration_tokens.id',ondelete='RESTRICT'),nullable=False)
+    contract_id: Mapped[int] = mapped_column(Integer,nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON,nullable=False)
 
 
 class LoginAttempt(Base):

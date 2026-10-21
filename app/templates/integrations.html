@@ -12,9 +12,35 @@
   <div><label for="integration-name">Name der Anwendung</label><input id="integration-name" name="name" maxlength="120" required placeholder="z. B. H&H Finanzwesen"></div>
   <div><label for="integration-department">Datenzugriff</label><select id="integration-department" name="department_id"><option value="">Alle Fachbereiche · nur lesend</option>{% for department in departments %}<option value="{{ department.id }}">Nur {{ department.name }}</option>{% endfor %}</select></div>
   <div><label for="integration-expiry">Gültigkeit</label><select id="integration-expiry" name="expires_in"><option value="90" selected>90 Tage</option><option value="365">1 Jahr</option><option value="never">Unbegrenzt</option></select></div>
+  <div><label for="integration-profile">API-Profil</label><select id="integration-profile" name="api_profile"><option value="v2">v2: ausgewählte Rechte und zuverlässiger Änderungsabruf</option><option value="legacy_v1">v1: bisheriger umfassender Lesezugriff</option></select></div>
+  <div><label for="service-owner">Verantwortlicher Dienst / Organisation</label><input id="service-owner" name="service_owner" maxlength="120" required></div>
+  <div><label for="owner-user">Verantwortliches Konto</label><select id="owner-user" name="owner_user_id">{% for account in owner_users %}<option value="{{ account.id }}" {% if account.id==user.id %}selected{% endif %}>{{ account.username }}</option>{% endfor %}</select></div>
+  <fieldset><legend>v2-Leserechte (v1 behält seinen bisherigen Umfang)</legend>
+  <label><input type="checkbox" name="capability" value="metadata" checked> Vertragsmetadaten (für v2 erforderlich)</label>
+  <label><input type="checkbox" name="capability" value="finance"> Finanzdaten</label>
+  <label><input type="checkbox" name="capability" value="documents"> Dokumentmetadaten und DMS-Links</label>
+  <label><input type="checkbox" name="capability" value="document_content"> Dateiinhalt (zusätzlich Dokumentmetadaten auswählen)</label>
+  <label><input type="checkbox" name="capability" value="tax"> Steuerprüfung</label>
+  <label><input type="checkbox" name="capability" value="tasks"> Aufgaben</label>
+  <label><input type="checkbox" name="capability" value="history"> Prüfentscheidungen und vollständige historische Inhalte, einschließlich früherer Finanz-/Steuerdaten</label>
+  </fieldset>
   <button class="button primary" type="submit">Token erstellen</button>
  </form>
- <p class="integration-note">Tokens erlauben den lesenden Abruf von Vertragsdaten einschließlich archivierter Verträge, Vertragswerten, zuständiger Personen, DMS-Verknüpfungen und hochgeladener Vertragsdateien. Gib den Token nur an eine dafür vorgesehene Anwendung weiter.</p>
+ <p class="integration-note">v2 erfordert eine Laufzeit von 90 oder 365 Tagen. Ein deaktiviertes verantwortliches Konto sperrt neu zugeordnete Tokens. Alte Tokens ohne zugeordnetes Konto behalten ausschließlich ihren bisherigen v1-Umfang. Bestehende Verbraucher erhalten keine zusätzlichen v2-Rechte.</p>
+</section>
+
+<section class="panel"><h2>Token rotieren oder Berechtigungen ändern</h2>
+ <p>Rotation zeigt ein neues Geheimnis einmalig an. Alter und neuer Token bleiben bis Ablauf oder ausdrücklichem Widerruf gültig. Der neue Verbraucher beginnt mit einem eigenen Snapshot; nach erfolgreicher Umstellung den Vorgänger widerrufen. Alte Tokens werden bei Rotation Ihrem Konto zugeordnet, sofern bisher kein Verantwortlicher hinterlegt war.</p>
+ {% for token in tokens %}{% if token.is_active %}<details><summary>{{ token.name }} · {{ token.api_scopes }} · {{ token.service_owner or 'Verantwortung noch nicht zugeordnet' }}</summary>
+ <form method="post" action="/admin/integrations/{{ token.id }}/rotate"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Neuen Token für die Umstellung erzeugen</button></form>
+ <form method="post" action="/admin/integrations/{{ token.id }}/scope"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+ <label>API-Rechte: legacy_v1 oder v2 mit metadata und gewählten Rechten aus obiger Liste<input name="api_scopes" value="{{ token.api_scopes }}" maxlength="300" required></label>
+ <label>Verantwortlicher Dienst<input name="service_owner" value="{{ token.service_owner or token.name }}" maxlength="120" required></label>
+ <label>Verantwortliches Konto<select name="owner_user_id">{% for account in owner_users %}<option value="{{ account.id }}" {% if account.id==(token.owner_user_id or user.id) %}selected{% endif %}>{{ account.username }}</option>{% endfor %}</select></label>
+ <label>Fachbereich<select name="department_id"><option value="">Alle Fachbereiche</option>{% for department in departments %}<option value="{{ department.id }}" {% if department.id==token.department_id %}selected{% endif %}>{{ department.name }}</option>{% endfor %}</select></label>
+ <label>Laufzeit<select name="expires_in"><option value="90">90 Tage</option><option value="365">365 Tage</option></select></label>
+ <button type="submit">Geänderte Rechte speichern (Verbraucher muss neu synchronisieren)</button></form>
+ </details>{% endif %}{% endfor %}
 </section>
 
 <section class="panel integration-list-panel"><div class="panel-heading"><div><h2>Vergebene Zugriffstokens</h2><p class="history-subtitle">Geheimnisse werden nur bei der Erstellung gezeigt; gespeichert wird ausschließlich ein Hash.</p></div><span class="count">{{ tokens|length }}</span></div>
