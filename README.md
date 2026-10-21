@@ -205,3 +205,11 @@ Phase 9 U018 continues with durable scan batches, review-only native Windows ope
 Phase 9 U019 implements the approved local TOTP strategy: encrypted user-bound seeds, operator-authorized enrollment/recovery, short pending challenges, persisted replay protection, PostgreSQL enforcement and separate service credentials. Head 0023; full SQLite 244 collected: 219 passed + 25 explicit skips, 15 passing subtests. Full PostgreSQL and exact-source hosted verification are running; no production rollout or Phase 9 exit. See HANDOFF U019 and docs/PHASE9_OPERATIONS.md.
 
 U019 final checkpoint ece7797: 244 collected; native PostgreSQL 242 passed/2 local skips; SQLite 219 passed/25 explicit skips; 15 passing subtests each; explicit PostgreSQL 23 passed. All five exact-source hosted jobs passed (39656369586). TOTP implementation technically verified; production custody/deployment and the remaining Phase 9 gates remain open. Evidence in HANDOFF U019 and docs/evidence/phase9-u019-local.json.
+
+
+Phase 9 U020 adds owner-operated encrypted/signed PostgreSQL plus private-file
+backup and verified restore-bundle commands, with a disabled native Windows task
+draft. No production task, key escrow or deployment activated. Local development
+needs no municipal approval; proposed IT operating/recovery roles are provisional
+for future production only. Targeted 29 tests passed; current full/hosted results
+are tracked in HANDOFF. Phase 9 remains open. See docs/PHASE9_OPERATIONS.md.

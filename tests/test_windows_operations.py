@@ -13,7 +13,7 @@ BASE = dict(python=r'C:\ohvr\venv\Scripts\python.exe', project=r'C:\ohvr\release
             config=r'C:\ohvr-private\web.json', account=r'MUNICIPAL\ohvr-web')
 
 
-@pytest.mark.parametrize('role', ['web','scan','purge','reconcile','integration-status'])
+@pytest.mark.parametrize('role', ['web','scan','purge','reconcile','integration-status','backup'])
 def test_windows_task_is_disabled_restricted_and_has_no_inline_secrets(role):
     raw = task_xml(role=role, **BASE)
     root = ET.fromstring(raw)
@@ -25,7 +25,9 @@ def test_windows_task_is_disabled_restricted_and_has_no_inline_secrets(role):
     assert '-WindowStyle Hidden' in value('t:Actions/t:Exec/t:Arguments')
     assert '-ExecutionPolicy' not in value('t:Actions/t:Exec/t:Arguments')
     assert b'postgresql' not in raw and b'PGPASSWORD' not in raw
-    assert value('t:Settings/t:ExecutionTimeLimit') == ('PT0S' if role=='web' else 'PT10M')
+    assert value('t:Settings/t:ExecutionTimeLimit') == ('PT0S' if role=='web' else 'PT70M' if role=='backup' else 'PT10M')
+    if role=='backup':
+        assert value('t:Triggers/t:CalendarTrigger/t:Repetition/t:Interval')=='PT12H'
 
 
 @pytest.mark.parametrize('path', [r'\\server\share\app',r'C:\ok\..\other',

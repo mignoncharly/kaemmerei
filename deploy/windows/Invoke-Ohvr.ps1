@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('web','scan','purge','reconcile','integration-status')][string]$Role,
+    [Parameter(Mandatory)][ValidateSet('web','scan','purge','reconcile','integration-status','backup')][string]$Role,
     [Parameter(Mandatory)][string]$Python,
     [Parameter(Mandatory)][string]$Project,
     [Parameter(Mandatory)][string]$Config
@@ -40,9 +40,12 @@ try {
         'DATABASE_STATEMENT_TIMEOUT_MS','DOCUMENT_STORAGE_QUOTA_BYTES','DOCUMENT_STORAGE_RESERVE_BYTES',
         'MANDATORY_REVIEW_RECIPIENTS','DMS_ALLOWED_HOSTS','REQUIRE_MFA','MFA_KEY_FILE','TEMP','TMP')
     $allowed = $common
+    $backupNames = @('BACKUP_DATABASE','BACKUP_DIRECTORY','BACKUP_AGE_EXECUTABLE','BACKUP_AGE_SHA256',
+        'BACKUP_RECIPIENTS_FILE','BACKUP_SIGNING_KEY_FILE','BACKUP_PG_DUMP')
+    if ($Role -eq 'backup') { $allowed += $backupNames }
     if ($Role -eq 'purge') { $allowed += 'MAINTENANCE_DATABASE_URL' }
     elseif ($Role -ne 'web') { $allowed += 'MIGRATION_DATABASE_URL' }
-    foreach ($name in ($common + @('MIGRATION_DATABASE_URL',
+    foreach ($name in ($common + $backupNames + @('MIGRATION_DATABASE_URL',
             'MAINTENANCE_DATABASE_URL','PGPASSWORD','PGSERVICE','PGSERVICEFILE'))) {
         [Environment]::SetEnvironmentVariable($name, $null, 'Process')
     }
@@ -66,6 +69,17 @@ try {
         }
         & $Python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 `
             --no-proxy-headers --no-access-log --log-config deploy/windows/logging.json
+    } elseif ($Role -eq 'backup') {
+        # Encryption needs only public recipients, not the recovery identity or
+        # MFA key contents. Signer is a separately protected operator file.
+        foreach ($name in @('BACKUP_DIRECTORY','BACKUP_AGE_EXECUTABLE','BACKUP_RECIPIENTS_FILE',
+                'BACKUP_SIGNING_KEY_FILE','BACKUP_PG_DUMP')) {
+            $null = Assert-LocalPath ([Environment]::GetEnvironmentVariable($name, 'Process')) ($name -eq 'BACKUP_DIRECTORY')
+        }
+        & $Python -m app.cli backup-create --database $env:BACKUP_DATABASE `
+            --directory $env:BACKUP_DIRECTORY --age $env:BACKUP_AGE_EXECUTABLE `
+            --age-sha256 $env:BACKUP_AGE_SHA256 --recipients $env:BACKUP_RECIPIENTS_FILE `
+            --signing-key $env:BACKUP_SIGNING_KEY_FILE --pg-dump $env:BACKUP_PG_DUMP
     } else {
         $commands = @{'scan'='scan-pending'; 'purge'='purge-sessions';
                       'reconcile'='document-reconcile'; 'integration-status'='integration-status'}

@@ -213,3 +213,16 @@ No deployed keys/ACLs/TLS, real identity recovery or encrypted scheduled backup
 acceptance is implied by these checks.
 
 U019 final checkpoint ece7797: 244 collected; native PostgreSQL 242 passed/2 local skips; SQLite 219 passed/25 explicit skips; 15 passing subtests each; explicit PostgreSQL 23 passed. All five exact-source hosted jobs passed (39656369586). TOTP implementation technically verified; production custody/deployment and the remaining Phase 9 gates remain open. Evidence in HANDOFF U019 and docs/evidence/phase9-u019-local.json.
+
+
+## Phase 9 U020 encrypted recovery
+
+`tests/test_backup_crypto.py` and `tests/test_phase9_backup.py` exercise actual
+native age encryption/decryption, independently trusted receipt signatures, exact
+ciphertext-stream hashes, unsafe archive rejection, guarded snapshot/restore,
+restricted restored access, IDs, file hashes and encrypted MFA continuity. Both
+hosted PostgreSQL jobs provision a hash-pinned native tool and REQUIRE actual
+encryption; no silent skip permitted there. Windows disabled backup schedule and
+actual PowerShell parsing are covered in `test_windows_operations.py`. Latest
+reviewed targeted run 29 passed/zero skips; 262 collected overall. Full/CI pending.
+Synthetic timing, no production recovery/schedule/escrow acceptance.

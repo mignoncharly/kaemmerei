@@ -35,6 +35,20 @@ def main():
     scans=subs.add_parser('scan-pending', help='Bounded durable PostgreSQL scan retries; explicit schema operator')
     scans.add_argument('--limit',type=int,default=10)
     scans.add_argument('--seconds',type=int,default=120)
+    backup=subs.add_parser('backup-create',help='Owner-only encrypted DB/private-file snapshot; no deletion or deployment')
+    backup.add_argument('--database',required=True,help='Exact non-default application database identity')
+    backup.add_argument('--directory',required=True)
+    backup.add_argument('--age',required=True)
+    backup.add_argument('--age-sha256',required=True)
+    backup.add_argument('--recipients',required=True,help='Public native age recipients file')
+    backup.add_argument('--signing-key',required=True,help='Protected Ed25519 key file path, never key contents')
+    backup.add_argument('--pg-dump',required=True)
+    backup.add_argument('--seconds',type=int,default=1800)
+    restore=subs.add_parser('backup-prepare-restore',help='Verify and extract into a NEW private bundle; never import or overwrite a database')
+    for option in ('receipt','verifier','identity','directory','age','age-sha256'):
+        restore.add_argument('--'+option,required=True)
+    restore.add_argument('--seconds',type=int,default=1800)
+    restore.add_argument('--production',action='store_true',help='Require production private ACL validation')
     keys=subs.add_parser('mfa-key-create',help='Create a new key file in a separately provisioned private directory; never print key')
     keys.add_argument('--output',required=True)
     for command in ('mfa-enroll-authorize','mfa-recover'):
@@ -61,6 +75,16 @@ def main():
     x = subs.add_parser("disable-user")
     x.add_argument("username")
     args = parser.parse_args()
+    if args.command=='backup-prepare-restore':
+        from pathlib import Path
+        from app.backup_restore import prepare_restore
+        try:
+            job=prepare_restore(Path(args.receipt),Path(args.verifier),Path(args.identity),Path(args.directory),
+                Path(args.age),args.age_sha256,seconds=args.seconds,production=args.production)
+        except Exception:
+            raise SystemExit('Recovery preparation failed; no ready bundle accepted. Inspect private staging locally; no database imported.') from None
+        print(json.dumps({'status':'verified-bundle-only','job':job.name,'database_imported':False}))
+        return
     if args.command=='mfa-key-create':
         import os
         from pathlib import Path
@@ -92,6 +116,17 @@ def main():
     engine = make_engine(settings)
     SessionFactory = make_session_factory(engine)
     try:
+        if args.command=='backup-create':
+            from pathlib import Path
+            from app.backup import BackupOptions,create_backup
+            try:
+                options=BackupOptions(Path(args.directory),Path(args.age),args.age_sha256,
+                    Path(args.recipients),Path(args.signing_key),Path(args.pg_dump),args.seconds,settings.production)
+                result=create_backup(engine,settings,options,database=args.database)
+            except Exception:
+                raise SystemExit('Backup failed; no successful receipt accepted. Inspect private staging locally; no source deletion.') from None
+            print(json.dumps(result))
+            return
         if args.command == 'init-db':
             from app.migrations import upgrade_connection
             with engine.connect() as connection:

@@ -22,7 +22,7 @@ def local_path(value):
 
 def task_xml(*, role, python, project, config, account):
     python, project, config = map(local_path, (python, project, config))
-    if role not in ('web', 'scan', 'purge', 'reconcile', 'integration-status'):
+    if role not in ('web', 'scan', 'purge', 'reconcile', 'integration-status', 'backup'):
         raise ValueError('Unsupported scheduled operation')
     if not re.fullmatch(r'[A-Za-z0-9_.-]+\\[A-Za-z0-9_.$-]+', account):
         raise ValueError('An explicit DOMAIN\\service-account identity is required')
@@ -38,9 +38,9 @@ def task_xml(*, role, python, project, config, account):
         add(add(triggers, 'BootTrigger'), 'Enabled', 'true')
     else:
         trigger = add(triggers, 'CalendarTrigger')
-        if role in ('scan', 'purge', 'integration-status'):
+        if role in ('scan', 'purge', 'integration-status', 'backup'):
             repetition = add(trigger, 'Repetition')
-            add(repetition, 'Interval', 'PT2M' if role == 'scan' else 'PT1H')
+            add(repetition, 'Interval', 'PT2M' if role == 'scan' else 'PT12H' if role=='backup' else 'PT1H')
             add(repetition, 'Duration', 'P1D')
             add(repetition, 'StopAtDurationEnd', 'false')
         add(trigger, 'StartBoundary', '2026-01-01T03:00:00')
@@ -58,7 +58,7 @@ def task_xml(*, role, python, project, config, account):
     add(settings, 'StopIfGoingOnBatteries', 'false')
     add(settings, 'StartWhenAvailable', 'true')
     add(settings, 'Enabled', 'false')
-    add(settings, 'ExecutionTimeLimit', 'PT0S' if role == 'web' else 'PT10M')
+    add(settings, 'ExecutionTimeLimit', 'PT0S' if role == 'web' else 'PT70M' if role=='backup' else 'PT10M')
     restart = add(settings, 'RestartOnFailure')
     add(restart, 'Interval', 'PT1M')
     add(restart, 'Count', '10' if role == 'web' else '2')

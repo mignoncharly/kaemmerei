@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 9 in progress (U019). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
+Current stage: Phase 9 in progress (U020). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -455,3 +455,13 @@ U019 interim full verification: SQLite 244 collected, 219 passed/25 explicit ski
 
 
 U019 final verification: ece779758db1660c2a3314331cea97f63974c2e6 committed/pushed main. Full 244 collected: PostgreSQL 242 passed + 2 local skips (585.98s), SQLite 219 + 25 skips (233.36s), 15 passing subtests each. Explicit actual PostgreSQL 23 passed/221 deselected (85.23s). All 25 MFA/codec items executed in the full PG run; two PG-only cases are explicit SQLite skips. Zero failures/errors/xfails. Clean/populated/repeated head 0023 migrations, actual roles and real restore regressions passed. Catalog 0 guarded DBs/0 generated roles, control privileges unchanged. Hosted run 39656369586 passed all five exact-source jobs; artifact metadata inspected, archives not downloaded. Evidence: phase9-u019-local.json and phase9-ci-39656369586.json. P09-T10 implementation technically verified; production custodians/keys/ACL/device/recovery procedure adoption remain unaccepted. Phase 9 exit remains open. Next independent work: P09-T09 encrypted signed backup/restore and remaining scheduling/monitoring/release gates.
+
+
+### U020 - Encrypted/signed native backup and guarded restore (2026-10-21)
+
+- P09-T09 implementation in app/backup.py, backup_crypto.py, backup_restore.py and operator CLI: owner-only named PostgreSQL identity, non-overlap lock, guarded exported snapshot, checked file inventory, native age encryption and independently trusted Ed25519 receipt. No migration, retention deletion, business DB import or deployment.
+- Restore prepares a new private bundle only after signature, exact ciphertext-stream digest, authenticated decryption, strict member bounds and all hashes pass. Actual import tests use only UUID/OID/owner/comment-identified new empty databases; restricted LOGIN access, document hashes, revision IDs and encrypted MFA replay state are verified after restore.
+- Disabled 12-hour Windows backup task draft and required native age provisioning for both hosted PostgreSQL jobs. No production keys/escrow, task registration, external notifications or approval workflows activated. Tool asset hashes recorded; Sigsum proof not verified.
+- Latest user ownership decision: future operations proposed for Municipal IT Operations/System Administration; sensitive identity recovery/key custody proposed for authorized identity/access or IT Security Administration with dual authorization, all provisional. No individuals or dedicated IAM team assumed. No municipal approvals for development, testing, routine login/use or local account recovery. Existing local operator procedures remain available. See PHASE9_OPERATIONS for distinctions and review-only commands.
+- Verification history: first new test collection failed on an incorrect model name; corrected to existing Revision without schema changes. Then 16, 28 and 29 targeted tests passed; latest reviewed-source targeted run 29 passed/0 skipped/0 failed in 17.69s. Entire suite now 262 collected. Full current-source PostgreSQL/SQLite and hosted CI results pending below. Previous ece7797 hosted pass applies only to U019.
+- P09-T09 stays open: no production/off-host schedule, representative recovery/RPO/RTO, backup-age alert or retention/custody acceptance. Tiny synthetic recovery timings are observations, not certificates. Keep all prior failures/history. User launcher whitespace preserved. Next: frozen-source full tests, exact-source hosted verification and catalog cleanup evidence; then remaining Phase 9 monitoring/workload/release gates.

@@ -601,3 +601,145 @@ exact ece779758db1660c2a3314331cea97f63974c2e6. Job steps/artifact metadata insp
 archives not downloaded. P09-T10 is technically verified; actual custody, private
 production ACL/key provisioning, device usability and operating procedure adoption
 remain unaccepted. Other Phase 9 operations/recovery/release gates remain open.
+
+### Provisional operating roles — user decision, 2026-10-21
+
+For a future production deployment, operational alerts and recovery are proposed
+for Municipal IT Operations / System Administration. Sensitive identity recovery
+and MFA-key custody are proposed for authorized identity/access or IT Security
+Administration, with dual authorization. These are provisional roles pending
+municipal agreement; no named people or existing dedicated IAM team is assumed.
+
+These proposals introduce no municipal approval requirement for development,
+testing, ordinary login, routine use or isolated development-account recovery.
+The existing local operator recovery command remains testable using a nonsecret
+local case reference (for example `DEVELOPMENT-RECOVERY-001`) and the documented
+identity-verification assertion. This is a local privileged action, not an
+external approval workflow. Authenticated password change remains self-service;
+lost-factor administrator recovery is a separate sensitive operation. The final
+production distinction between self-service recovery and sensitive recovery
+still requires an agreed operating procedure.
+
+No external notifications, approval workflow or production MFA-key escrow has
+been activated. TOTP seeds remain encrypted in the database; encryption keys
+are external protected files. Do not put plaintext MFA secrets or recovery
+credentials in application records, reports, logs, backups of application
+configuration, or this documentation. Test-only keys are disposable.
+
+### U020 — encrypted database/document backup and verified restore bundle
+
+Implemented `app/backup.py`, `backup_crypto.py`, `backup_restore.py`, operator CLI
+commands, disposable regression tests and a disabled Windows backup-task draft.
+No new migration; head remains `0023_human_mfa`. No real production key, backup,
+escrow, task registration, notification or deployment has been created.
+
+`backup-create` requires the exact named application database, direct
+non-superuser/non-BYPASSRLS schema ownership and current migration head. Default
+`postgres`/template databases, wrong database names, unrelated owners and unsafe
+paths are rejected. A PostgreSQL advisory lock prevents overlapping backups.
+The existing identity/writer guard is held across a REPEATABLE READ exported
+snapshot, native matching-major `pg_dump`, private storage inventory and encrypted
+file capture. Use a reviewed maintenance window: authenticated login and domain
+mutations can wait or receive busy errors while that guard is held. Reads may
+continue; this is not a zero-impact online backup certificate. Out-of-band DBA
+or filesystem mutations must be excluded during capture.
+
+The inventory checks every referenced stored object/hash and includes valid
+unreferenced private objects without deleting them. Missing/mismatched files or
+unclassified objects fail the backup. Metadata-only DMS links do not copy external
+content. Native age 1.3.2 streams the manifest, custom-format database dump and
+private files into an encrypted tar archive; only native public recipients are
+accepted, with no SSH/plugin/passphrase or interactive fallback. Encryption does
+not require the recovery private identity. An independently trusted Ed25519 key
+signs a receipt binding timestamps, migration head, ciphertext name/hash/size and
+file count. The receipt is written last; incomplete directories are not healthy
+backups. Secrets, authenticated URLs and tool stderr are never printed.
+
+The temporary plaintext dump is deleted only after successful encryption and
+positive verification of this operation's UUID directory, marker and dump hash.
+There is no recursive source cleanup, retention deletion, database drop or
+cluster/service operation. On failure a private partial may remain for local
+inspection and is never advertised as successful. Limits: 100,000 physical files,
+25 MiB/file, 20 GiB dump and 50 GiB encrypted archive; capacity includes 256 MiB
+reserve. Tool stages have explicit deadlines (default 30 minutes each), not a
+promise that the whole recovery completes within that duration.
+
+`backup-prepare-restore` is DB-independent. It verifies an independently supplied
+Ed25519 public key and the entire ciphertext before decrypting. The exact bytes
+sent to age are hashed against the signed digest as well. Complete age success
+is required before parsing any plaintext. Extraction uses an exact manifest
+allowlist, member/count/size bounds, exclusive file creation and per-file hashes;
+traversal, links, duplicates, missing/extra members and corrupt files are denied.
+It writes a new UUID child only, then `ready.json` last. It never imports into an
+existing database. A separately reviewed import must use a NEW empty target,
+matching-major native clients, the source migration head and reviewed restricted
+role grants. Retain the old instance for rollback; never point a test harness at
+a real backup or business database. Private prepared plaintext remains sensitive.
+
+Signing keys, decryption identities and MFA encryption keys are separate from
+the backup and web process. Keep an independently trusted verifier public key;
+accepting a verifier supplied alongside an untrusted backup proves no origin.
+The application database contains encrypted MFA seeds only; this bundle does not
+escrow the external MFA key. Production custody/dual-authorization proposals
+above remain inactive. Local development tests generate disposable keys without
+municipal approval. No retention policy is silently enabled.
+
+Review-only Windows command shapes (all paths/identity below are examples, no
+credential values). Existing environment must select the appropriate owner
+connection/passfile; production connections still require verified database TLS:
+
+```powershell
+& $Python -m app.cli backup-create --database APP_DATABASE `
+  --directory C:\ohvr-private\backups --age C:\ohvr-tools\age.exe `
+  --age-sha256 REVIEWED_EXE_SHA256 --recipients C:\ohvr-private\recipients.txt `
+  --signing-key C:\ohvr-signing\signer.pem `
+  --pg-dump 'C:\Program Files\PostgreSQL\18\bin\pg_dump.exe'
+
+& $Python -m app.cli backup-prepare-restore `
+  --receipt C:\ohvr-private\backups\BACKUP_JOB\receipt.json `
+  --verifier C:\ohvr-trusted\verifier.pem --identity C:\ohvr-recovery\identity.txt `
+  --directory C:\ohvr-private\recovery --age C:\ohvr-tools\age.exe `
+  --age-sha256 REVIEWED_EXE_SHA256 --production
+```
+
+`render_windows_tasks.py --role backup` renders a **disabled** 12-hour repeating
+task with no overlap, least privilege and a bounded execution limit. The launcher
+accepts only backup public configuration paths plus the protected signing-key
+path; no decryption identity is configured in the scheduled encryptor. It uses
+`MIGRATION_DATABASE_URL`, not web/limited maintenance credentials. The owner
+account has broad database privileges and must remain separate from the web
+identity. No task registration has run. A successful schedule, off-host copy,
+backup-age alerts, capacity/retention policy, recovery custody and a representative
+restore drill still need operating acceptance. RPO 24h/RTO 4h remain targets;
+the 12h schedule alone cannot prove either.
+
+Verification:
+
+```powershell
+$env:TEST_POSTGRES_ADMIN_URL='postgresql+psycopg://ohvr_verify@127.0.0.1:55432/postgres'
+$env:PGPASSFILE=Join-Path $PWD '.local-postgres\test.pgpass'
+# TEST_AGE_BIN and TEST_AGE_SHA256 can select an already verified native tool.
+# This workspace also recognizes its ignored, hash-verified verification tool.
+$env:REQUIRE_BACKUP_ENCRYPTION='1'
+& 'C:\kämmerei\.venv\Scripts\python.exe' -m pytest tests/test_backup_crypto.py tests/test_phase9_backup.py tests/test_windows_operations.py -q -ra --database postgresql
+```
+
+Actual targeted runs: initial collection failed because a new test used the
+wrong model name `ContractHistory`; corrected to existing `Revision`. No schema
+or production behavior was changed to accommodate it. Corrected run 16 passed;
+restricted-login restored-access and Windows checks then 28 passed; CLI regression
+made 29 passed. Latest reviewed-source/full/CI results must be appended below.
+The real encrypted restore compares contract/document/revision IDs, file hashes,
+encrypted MFA seed/replay state, forced RLS and restricted-login department access
+and downloads. Tampered signatures/ciphertext/archives, missing blobs, overlap
+and unsafe targets are negative tests. Each database is generated and identified
+by the existing UUID/OID/owner/comment harness; only those databases are removed.
+
+CI provisions two native tools in an ignored test directory from the official
+Linux release with a pinned archive SHA-256, and sets
+`REQUIRE_BACKUP_ENCRYPTION=1` for **both PostgreSQL jobs**. Missing tools fail those
+jobs; SQLite without the tools has explicit encryption skips. No production or
+global tool installation. Official Windows asset and exact executable digests
+are recorded separately; Sigsum proof was not verified. References:
+[age 1.3.2 manual](https://github.com/FiloSottile/age/blob/v1.3.2/doc/age.1.html),
+[standard Ed25519 signatures](https://cryptography.io/en/50.0.2/hazmat/primitives/asymmetric/ed25519/).
