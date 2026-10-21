@@ -18,7 +18,8 @@ jobs:
         with:
           python-version: '3.14'
       - name: Clean runtime installation with required wheel hashes
-        run: python -m pip install --require-hashes --only-binary=:all: -r requirements.lock
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all: -r requirements.lock
       - run: python -m pip check
       - name: Verify release and operator regressions
         run: |

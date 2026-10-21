@@ -62,8 +62,8 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 6 - Integration synchronization | Verified technically; D07 owner acceptance pending | P06-T01-T08 | PG 149 + 2 local skips; SQLite 134 + 17; 21 actual PG integration regressions; all four CI jobs passed | Engineering: Codex; integration/security owners unassigned | Next P07-T01; D07 consumer profiles/transition and retention before production |
 | 7 - Reports/dates/Excel | Verified technically; D08-D10 unapproved | P07-T02-T09 technical defaults; T01 owner agreement pending | PG 168 + 2 local skips; SQLite 152 + 18; Phase 7 PG 19; explicit PG 16; four hosted jobs passed | Engineering: Codex; municipal owners unassigned | Next technical phase P08-T01; obtain D08-D10 before business deployment |
 | 8 - Frontend and navigation | Verified technically; manual usability/AT and production acceptance pending | P08-T01-T09 | PG 176 + 2 local skips; SQLite 160 + 18; Phase 8 eight on both; real browser and all five hosted jobs passed | Engineering: Codex; usability owner unassigned | Next P09-T01; establish operational targets and release acceptance owners |
-| 9 - Operations and availability | In progress; no exit acceptance | Partial P09-T01-T04, T07-T08; dashboard-only reminder limit documented | U017; 21 Phase 9 checks on each backend, full PG 197 passed + 2 skips, five hosted jobs passed | Engineering: Codex; operations/identity owners unassigned | Complete T03/T05 scheduling/queues and T04 representative workload; implement approved D12 TOTP/recovery; encrypted recovery, alert ownership and release gates |
-| 10 — Acceptance and release | Not started | None | Not run | Unassigned | Assign acceptance owners and release scope |
+| 9 - Operations and availability | In progress; no exit acceptance | Ingress/throttles/workers; scan retry/scheduling drafts; MFA; encrypted restore; U021 TLS/release checks | U019/U020 verified; U021 current-source full/hosted pending | Engineering; proposed production IT roles provisional | Finish monitoring, representative mixed load/recovery, remaining schedules and production operating/deployment acceptance |
+| 10 - Acceptance and release | Preparation only; Phase 9 entry gates open | P10-T02 F1-F15 matrix and T01/T03-T09 worksheets | No manual pilot, independent review, organizational sign-off or release acceptance | Provisional role proposals only; no individuals assigned | See docs/PHASE10_ACCEPTANCE.md; finish required Phase 9 work before claiming release entry |
 
 No phase is complete merely because this plan has been written.
 
@@ -91,7 +91,7 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R23-R28 - Frontend correctness | Medium | Corrected and technically verified | U016; final local suites, eight restricted-role/frontend regressions and hosted Chromium gate |
 | R31 — Contact/deputy identities | Scope gap | Maintained scoped catalog delivered; labels grant no access | U010; no implicit delegation; delegation requires a separate accepted policy |
 | R32 — Department lifecycle | Scope gap | Audited administration delivered | U010; rename/suspend/reactivate, stable IDs, session revocation and token suspension |
-| R34 — Account recovery/password/MFA | Scope gap | Password change and audited recovery delivered; MFA/SSO remains Phase 9 | U010; temporary passwords force replacement; session/CSRF rotation and rate limiting |
+| R34 - Account recovery/password/MFA | Scope gap | Local password change/recovery and TOTP technically verified; production custody/adoption pending | U010/U019; no external approval for local development/login/recovery; service tokens separate |
 | R29-R30 - Integration/reminder scope | Scope decisions required | Open | Original phase assignments |
 | R35 - Excel identity/update semantics | Scope gap | Explicit create-only identity technically verified; D10 adoption pending | U015; generated-number rejection, scoped references, atomic concurrent import and provenance |
 | R37/R40 - Maintainability/distribution | Nice to fix/have | Remaining backlog | Original phase assignments; shared list/export filter specification delivered U016 |
@@ -498,3 +498,20 @@ verification caller now uses a plain connection, matching existing migration
 fixtures; no migration or application guard changed. The same artifact then
 passed fresh-runtime migrations/startup/shutdown in isolated in-memory SQLite.
 Final frozen-source local/hosted results and final artifact identity follow.
+
+
+U021 hosted pre-job failure retained: run 39664714773 for 70ee4b8 ended
+with failure and zero jobs. The plain YAML run scalar contained `: ` inside
+`--only-binary=:all: -r`; the corrected folded scalar is parsed by a new actual
+YAML regression. Added development-only PyYAML 6.0.3 from an official verified
+wheel (SHA-256 4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac).
+Runtime lock/versions remain unchanged; shared test environment now has this
+additional development parser. Corrected release/TLS/YAML selection: 30 passed.
+The zero-job run is not hosted test evidence. Final hosted retry pending.
+
+Phase 10 preparation now has one authoritative worksheet in
+[PHASE10_ACCEPTANCE.md](docs/PHASE10_ACCEPTANCE.md): F1-F15 journeys/permissions,
+actual regression references, connector scope ledger, provisional role-only
+ownership, manual pilot steps and release/rollback gates. It records no pilot,
+independent review, municipal approval or production acceptance. No scope gap is
+silently waived and Phase 9 entry conditions remain open.

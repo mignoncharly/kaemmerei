@@ -151,3 +151,17 @@ def test_runtime_lock_matches_provenance_and_direct_requirements():
         if line.strip() and not line.startswith('#'):
             requirement=Requirement(line)
             assert pins[canonicalize_name(requirement.name)] in requirement.specifier
+
+
+def test_hosted_release_workflow_parses_and_requires_both_platforms():
+    import yaml
+    root=Path(__file__).resolve().parent.parent
+    # Regression for the actual pre-job failure: ': ' in a plain YAML scalar.
+    with pytest.raises(yaml.YAMLError):
+        yaml.safe_load('run: python -m pip install --only-binary=:all: -r requirements.lock')
+    workflow=yaml.safe_load((root/'.github/workflows/phase1-verification.yml').read_text(encoding='utf-8'))
+    jobs=workflow['jobs'];release=jobs['locked-release']
+    assert release['strategy']['matrix']['os']==['ubuntu-24.04','windows-latest']
+    installs=[step.get('run','') for step in release['steps']]
+    assert any('--require-hashes --only-binary=:all: -r requirements.lock' in command for command in installs)
+    assert jobs['release-reproducibility']['needs']=='locked-release'

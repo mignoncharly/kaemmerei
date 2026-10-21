@@ -862,3 +862,20 @@ verification caller now uses a plain connection, matching existing migration
 fixtures; no migration or application guard changed. The same artifact then
 passed fresh-runtime migrations/startup/shutdown in isolated in-memory SQLite.
 Final frozen-source local/hosted results and final artifact identity follow.
+
+
+U021 hosted pre-job failure retained: run 39664714773 for 70ee4b8 ended
+with failure and zero jobs. The plain YAML run scalar contained `: ` inside
+`--only-binary=:all: -r`; the corrected folded scalar is parsed by a new actual
+YAML regression. Added development-only PyYAML 6.0.3 from an official verified
+wheel (SHA-256 4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac).
+Runtime lock/versions remain unchanged; shared test environment now has this
+additional development parser. Corrected release/TLS/YAML selection: 30 passed.
+The zero-job run is not hosted test evidence. Final hosted retry pending.
+
+Phase 10 preparation now has one authoritative worksheet in
+[PHASE10_ACCEPTANCE.md](PHASE10_ACCEPTANCE.md): F1-F15 journeys/permissions,
+actual regression references, connector scope ledger, provisional role-only
+ownership, manual pilot steps and release/rollback gates. It records no pilot,
+independent review, municipal approval or production acceptance. No scope gap is
+silently waived and Phase 9 entry conditions remain open.

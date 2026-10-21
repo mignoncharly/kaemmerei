@@ -244,3 +244,9 @@ builder/manifest/verifier added. Fresh Windows installation/pip check and 29
 targeted release/TLS tests passed. Packaged runtime, full tests and eight-job
 current-source hosted evidence pending in HANDOFF. No production deployment or
 Phase 9 exit; local development has no municipal approval dependency.
+
+
+Phase 10 preparation: [acceptance worksheet](PHASE10_ACCEPTANCE.md) maps
+F1-F15 to actual journeys/permissions/regressions and records connector, owner,
+pilot and release gaps. This is preparation only: Phase 9 entry gates remain
+open; no production release, named appointment or external workflow is activated.
