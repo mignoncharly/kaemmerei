@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $manager = Join-Path $PSScriptRoot "native_test_database.py"
 $configuration = & $Python $manager start --bin $PostgresBin --port $Port
-if ($LASTEXITCODE -ne 0) { throw "Native PostgreSQL setup failed. The existing Windows service was not changed. See the preceding error; Windows token error 87 needs one initialization from a normal authorized PowerShell terminal." }
+if ($LASTEXITCODE -ne 0) { throw "Native PostgreSQL setup failed. See the specific error above. Existing cluster data is preserved; retry from an authorized PowerShell terminal if Windows denied access." }
 $connection = $configuration | ConvertFrom-Json
 if ($connection.backend -ne "native" -or -not $connection.passfile -or -not $connection.url) {
     throw "Native setup did not return valid connection configuration."

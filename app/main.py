@@ -24,7 +24,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory
 from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, read_xlsx
-from app.logic import ValidationError, can_read, can_write, snapshot, validate_data
+from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.models import (Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginSession, Revision, User, now_utc)
 from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
@@ -136,6 +136,9 @@ def require_integration_token(request: Request, db: Session) -> IntegrationToken
                             headers={"WWW-Authenticate": "Bearer"})
     if token.expires_at and token.expires_at <= now_utc():
         raise HTTPException(status_code=401, detail="Integrationstoken abgelaufen",
+                            headers={"WWW-Authenticate": "Bearer"})
+    if token.department_id is not None and (token.department is None or not token.department.is_active):
+        raise HTTPException(status_code=401, detail="Integrationstoken deaktiviert",
                             headers={"WWW-Authenticate": "Bearer"})
     token.last_used_at = now_utc()
     db.commit()
@@ -596,7 +599,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return html(request, "login.html", {"csrf_token": guest.csrf_token,
                          "error": "Anmeldung vorübergehend nicht möglich. Bitte später erneut versuchen."}, 429)
         user = db.scalar(select(User).where(User.username == username, User.is_active.is_(True)))
-        if not verify_password(password, user):
+        if not verify_password(password, user) or not active_access(user):
             record_failure(db, key)
             return html(request, "login.html", {"csrf_token": guest.csrf_token,
                          "error": "Benutzername oder Passwort ungültig."}, 401)
@@ -1321,9 +1324,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "ended": sum(contract.status in ("terminated", "ended") for contract in dashboard_contracts),
         }
         departments = db.scalars(select(Department).order_by(Department.name)).all() if user.role != "department" else []
-        stored_types = set(db.scalars(select(Contract.contract_type).distinct()).all())
-        stored_people = (set(db.scalars(select(Contract.contact_person).distinct()).all()) |
-                         set(db.scalars(select(Contract.deputy_contact_person).distinct()).all())) - {""}
+        metadata_scope = [Contract.department_id == user.department_id] if user.role == "department" else []
+        stored_types = set(db.scalars(select(Contract.contract_type).where(*metadata_scope).distinct()).all())
+        stored_people = (set(db.scalars(select(Contract.contact_person).where(*metadata_scope).distinct()).all()) |
+                         set(db.scalars(select(Contract.deputy_contact_person).where(*metadata_scope).distinct()).all())) - {""}
         contract_types = list(CONTRACT_TYPES) + sorted(stored_types - set(CONTRACT_TYPES))
         contact_persons = list(CONTACT_PERSONS) + sorted(stored_people - set(CONTACT_PERSONS))
         return html(request, "list.html", {**base_context(request, user, csrf),
@@ -1447,7 +1451,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         if contract.automatic_renewal else contract.end_date,
                         contract.notice_period_months),
                     "can_edit": can_write(user, contract) and contract.archived_at is None,
-                    "can_handle_reviews": user.role in ("admin", "reviewer")})
+                    "can_handle_reviews": user.role in ("admin", "reviewer") and contract.archived_at is None})
 
     @app.post("/contracts/{contract_id}/tasks")
     async def create_contract_task(request: Request, contract_id: int, db: Session = Depends(get_db)):
@@ -1538,10 +1542,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def update_contract_review(request: Request, contract_id: int, review_id: int,
                                      db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        # Serialize review changes with contract archival on PostgreSQL.
+        contract = db.scalar(select(Contract).where(Contract.id == contract_id).with_for_update())
+        if contract is None:
+            raise HTTPException(status_code=404, detail="Vertrag nicht gefunden")
         check_read(user, contract)
         if user.role not in ("admin", "reviewer"):
             raise HTTPException(status_code=403, detail="Nur die Kämmerei oder Prüfer können Rückmeldungen erfassen")
+        if contract.archived_at is not None:
+            raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
         review = db.get(ContractReview, review_id)
         if not review or review.contract_id != contract.id:
             raise HTTPException(status_code=404, detail="Prüfvorgang nicht gefunden")

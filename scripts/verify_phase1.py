@@ -1,4 +1,4 @@
-"""Run the baseline, migration/configuration checks, and tracked expected failures.
+"""Run the baseline, migration/configuration and security regression checks.
 
 Usage: python scripts/verify_phase1.py --database sqlite|postgresql
 PostgreSQL requires TEST_POSTGRES_ADMIN_URL pointing to a LOCAL disposable

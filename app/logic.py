@@ -11,12 +11,20 @@ class ValidationError(Exception):
     pass
 
 
+def active_access(user: User) -> bool:
+    """Department membership only grants access while that department is active."""
+    return user.is_active and (user.role != "department" or (
+        user.department is not None and user.department.is_active))
+
+
 def can_read(user: User, contract: Contract) -> bool:
-    return user.role in ("admin", "reviewer") or (
-        user.role == "department" and user.department_id == contract.department_id)
+    return active_access(user) and (user.role in ("admin", "reviewer") or (
+        user.role == "department" and user.department_id == contract.department_id))
 
 
 def can_write(user: User, contract: Contract | None = None) -> bool:
+    if not active_access(user):
+        return False
     if user.role == "admin":
         return True
     if user.role != "department" or user.department_id is None:

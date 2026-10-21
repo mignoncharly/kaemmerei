@@ -12,6 +12,43 @@ from tests.support import scratch_directory
 
 
 class NativeManagerTests(unittest.TestCase):
+    def test_pg_ctl_start_uses_regular_file_instead_of_inherited_pipes(self):
+        with scratch_directory('ohvr-start-log-') as directory:
+            with patch.object(native.subprocess, 'run', return_value=SimpleNamespace(returncode=0)) as run:
+                native.run_pg_ctl_start(['pg_ctl', 'start'], output_log=Path(directory) / 'start.log')
+                options = run.call_args.kwargs
+                self.assertNotIn('capture_output', options)
+                self.assertNotEqual(options['stdout'], native.subprocess.PIPE)
+                self.assertEqual(options['stderr'], native.subprocess.STDOUT)
+                self.assertEqual(options['stdin'], native.subprocess.DEVNULL)
+                self.assertEqual(options['timeout'], 45)
+
+    def test_binary_cluster_identity_rejects_mismatch_and_truncation(self):
+        from unittest.mock import MagicMock
+        self.cluster.prepare_home()
+        control = self.cluster.data / 'global' / 'pg_control'
+        control.parent.mkdir(parents=True)
+        control.write_bytes(b'12345678')
+        connection = MagicMock()
+        connection.execute.return_value.fetchone.return_value = (memoryview(b'12345678'),)
+        self.cluster.assert_connected_cluster(connection)
+        self.assertIn('pg_read_binary_file', connection.execute.call_args.args[0])
+        connection.execute.return_value.fetchone.return_value = (b'87654321',)
+        with self.assertRaisesRegex(native.SetupError, 'identity'):
+            self.cluster.assert_connected_cluster(connection)
+        control.write_bytes(b'123')
+        with self.assertRaisesRegex(native.SetupError, 'incomplete'):
+            self.cluster.assert_connected_cluster(connection)
+
+    def test_existing_setup_lock_is_never_removed(self):
+        self.cluster.prepare_home()
+        lock = self.cluster.home / '.setup.lock'
+        lock.write_text(str(os.getpid()))
+        with self.assertRaises(native.SetupError):
+            with native.setup_lock(self.cluster.home):
+                self.fail('Active lock was ignored')
+        self.assertEqual(lock.read_text(), str(os.getpid()))
+
     def setUp(self):
         self.stack = self.enterContext(ExitStack())
         self.root = Path(self.enterContext(scratch_directory("ohvr-native-unit-")))

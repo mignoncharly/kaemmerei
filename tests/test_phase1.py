@@ -211,11 +211,10 @@ class ResourceAndPermissionTests(unittest.TestCase):
             self.assertEqual(client.get("/api/v1/contracts", headers={"Authorization": "Bearer ohvr_invalid"}).status_code, 401)
 
 
-class KnownDefectTests(unittest.TestCase):
-    """Strict expected failures: unexpected success requires review/removing the marker."""
+class SecurityRegressionTests(unittest.TestCase):
+    """Passing regressions for the three original acceptance security defects."""
     def setUp(self):
-        # Fixture/application preparation is OUTSIDE expectedFailure methods:
-        # migration, setup, or transport errors must remain unexpected errors.
+        # Migration, setup and transport failures must remain real errors.
         client, app = self.enterContext(environment_context(backend()))
         self.assertEqual(login(client, "admin").status_code, 303)
         if "R01" in self._testMethodName:
@@ -248,15 +247,12 @@ class KnownDefectTests(unittest.TestCase):
                 db.commit()
             self.response = client.get("/", follow_redirects=False)
 
-    @unittest.expectedFailure
     def test_R01_cross_department_metadata_is_not_visible(self):
         self.assertNotIn("DEPARTMENT_B_PRIVATE_TYPE", self.response.text)
 
-    @unittest.expectedFailure
     def test_R04_archived_reviews_are_immutable(self):
         self.assertEqual(self.response.status_code, 409)
 
-    @unittest.expectedFailure
     def test_R10_inactive_department_denies_access(self):
         self.assertEqual(self.response.status_code, 303)
 

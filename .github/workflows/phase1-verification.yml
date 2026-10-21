@@ -29,6 +29,7 @@ jobs:
           export PGPASSFILE="$(python -c 'import json; print(json.load(open(".verification/native-connection.json"))["passfile"])')"
           python scripts/verify_phase1.py --database postgresql
           python -m pytest -q --database postgresql --junitxml=.verification/native-postgresql-pytest.xml
+          python -m pytest -q -m postgresql --database postgresql
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -85,6 +86,7 @@ jobs:
           PY
       - run: python scripts/verify_phase1.py --database postgresql
       - run: python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml
+      - run: python -m pytest -q -m postgresql --database postgresql
       - uses: actions/upload-artifact@v4
         if: always()
         with:

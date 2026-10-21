@@ -8,6 +8,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, Request
 from app.models import LoginAttempt, LoginSession, User, now_utc
+from app.logic import active_access
 
 COOKIE_NAME = "vertragsregister_session"
 ph = PasswordHasher()
@@ -33,7 +34,7 @@ def get_user(request: Request, db: Session) -> User | None:
     login_session = get_login_session(request, db)
     if login_session is None or login_session.user_id is None:
         return None
-    if login_session.user is None or not login_session.user.is_active:
+    if login_session.user is None or not active_access(login_session.user):
         return None
     return login_session.user
 

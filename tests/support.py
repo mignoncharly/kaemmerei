@@ -21,6 +21,18 @@ from app.security import ph
 PASSWORD = "NurZumTesten-Starkes-Passwort-2026"
 
 
+def database_identity(control, name):
+    return control.execute(
+        "SELECT oid, pg_get_userbyid(datdba), shobj_description(oid, 'pg_database') "
+        "FROM pg_database WHERE datname = %s", (name,)).fetchone()
+
+
+def require_database_identity(control, name, expected):
+    if (not re.fullmatch(r"ohvr_test_[0-9a-f]{32}", name) or
+            database_identity(control, name) != expected):
+        raise RuntimeError("Refusing operation: disposable database identity changed")
+
+
 @contextmanager
 def scratch_directory(prefix="ohvr-"):
     # Inherit workspace ACLs: Python 3.14's private mkdtemp ACL is inaccessible
@@ -50,6 +62,7 @@ def disposable_database(backend: str, root: Path):
         raise RuntimeError("PostgreSQL verification requires TEST_POSTGRES_ADMIN_URL; no fallback")
     admin_url = make_url(raw)
     if (admin_url.drivername != "postgresql+psycopg" or
+            admin_url.username != "ohvr_verify" or
             admin_url.host not in ("127.0.0.1", "localhost", "::1") or
             admin_url.database != "postgres" or
             set(admin_url.query) - {"sslmode", "connect_timeout"}):
@@ -59,12 +72,33 @@ def disposable_database(backend: str, root: Path):
     db_name = "ohvr_test_" + uuid4().hex
     connect_url = admin_url.set(drivername="postgresql").render_as_string(hide_password=False)
     with psycopg.connect(connect_url, autocommit=True, connect_timeout=5) as control:
+        attributes = control.execute(
+            "SELECT current_database(), current_user, rolsuper, rolcreatedb, rolcreaterole, "
+            "rolreplication, rolbypassrls FROM pg_roles WHERE rolname = current_user").fetchone()
+        if attributes != ("postgres", "ohvr_verify", False, True, False, False, False):
+            raise RuntimeError("Verification requires the restricted dedicated test role")
         control.execute(sql.SQL("CREATE DATABASE {} TEMPLATE template0").format(sql.Identifier(db_name)))
+        oid, owner, _ = database_identity(control, db_name)
+        marker = "ohvr-disposable:" + uuid4().hex
+        expected = (oid, owner, marker)
         try:
-            yield admin_url.set(database=db_name).render_as_string(hide_password=False)
+            control.execute(sql.SQL("COMMENT ON DATABASE {} IS {}").format(
+                sql.Identifier(db_name), sql.Literal(marker)))
+            require_database_identity(control, db_name, expected)
+            target = admin_url.set(database=db_name)
+            with psycopg.connect(target.set(drivername="postgresql").render_as_string(hide_password=False),
+                                 connect_timeout=5) as isolated:
+                if isolated.execute("SELECT current_database(), current_user").fetchone() != (db_name, owner):
+                    raise RuntimeError("Unexpected disposable connection identity")
+                require_database_identity(isolated, db_name, expected)
+                if isolated.execute("SELECT count(*) FROM information_schema.tables "
+                                    "WHERE table_schema = 'public'").fetchone()[0]:
+                    raise RuntimeError("Disposable database is not clean")
+            yield target.render_as_string(hide_password=False)
         finally:
-            if not re.fullmatch(r"ohvr_test_[0-9a-f]{32}", db_name):
-                raise RuntimeError("Refusing unexpected verification database cleanup")
+            # The live control connection, OID, owner and random database comment
+            # must all match. Never drop a replacement DB merely sharing a name.
+            require_database_identity(control, db_name, expected)
             control.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(db_name)))
 
 

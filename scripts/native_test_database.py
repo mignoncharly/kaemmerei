@@ -10,7 +10,7 @@ from contextlib import contextmanager
 import csv
 import json
 import os
-from pathlib import Path
+from pathlib import Path 
 import re
 import secrets
 import socket
@@ -51,6 +51,35 @@ def run_command(arguments, *, accepted=(0,), timeout=45):
                         "This session cannot initialize PostgreSQL's Windows process token; "
                         "do not disable PostgreSQL token checks.")
         raise SetupError(f"{Path(arguments[0]).name} exited {result.returncode}: {message}")
+    return result
+
+
+def run_pg_ctl_start(arguments, *, output_log: Path, timeout=45):
+    """Start pg_ctl without anonymous stdout/stderr pipes.
+
+    On Windows a postgres server launched by pg_ctl may inherit PIPE handles.
+    subprocess.run(capture_output=True) then waits for EOF forever even though
+    pg_ctl has exited and PostgreSQL is accepting connections. Redirecting to
+    a regular log file prevents that inherited-pipe deadlock.
+    """
+    try:
+        with output_log.open("a", encoding="utf-8") as output:
+            result = subprocess.run(
+                [str(a) for a in arguments],
+                stdin=subprocess.DEVNULL,
+                stdout=output,
+                stderr=subprocess.STDOUT,
+                timeout=timeout,
+                check=False,
+            )
+    except subprocess.TimeoutExpired:
+        raise SetupError(
+            f"pg_ctl start exceeded {timeout}s. Inspect {output_log} and the PostgreSQL server.log."
+        ) from None
+    if result.returncode != 0:
+        raise SetupError(
+            f"pg_ctl start exited {result.returncode}. Inspect {output_log} and the PostgreSQL server.log."
+        )
     return result
 
 
@@ -197,15 +226,31 @@ class NativeCluster:
         except OSError:
             raise SetupError(f"Port {self.port} is occupied. Refusing to stop or reuse its existing service.") from None
 
+    def assert_connected_cluster(self, connection):
+        """Identify the native cluster without decoding Windows paths as UTF-8.
+
+        PostgreSQL may expose non-UTF-8 data_directory bytes on Windows.
+        Compare the binary cluster system identifier instead of SHOW data_directory.
+        The local pg_control must already belong to our marked project cluster.
+        """
+        control_file = self.data / "global" / "pg_control"
+        with control_file.open("rb") as handle:
+            expected = handle.read(8)
+        if len(expected) != 8:
+            raise SetupError("Local test-cluster control file is incomplete")
+        actual = connection.execute(
+            "SELECT pg_read_binary_file('global/pg_control', 0, 8)"
+        ).fetchone()[0]
+        if bytes(actual) != expected:
+            raise SetupError("Connected PostgreSQL cluster identity does not match dedicated test storage")
+
     def provision_role(self):
         import psycopg
         from psycopg import sql
         try:
             with psycopg.connect(host="127.0.0.1", port=self.port, dbname="postgres", user=BOOTSTRAP,
                                  password=self.secret(BOOTSTRAP), connect_timeout=5, autocommit=True) as connection:
-                actual = connection.execute("SHOW data_directory").fetchone()[0]
-                if Path(actual).resolve() != self.data.resolve():
-                    raise SetupError("Connected PostgreSQL data directory is not this marked test cluster")
+                self.assert_connected_cluster(connection)
                 exists = connection.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (TEST_USER,)).fetchone()
                 operation = "ALTER" if exists else "CREATE"
                 statement = sql.SQL(operation + " ROLE ohvr_verify LOGIN CREATEDB NOSUPERUSER NOCREATEROLE "
@@ -228,8 +273,9 @@ class NativeCluster:
             if self.status() != "running":
                 self.assert_port_free()
                 self.configure()
-                run_command([self.executable("pg_ctl"), "-D", self.data, "-l", self.home / "server.log",
-                             "-w", "-t", "30", "start"])
+                run_pg_ctl_start([self.executable("pg_ctl"), "-D", self.data,
+                                  "-l", self.home / "server.log", "-w", "-t", "30", "start"],
+                                 output_log=self.home / "pg_ctl-start.log")
             self.provision_role()
         return self.connection_info()
 
