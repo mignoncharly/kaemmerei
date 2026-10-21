@@ -21,6 +21,7 @@ def enrich(owner, ids, actor, *, files=500):
             contracts = db.scalars(select(Contract).where(Contract.id.in_(ids[start:start+250])).order_by(Contract.id)).all()
             history = []; tasks = []; reviews = []
             for c in contracts:
+                c.status=('draft','in_progress','terminated','ended')[c.id%4]
                 c.end_date = date(2026 + c.id % 3, 2, 28)
                 c.notice_period_months = c.id % 7
                 c.automatic_renewal = c.id % 3 == 0
@@ -56,7 +57,8 @@ def enrich(owner, ids, actor, *, files=500):
             document.size_bytes = len(payload)
         db.commit()
     return dict(history=len(ids)*2, tasks=len(ids)//10, reviews=len(ids)//10,
-                actual_files=len(documents), file_bytes=len(documents)*len(payload))
+                actual_files=len(documents), file_bytes=len(documents)*len(payload),
+                statuses=['draft','in_progress','terminated','ended'])
 
 
 def seed_recovery(owner, actor, *, contracts=10000, documents=50000):

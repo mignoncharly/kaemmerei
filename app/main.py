@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import secrets
 from urllib.parse import quote, urlencode
 from urllib.parse import urlsplit
@@ -268,11 +269,11 @@ def contract_reminder(contract: Contract, today: date) -> dict | None:
         return None
     if contract.status != "terminated" and contract.notice_period_months is not None:
         due_date = dates['notice_deadline']
-        label = "Kündigung spätestens"
+        label = "Rechnerischer Kündigungstermin (unbestätigt)"
     else:
         due_date = effective_end
-        label = ("Nächster Verlängerungstermin"
-                 if contract.automatic_renewal and contract.status != "terminated" else "Vertragsende")
+        label = ("Rechnerischer Laufzeitstichtag"
+                 if contract.automatic_renewal and contract.status != "terminated" else "Erfasstes Vertragsende")
     if due_date is None:
         return None
     return {"contract": contract, "due_date": due_date, "label": label,
@@ -295,12 +296,21 @@ def split_deadline_reminders(contracts, today: date) -> tuple[list[dict], list[d
     return overdue, upcoming
 
 
+def read_reminder_contracts(db,statement,departments=None):
+    columns=(Contract.id,Contract.contract_number,Contract.designation,Contract.department_id,
+        Contract.status,Contract.end_date,Contract.notice_period_months,
+        Contract.automatic_renewal,Contract.renewal_period_months)
+    rows=db.execute(statement.with_only_columns(*columns).where(
+        Contract.end_date.is_not(None),Contract.status.not_in(('draft','ended')))).mappings()
+    return [SimpleNamespace(**row,department=(departments or {}).get(row['department_id'])) for row in rows]
+
+
 def listing_spec(db, user, values):
     filters = normalize_filters(values)
     upcoming_ids = []
     if filters['focus'] == 'expiring':
-        population = db.scalars(contract_query(user).where(
-            Contract.archived_at.is_(None), Contract.end_date.is_not(None))).all()
+        population = read_reminder_contracts(db,contract_query(user).where(
+            Contract.archived_at.is_(None)).order_by(Contract.id))
         _, upcoming = split_deadline_reminders(population, date.today())
         upcoming_ids = [item['contract'].id for item in upcoming]
     return filters, filtered_contracts(user, filters, upcoming_ids=upcoming_ids).order_by(Contract.updated_at.desc(), Contract.id.desc())
@@ -983,7 +993,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         headers={"Content-Disposition": 'attachment; filename="vertragsregister_export.xlsx"'})
 
     @app.get("/reports", response_class=HTMLResponse)
-    def reports(request: Request, db: Session = Depends(get_db)):
+    def reports(request: Request, overdue_page: int = Query(1,ge=1,le=10000),
+                upcoming_page: int = Query(1,ge=1,le=10000), db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         today = date.today()
         department_filter = ([Contract.department_id == user.department_id]
@@ -994,16 +1005,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         contract_ids = population.with_only_columns(Contract.id)
         # Only dated records can produce contract reminders. All inventory
         # amounts/counts below are database aggregates, not full ORM snapshots.
-        contracts = db.scalars(population.where(Contract.end_date.is_not(None))
-            .options(joinedload(Contract.department)).order_by(Contract.designation)).all()
         departments = db.scalars(select(Department).where(
             *([Department.id == user.department_id] if user.role == "department" else [])
         ).order_by(Department.name)).all()
         department_by_id = {department.id: department for department in departments}
-
-        tasks = (db.scalars(select(ContractTask).where(
+        contracts=read_reminder_contracts(db,population.order_by(Contract.designation,Contract.id),department_by_id)
+        parents={contract.id:contract for contract in contracts}
+        tasks=[]
+        task_rows=db.execute(select(ContractTask.id.label('task_id'),ContractTask.contract_id,
+            ContractTask.title,ContractTask.status,ContractTask.due_date,
+            Contract.department_id,Contract.contract_number,Contract.designation)
+            .select_from(ContractTask).join(Contract,Contract.id==ContractTask.contract_id).where(
             ContractTask.contract_id.in_(contract_ids),ContractTask.status!='done'
-        ).options(joinedload(ContractTask.contract).joinedload(Contract.department))).all())
+        ).order_by(ContractTask.due_date,ContractTask.id)).mappings()
+        for row in task_rows:
+            parent=parents.get(row['contract_id'])
+            if parent is None:
+                parent=SimpleNamespace(id=row['contract_id'],department_id=row['department_id'],
+                    contract_number=row['contract_number'],designation=row['designation'],
+                    department=department_by_id.get(row['department_id']))
+                parents[parent.id]=parent
+            tasks.append(SimpleNamespace(id=row['task_id'],title=row['title'],status=row['status'],
+                due_date=row['due_date'],contract=parent))
         review_counts = db.execute(select(Contract.department_id,func.count(ContractReview.id))
             .join(ContractReview,ContractReview.contract_id==Contract.id).where(
             ContractReview.contract_id.in_(contract_ids),
@@ -1088,12 +1111,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                             "title": item["task"].title} for item in upcoming_tasks]
         overdue_items = sorted(overdue_deadlines + overdue_tasks, key=lambda item: item["due_date"])
         upcoming_items = sorted(upcoming_deadlines + upcoming_tasks, key=lambda item: item["due_date"])
+        def reminder_page(items,requested):
+            total=len(items);pages=max(1,(total+99)//100);page=min(requested,pages)
+            return items[(page-1)*100:page*100],total,page,pages
+        overdue_items,overdue_total,overdue_page,overdue_pages=reminder_page(overdue_items,overdue_page)
+        upcoming_items,upcoming_total,upcoming_page,upcoming_pages=reminder_page(upcoming_items,upcoming_page)
         return html(request, "reports.html", {**base_context(request, user, csrf),
                     "report_rows": list(by_department.values()),
                     "contract_count": sum(row['contract_count'] for row in by_department.values()), "annual_expenses": annual_expenses,
                     "annual_income": annual_income, "total_contract_value": total_contract_value,
                     "open_task_count": open_task_count, "open_review_count": open_review_count,
                     "overdue_items": overdue_items, "upcoming_items": upcoming_items,
+                    "overdue_total":overdue_total,"upcoming_total":upcoming_total,
+                    "overdue_page":overdue_page,"overdue_pages":overdue_pages,
+                    "upcoming_page":upcoming_page,"upcoming_pages":upcoming_pages,
                     "trend": trend, "trend_peak": trend_peak, "financial_groups": financial_groups,
                     "unknown_direction_count": sum(g["record_count"] for g in financial_groups if g["direction"]=="unknown"),
                     "unknown_basis_count": sum(g["record_count"] for g in financial_groups if g["basis"]=="unknown"),
@@ -1263,8 +1294,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             Contract.status,func.count()).group_by(Contract.status)).all())
         # Undated contracts cannot produce a reminder. Do not materialize the
         # whole inventory just to count statuses or paginate fifty list rows.
-        dashboard_contracts = db.scalars(dashboard_stmt.where(Contract.end_date.is_not(None))
-            .order_by(Contract.end_date, Contract.id)).all()
+        dashboard_contracts = read_reminder_contracts(db,dashboard_stmt.order_by(Contract.end_date,Contract.id))
         overdue_reminders, upcoming_reminders = split_deadline_reminders(dashboard_contracts, date.today())
         total_count = db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
         page_count = max(1, (total_count + page_size - 1) // page_size)
@@ -1302,8 +1332,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "archived": status == "archived",
                     "focus": focus, "focus_label": focus_labels.get(focus, ""),
                     "focus_counts": focus_counts,
-                    "overdue_reminders": overdue_reminders,
-                    "upcoming_reminders": upcoming_reminders,
+                    "overdue_reminder_total":len(overdue_reminders),
+                    "upcoming_reminder_total":len(upcoming_reminders),
+                    "overdue_reminders": overdue_reminders[:10],
+                    "upcoming_reminders": upcoming_reminders[:10],
                     "reminder_window_days": REMINDER_WINDOW_DAYS,
                     "can_create": can_write(user)})
 

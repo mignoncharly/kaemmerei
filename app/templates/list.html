@@ -14,15 +14,17 @@
  <a class="dashboard-card dashboard-card-ended {% if focus == 'ended' %}selected{% endif %}" href="/?focus=ended" {% if focus == 'ended' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Gekündigt / beendet</span><strong>{{ focus_counts.ended }}</strong><small>Alle nicht archivierten Verträge</small></a>
 </nav>
 <section class="reminder-board" aria-label="Vertragsfristen und Warnungen">
- <div class="reminder-board-heading"><div><h2>Fristen &amp; Warnungen</h2><p>Automatisch berechnet beim Aufruf der Übersicht · aktuelle, nicht archivierte Verträge</p></div><span class="count">Nächste {{ reminder_window_days }} Tage</span></div>
+ <div class="reminder-board-heading"><div><h2>Fristen &amp; Warnungen</h2><p>Unbestätigte Kalenderorientierung für nicht archivierte Verträge · manuelle Prüfung erforderlich</p></div><span class="count">Nächste {{ reminder_window_days }} Tage</span></div>
  <div class="reminder-columns">
-  <section class="reminder-card overdue-card"><div class="reminder-card-heading"><h3>Überfällig</h3><span>{{ overdue_reminders|length }}</span></div>
+  <section class="reminder-card overdue-card"><div class="reminder-card-heading"><h3>Überfällig</h3><span>{{ overdue_reminder_total }}</span></div>
    {% if overdue_reminders %}<ul>{% for reminder in overdue_reminders %}<li><a href="/contracts/{{ reminder.contract.id }}"><strong>{{ reminder.contract.designation }}</strong><small>{{ reminder.contract.contract_number }} · {{ reminder.label }} {{ reminder.due_date.strftime('%d.%m.%Y') }}</small></a><span class="reminder-age">{{ -reminder.days_remaining }} Tage überfällig</span></li>{% endfor %}</ul>
    {% else %}<p class="reminder-empty">Keine überfälligen Fristen.</p>{% endif %}
+   {% if overdue_reminder_total > overdue_reminders|length %}<p>{{ overdue_reminders|length }} von {{ overdue_reminder_total }} · <a href="/reports#report-overdue">Alle anzeigen</a></p>{% endif %}
   </section>
-  <section class="reminder-card upcoming-card"><div class="reminder-card-heading"><h3>Demnächst fällig</h3><span>{{ upcoming_reminders|length }}</span></div>
+  <section class="reminder-card upcoming-card"><div class="reminder-card-heading"><h3>Demnächst fällig</h3><span>{{ upcoming_reminder_total }}</span></div>
    {% if upcoming_reminders %}<ul>{% for reminder in upcoming_reminders %}<li><a href="/contracts/{{ reminder.contract.id }}"><strong>{{ reminder.contract.designation }}</strong><small>{{ reminder.contract.contract_number }} · {{ reminder.label }} {{ reminder.due_date.strftime('%d.%m.%Y') }}</small></a><span class="reminder-age">{% if reminder.days_remaining == 0 %}Heute{% elif reminder.days_remaining == 1 %}Morgen{% else %}in {{ reminder.days_remaining }} Tagen{% endif %}</span></li>{% endfor %}</ul>
    {% else %}<p class="reminder-empty">In diesem Zeitraum stehen keine Fristen an.</p>{% endif %}
+   {% if upcoming_reminder_total > upcoming_reminders|length %}<p>{{ upcoming_reminders|length }} von {{ upcoming_reminder_total }} · <a href="/reports#report-upcoming">Alle anzeigen</a></p>{% endif %}
   </section>
  </div>
 </section>
