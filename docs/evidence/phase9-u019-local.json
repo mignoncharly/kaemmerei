@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-21",
+  "source": "ece779758db1660c2a3314331cea97f63974c2e6",
+  "migration_head": "0023_human_mfa",
+  "results": [
+    {
+      "selection": "sqlite",
+      "executed_items": 244,
+      "passed": 219,
+      "skipped": 25,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 233.349,
+      "mfa_items_in_selection": 25,
+      "mfa_skipped": 2,
+      "junit_sha256": "914ce0dbadc76a847ea9f1b9380a4e4a3d70a27b1fac60effd477fb4714acdf1"
+    },
+    {
+      "selection": "postgresql",
+      "executed_items": 244,
+      "passed": 242,
+      "skipped": 2,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 585.974,
+      "mfa_items_in_selection": 25,
+      "mfa_skipped": 0,
+      "junit_sha256": "8939e3144c523e19a65f3ee6c334591d3677ce86fcd8496c25f8d791fe31c8d8"
+    },
+    {
+      "selection": "explicit-postgresql",
+      "executed_items": 23,
+      "passed": 23,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": 85.226,
+      "mfa_items_in_selection": 2,
+      "mfa_skipped": 0,
+      "junit_sha256": "6e09581e47f245fc7bcae6d2ef4f80832cfd398d3c121c6a05e01c93cf420f1c"
+    }
+  ],
+  "catalog": {
+    "guarded_databases": 0,
+    "generated_roles": 0,
+    "control_privileges_unchanged": true
+  },
+  "scope": "Synthetic databases/storage/keys; no production enrollment, key provisioning, deployment or Phase 9 exit"
+}

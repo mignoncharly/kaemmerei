@@ -585,3 +585,19 @@ Primary references: [PyOTP API/security guidance](https://pyauth.github.io/pyotp
 [Fernet and key rotation](https://cryptography.io/en/50.0.2/fernet/),
 [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238),
 [OWASP MFA recovery guidance](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html).
+
+
+### U019 final technical verification: ece7797
+
+[Local final evidence](evidence/phase9-u019-local.json): 244 collected, PostgreSQL
+242 passed/2 local skips, SQLite 219 passed/25 explicit skips, 15 passing subtests
+each. Explicit PostgreSQL 23 passed. All 25 MFA/codec cases executed in full PG;
+SQLite explicitly skips concurrent PG and actual restricted-role MFA cases.
+Zero failures/errors/xfails. Clean/populated/repeated migration head 0023 and real
+restore regressions passed. Final read-only catalog 0 guarded DBs/0 generated
+roles and unchanged control privileges; no business schema/storage/cluster change.
+[Hosted evidence](evidence/phase9-ci-39656369586.json): all five jobs passed for
+exact ece779758db1660c2a3314331cea97f63974c2e6. Job steps/artifact metadata inspected;
+archives not downloaded. P09-T10 is technically verified; actual custody, private
+production ACL/key provisioning, device usability and operating procedure adoption
+remain unaccepted. Other Phase 9 operations/recovery/release gates remain open.
