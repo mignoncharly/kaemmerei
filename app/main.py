@@ -86,7 +86,7 @@ CONTRACT_REVIEW_STATUS_LABELS = dict(CONTRACT_REVIEW_STATUSES)
 
 
 def get_db(request: Request):
-    factory = request.app.state.integration_session_factory if request.url.path.startswith('/api/') else request.app.state.session_factory
+    factory = request.app.state.integration_session_factory if request.scope['path'].startswith('/api/') else request.app.state.session_factory
     with factory() as db:
         cookie = request.cookies.get(COOKIE_NAME,'')
         scheme, _, credential = request.headers.get('authorization','').partition(' ')
@@ -179,7 +179,7 @@ def require_integration_token(request: Request, db: Session) -> IntegrationToken
         owner=db.get(User,token.owner_user_id)
         if owner is None or not active_access(owner):raise HTTPException(401,'Token owner suspended')
     if token.revoked_at is not None:raise HTTPException(401,'Token revoked')
-    if request.url.path.startswith('/api/v1/') and token.api_scopes!='legacy_v1':
+    if request.scope['path'].startswith('/api/v1/') and token.api_scopes!='legacy_v1':
         raise HTTPException(403,'This capability token must use API v2')
     request.state.usage_token_id=token.id
     request.state.usage_context=dict(db.info.get('request_context',{}))
@@ -514,17 +514,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                   openapi_url=None, lifespan=lifespan)
     @app.exception_handler(WorkflowConflict)
     async def workflow_conflict(request, exc):
-        if request.url.path.startswith('/api/'):
+        if request.scope['path'].startswith('/api/'):
             return JSONResponse({'detail':'Changed since this form was loaded'},status_code=409)
         return TEMPLATES.TemplateResponse(request=request, name='workflow_conflict.html', context={
             'request':request,'submitted':exc.submitted,'current_version':exc.current_version,
-            'reload_url':'/'.join(request.url.path.split('/')[:3]),'user':None},status_code=409)
+            'reload_url':'/'.join(request.scope['path'].split('/')[:3]),'user':None},status_code=409)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request, exc):
         if 300 <= exc.status_code < 400:
             return Response(status_code=exc.status_code,headers=exc.headers)
-        if request.url.path.startswith('/api/'):
+        if request.scope['path'].startswith('/api/'):
             return JSONResponse({'detail':exc.detail},status_code=exc.status_code,headers=exc.headers)
         messages={400:'Die Anfrage konnte nicht verarbeitet werden.',401:'Bitte erneut anmelden.',
             403:'Keine Berechtigung oder abgelaufenes Formular. Bitte neu laden und erneut anmelden.',
@@ -535,12 +535,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return TEMPLATES.TemplateResponse(request=request,name='error.html',context={
             'user':None,'status_code':exc.status_code,'message':messages.get(exc.status_code,'Der Vorgang konnte nicht abgeschlossen werden.'),
             'submitted':getattr(request.state,'safe_values',{}),
-            'reload_url':request.url.path if request.method=='GET' else '/'.join(request.url.path.split('/')[:3]) or '/'},
+            'reload_url':request.scope['path'] if request.method=='GET' else '/'.join(request.scope['path'].split('/')[:3]) or '/'},
             status_code=exc.status_code,headers=exc.headers)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, exc):
-        if request.url.path.startswith('/api/'):
+        if request.scope['path'].startswith('/api/'):
             return JSONResponse({'detail':'Invalid request parameters'},status_code=422)
         return await http_error(request,HTTPException(422))
 

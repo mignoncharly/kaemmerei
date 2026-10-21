@@ -8,10 +8,11 @@ import logging
 from ipaddress import ip_address, ip_network
 from time import monotonic
 from uuid import uuid4
+from urllib.parse import parse_qsl
 
 import anyio
 from fastapi import HTTPException
-from starlette.datastructures import UploadFile
+from starlette.datastructures import UploadFile, FormData
 from starlette.requests import Request, ClientDisconnect
 from starlette.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -42,6 +43,14 @@ class RequestBoundary:
         headers = {}
         for key, value in scope.get('headers', ()):
             headers.setdefault(key.lower(), []).append(value)
+        # Reject ambiguous authority/Windows file paths before URL construction,
+        # routing or StaticFiles.realpath can perform filesystem/network access.
+        hosts = headers.get(b'host', [])
+        path = scope.get('path','')
+        if (len(hosts)>1 or any(any(byte<=32 or byte>=127 or byte in b'/\\?#@' for byte in host) for host in hosts)
+                or not path.startswith('/') or path.startswith('//')
+                or any(char in path for char in ('\\',':','\x00','\r','\n'))):
+            return await JSONResponse({'detail':'Invalid request authority or path'},status_code=400)(scope,receive,send)
         client = scope.get('client')
         try:
             trusted = client and any(ip_address(client[0]) in network for network in self.proxies)
@@ -135,6 +144,12 @@ class RequestBoundary:
                         parser = MultiPartParser(request.headers, request.stream(), max_files=cfg.form_max_files,
                             max_fields=cfg.form_max_fields, max_part_size=cfg.form_field_bytes)
                         form = await parser.parse()
+                    elif encoded_form:
+                        # The pinned python-multipart QuerystringParser has an
+                        # advisory for semicolon-induced quadratic work. Use the
+                        # bounded standard parser with HTML's '&' separator only.
+                        form = FormData(parse_qsl(body.decode('utf-8'),keep_blank_values=True,
+                            encoding='utf-8',errors='strict',max_num_fields=cfg.form_max_fields,separator='&'))
                     else:
                         form = await request.form(max_files=0,max_fields=cfg.form_max_fields)
                     fields = files = 0

@@ -90,6 +90,36 @@ def test_form_field_bomb_rejected_before_parse():
     assert result[0]['status']==413
 
 
+def test_urlencoded_semicolons_do_not_invoke_vulnerable_querystring_parser():
+    async def app(s,r,send):
+        fields=s['state']['parsed_form'].multi_items()
+        assert fields==[('field',';'*64000)]
+        await PlainTextResponse('OK')(s,r,send)
+    with patch('python_multipart.QuerystringParser',side_effect=AssertionError('vulnerable parser invoked')):
+        result=asyncio.run(invoke(RequestBoundary(app,Settings()),
+            headers=[(b'content-type',b'application/x-www-form-urlencoded')],
+            messages=[dict(type='http.request',body=b'field='+b';'*64000,more_body=False)]))
+    assert result[0]['status']==200
+
+
+def test_unc_drive_and_ambiguous_paths_rejected_before_filesystem_access():
+    async def app(*args):raise AssertionError('unsafe path reached application or StaticFiles')
+    for path in ('/static/\\\\attacker.invalid/share/file','/static/Z:secret','//attacker.invalid/file',
+                 '@attacker.invalid','/static/file\x00.txt'):
+        request_scope=scope();request_scope['path']=path
+        with patch('os.path.realpath',side_effect=AssertionError('unsafe path touched filesystem')):
+            result=asyncio.run(invoke(RequestBoundary(app,Settings()),request_scope=request_scope))
+        assert result[0]['status']==400
+
+
+def test_poisoned_or_duplicate_host_cannot_select_security_path():
+    async def app(*args):raise AssertionError('poisoned host reached application')
+    for hosts in ([b'localhost/admin?x='],[b'localhost#fragment'],[b'localhost\\evil'],
+                  [b'localhost@attacker.invalid'],[b'localhost',b'attacker.invalid']):
+        result=asyncio.run(invoke(RequestBoundary(app,Settings()),headers=[(b'host',host) for host in hosts]))
+        assert result[0]['status']==400
+
+
 def test_multipart_file_limit_and_field_size():
     async def app(*args):raise AssertionError('invalid form reached application')
     for files, data in [([('files',('test.txt',b'x'))]*6,None),

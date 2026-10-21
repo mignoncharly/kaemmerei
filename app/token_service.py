@@ -101,9 +101,9 @@ def install_usage_recording(app):
     @app.middleware('http')
     async def usage(request,call_next):
         response=await call_next(request)
-        if request.url.path.startswith('/api/'):
+        if request.scope['path'].startswith('/api/'):
             response.headers['Cache-Control']='private, no-store'
-            if request.url.path.startswith('/api/v1/'):
+            if request.scope['path'].startswith('/api/v1/'):
                 response.headers['Link']='</api/v2/snapshot>; rel="successor-version"'
         token_id=getattr(request.state,'usage_token_id',None)
         if token_id is not None and response.status_code<400:
