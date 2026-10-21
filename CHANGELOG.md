@@ -135,3 +135,12 @@
 - Umsetzung der Funktionsbereiche F1–F15 für das Vertragsregister.
 - Dokumentation von Funktionen, Installation und API in [README.md](README.md).
 - Umsetzungs- und Freigabestatus in [docs/ARBEITSPLAN.md](docs/ARBEITSPLAN.md) aktualisiert.
+
+
+U021 final verification (source 3442ad8): 292 collected; serial native PostgreSQL
+290 passed/2 expected local skips; SQLite 266/26 explicit skips; 15 subtests each.
+Explicit PostgreSQL 24 passed; release/operator/YAML 30 passed. All eight hosted
+jobs passed, including pure Windows/Linux packaged runtime and byte comparison.
+Final catalog 0 guarded DBs/0 generated roles; control privileges unchanged.
+Phase 10 F1-F15 matrix prepared (P10-T02); Phase 9 and production release gates
+remain open. Details/evidence/failure history: HANDOFF U021 and PHASE9_OPERATIONS.

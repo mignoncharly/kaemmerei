@@ -250,3 +250,12 @@ Phase 10 preparation: [acceptance worksheet](PHASE10_ACCEPTANCE.md) maps
 F1-F15 to actual journeys/permissions/regressions and records connector, owner,
 pilot and release gaps. This is preparation only: Phase 9 entry gates remain
 open; no production release, named appointment or external workflow is activated.
+
+
+U021 final verification (source 3442ad8): 292 collected; serial native PostgreSQL
+290 passed/2 expected local skips; SQLite 266/26 explicit skips; 15 subtests each.
+Explicit PostgreSQL 24 passed; release/operator/YAML 30 passed. All eight hosted
+jobs passed, including pure Windows/Linux packaged runtime and byte comparison.
+Final catalog 0 guarded DBs/0 generated roles; control privileges unchanged.
+Phase 10 F1-F15 matrix prepared (P10-T02); Phase 9 and production release gates
+remain open. Details/evidence/failure history: HANDOFF U021 and PHASE9_OPERATIONS.

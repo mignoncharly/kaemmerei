@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-21",
+  "source_checkpoint": "3442ad89d7dcc60e9adb5b38301bb79950d70f04",
+  "document": "docs/PHASE10_ACCEPTANCE.md",
+  "document_sha256": "e445e72aa8b675f603461b096c8f6dae6a7812ada317da76f3f574d463cca376",
+  "state": "preparation-only; Phase 9 entry conditions open",
+  "release_authorized": false,
+  "production_deployed": false,
+  "features": [
+    {
+      "id": "F1",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F2",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F3",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F4",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F5",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F6",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F7",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F8",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F9",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F10",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F11",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F12",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F13",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F14",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    },
+    {
+      "id": "F15",
+      "state": "technical regressions mapped; manual pilot/business acceptance pending"
+    }
+  ],
+  "pilot": "not run",
+  "independent_security_review": "not performed",
+  "ownership": "role proposals provisional; no individuals appointed",
+  "external_notifications": "inactive",
+  "production_mfa_escrow": "inactive",
+  "local_development_external_approval_required": false,
+  "scope": "Organizes existing evidence and open scope/release gates; no waiver or acceptance inferred"
+}

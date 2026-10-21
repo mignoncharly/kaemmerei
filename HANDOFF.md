@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 9 in progress (U021). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
+Current stage: Phase 9 remaining operations gates; Phase 10 acceptance/release preparation (U021). P10-T02 matrix prepared; no production release or Phase 9 exit. See docs/PHASE9_OPERATIONS.md and docs/PHASE10_ACCEPTANCE.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -27,11 +27,11 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Latest migration observed | `0023_human_mfa`; encrypted owner-only credentials, challenge sessions and deliberate rollout policy, tested only in disposable databases. Rerun reviewed runtime-role configuration after migrations. No business migration. |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
-| Tests | U020: 262 collected; native PostgreSQL 260 passed/2 local skips; SQLite 236/26 explicit skips; 15 passing subtests each. Explicit PG 24 passed, backup/Windows 29 passed. All 17 backup cases executed on PG. Zero failures/errors/xfails. |
+| Tests | U021: 292 collected; serial native PG 290 passed/2 local skips, SQLite 266/26 explicit skips; 15 subtests each. Explicit PG 24 passed/zero skips. Release/TLS/YAML 30 passed. Final zero failures/errors/xfails; eight exact-source hosted jobs passed. Earlier failed attempts retained. |
 | PostgreSQL/migrations | Native Windows 18.3; head 0023_human_mfa clean/populated/repeated upgrades, actual restricted roles and real database/document/MFA restores passed in synthetic disposable databases. Final read-only catalog 0 guarded DBs/0 generated roles; control privileges unchanged. No business migration/grants or cluster change. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main; frozen application source 92329b6f181f174f0212c429e3368383bcc027dc committed/pushed. Exact-source CI run 39660619585 passed all five jobs, including required actual encrypted recovery. Documentation/evidence follow-up separate. |
+| Source commit/branch | main; verified source 3442ad89d7dcc60e9adb5b38301bb79950d70f04 committed/pushed; all eight hosted jobs passed (39666552361), including clean Windows/Linux source artifacts and byte comparison. Documentation/evidence follow-up separate. |
 | Completed deliverables | Phases 1-8 technical implementations/tests/evidence; HTML/browser/navigation contracts included. Owner, usability and production acceptance remain separate. |
 | Application remediation | Phases 1-8 technically verified. P07-T01 finance agreement, availability/deployment/operations, remaining adapters and owner/usability acceptance remain open. |
 
@@ -62,8 +62,8 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 6 - Integration synchronization | Verified technically; D07 owner acceptance pending | P06-T01-T08 | PG 149 + 2 local skips; SQLite 134 + 17; 21 actual PG integration regressions; all four CI jobs passed | Engineering: Codex; integration/security owners unassigned | Next P07-T01; D07 consumer profiles/transition and retention before production |
 | 7 - Reports/dates/Excel | Verified technically; D08-D10 unapproved | P07-T02-T09 technical defaults; T01 owner agreement pending | PG 168 + 2 local skips; SQLite 152 + 18; Phase 7 PG 19; explicit PG 16; four hosted jobs passed | Engineering: Codex; municipal owners unassigned | Next technical phase P08-T01; obtain D08-D10 before business deployment |
 | 8 - Frontend and navigation | Verified technically; manual usability/AT and production acceptance pending | P08-T01-T09 | PG 176 + 2 local skips; SQLite 160 + 18; Phase 8 eight on both; real browser and all five hosted jobs passed | Engineering: Codex; usability owner unassigned | Next P09-T01; establish operational targets and release acceptance owners |
-| 9 - Operations and availability | In progress; no exit acceptance | Ingress/throttles/workers; scan retry/scheduling drafts; MFA; encrypted restore; U021 TLS/release checks | U019/U020 verified; U021 current-source full/hosted pending | Engineering; proposed production IT roles provisional | Finish monitoring, representative mixed load/recovery, remaining schedules and production operating/deployment acceptance |
-| 10 - Acceptance and release | Preparation only; Phase 9 entry gates open | P10-T02 F1-F15 matrix and T01/T03-T09 worksheets | No manual pilot, independent review, organizational sign-off or release acceptance | Provisional role proposals only; no individuals assigned | See docs/PHASE10_ACCEPTANCE.md; finish required Phase 9 work before claiming release entry |
+| 9 - Operations and availability | In progress; no exit acceptance | Ingress/throttles/workers, scan retries/schedule drafts, TOTP, encrypted restore, DBA TLS policy and locked source releases | U021 PG 290/2, SQLite 266/26, 15 subtests each; explicit PG 24; eight hosted jobs passed | Engineering; production IT roles provisional | Monitoring/remaining jobs, mixed workload/recovery, wider update inventory and live operating/deployment acceptance |
+| 10 - Acceptance and release | Preparation only; Phase 9 entry gates open | P10-T02 technical matrix prepared; T01/T03-T09 worksheets | Fifteen journeys/permissions/evidence mappings; no manual pilot, independent review, sign-off or release acceptance | Provisional roles only; no individuals assigned | docs/PHASE10_ACCEPTANCE.md; finish required Phase 9 work and adopted release scope |
 
 No phase is complete merely because this plan has been written.
 
@@ -94,7 +94,8 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R34 - Account recovery/password/MFA | Scope gap | Local password change/recovery and TOTP technically verified; production custody/adoption pending | U010/U019; no external approval for local development/login/recovery; service tokens separate |
 | R29-R30 - Integration/reminder scope | Scope decisions required | Open | Original phase assignments |
 | R35 - Excel identity/update semantics | Scope gap | Explicit create-only identity technically verified; D10 adoption pending | U015; generated-number rejection, scoped references, atomic concurrent import and provenance |
-| R37/R40 - Maintainability/distribution | Nice to fix/have | Remaining backlog | Original phase assignments; shared list/export filter specification delivered U016 |
+| R37 - Maintainability | Nice to fix/have | Remaining backlog | Shared list/export specification U016; broader maintainability review remains |
+| R40 - Distribution | Nice to fix/have | Runtime lock/deterministic source artifact technically verified; final release/document/update adoption remains | U021; clean Windows/Linux installation, manifest/hash checks, source-only exclusions and byte comparison |
 | R42 - Newly reviewed dependency advisories | High (identified U017) | Reviewed affected ranges corrected: FastAPI 0.158.0 / Starlette 1.9.0 / multipart 0.0.32 adopted; current runtime OSV query zero matches | U017; five exact-source hosted jobs passed for 1649b15; wider tool/OS/release checks remain P09-T11 |
 | R38 - Navigation/order/inbox | Nice to fix/have | Implemented and technically verified | U016; stable paging, filter-preserving links, scoped actionable inbox; manual usability acceptance pending |
 | R39 - Document correction/supersession | Nice to fix/have | Implemented and technically verified | U013; retained predecessors, DMS correction, approval invalidation and hold preservation |
@@ -537,3 +538,30 @@ passing subtests (291 collected, 718.11s). The earlier run had 286 passed/3 fail
 database creation. Dedicated Phase 1 diagnostic then passed 12 tests/11 subtests.
 No connect timeout, safety check or retry policy changed. Final 292-item serial
 PostgreSQL/current SQLite and exact-source hosted results follow after completion.
+
+
+### U021 final checkpoint - source 3442ad8 (2026-10-21)
+
+- **292 collected**. Final serial native PostgreSQL: **290 passed, 2 expected local skips, 15 passing subtests**, 550.44s. Final SQLite: **266 passed, 26 explicit skips, 15 passing subtests**, 162.96s. Zero failures/errors/xfails in final runs. Full PG executed all 17 backup cases. Clean/populated/repeated PostgreSQL migrations remain at 0023_human_mfa.
+- Explicit PostgreSQL: **24 passed, 268 deselected, zero skips**, 83.68s. Release/operator/YAML regressions: **30 passed**, 14.25s. Both security and packaging regressions are normal tests; no checks were disabled.
+- **All eight exact-source hosted jobs passed** for 3442ad89d7dcc60e9adb5b38301bb79950d70f04: [run 39666552361](https://github.com/mignoncharly/kaemmerei/actions/runs/39666552361). This includes existing native/service PostgreSQL, real browser/scanner, SQLite, clean Windows/Linux runtime installation and startup BEFORE dev dependencies, and cross-platform byte comparison. Run/jobs/steps/seven artifact metadata entries inspected; agent did not download hosted archives. CI itself compared its two source archives.
+- Fresh native Windows venv: 30 locked runtime versions installed with required official wheel hashes; version inventory/pip check passed. Development-only PyYAML 6.0.3 reviewed separately: OSV returned zero indexed matches/errors/pagination; broader tool/OS/advisory update operations remain open.
+- Local source artifact built twice identically: **103 manifested files plus the manifest**, 914,376 bytes, SHA-256 `0238d2466e82f2fb9d7a35ce26c62d9b9a8550ea3d2a3c9f5fc92b64702e92a4`. Fresh pure-runtime packaged imports, migrations/startup/shutdown passed using only in-memory SQLite. It is a source/configuration-template bundle, not a full development checkout or approved production release; final release-document curation remains P10-T09 work.
+- Final read-only catalog: **0 guarded test databases, 0 generated roles**, control privileges unchanged. No existing cluster/service/business database changed, no deployment/notification/key escrow activated. Existing user launcher whitespace retained. Earlier six failed synthetic Git fixture directories remain ignored after automatic cleanup approval rejection; they are not business data and were not deleted by another route.
+- Earlier failures remain in the evidence: three five-second control-connection timeouts before DB creation in a preliminary overlapping run; Phase 1 diagnostic and later full/serial checks pass. YAML pre-job and temporary-script import failures were corrected with exact regressions. Migration smoke caller fixed without weakening the existing transaction guard. No timeout/retry/permission check was suppressed. Existing Starlette/httpx TestClient and managed pytest-cache warnings remain; pip temp-cleanup warnings retained.
+- **P10-T02 technical preparation complete:** F1-F15 journeys, permissions, automated references, scope limits and role-only ownership/pilot/release worksheets exist in PHASE10_ACCEPTANCE.md. Manual pilot, independent security/AT review, municipal/domain/records acceptance and release authorization are **not performed/recorded**. Phase 9 entry gates and Phase 10 release acceptance remain open.
+
+Evidence: [local](docs/evidence/phase9-u021-local.json), [hosted](docs/evidence/phase9-ci-39666552361.json), [source artifact](docs/evidence/phase9-u021-release.json), [runtime lock provenance](docs/evidence/phase9-runtime-lock-provenance.json), [development parser review](docs/evidence/phase9-pyyaml-review.json), [Phase 10 preparation](docs/evidence/phase10-preparation.json).
+
+Final acceptance checklist:
+
+- [x] Production DBA policy rejects unsafe TLS/environment before connection, with redacted errors; development remains usable. Actual production TLS handshake is a separate unverified gate.
+- [x] Hash-pinned runtime installation, deterministic source manifest and packaged runtime verified locally and on Windows/Linux CI.
+- [x] Full SQLite/PostgreSQL and explicit real PostgreSQL checks pass; hosted exact-source evidence recorded.
+- [x] Test database/role cleanup verified; no business-data or cluster operation.
+- [x] Phase 10 acceptance matrix and reviewable worksheets prepared without invented approvals or scope waivers.
+- [ ] Phase 9 monitoring/job-heartbeat/backup-age checks, remaining maintenance schedules, representative mixed workload/recovery and live native deployment/TLS/storage acceptance.
+- [ ] Wider tool/update inventory, final release-document set and production custody/retention procedure adoption.
+- [ ] Independent security/usability/departmental pilot/business scope acceptance and production release authorization.
+
+Next ready engineering work remains Phase 9 monitoring/remaining jobs and representative mixed-load/recovery tests. These can proceed in isolation without municipal approval; no production operating model or deployment is presumed.

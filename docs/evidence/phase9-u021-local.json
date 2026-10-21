@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-21",
+  "source": "3442ad89d7dcc60e9adb5b38301bb79950d70f04",
+  "migration_head": "0023_human_mfa",
+  "results": [
+    {
+      "selection": "postgresql-serial",
+      "collected": 292,
+      "passed": 290,
+      "skipped": 2,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 550.436,
+      "junit_sha256": "0371a1c703c3de3e15d3aa2e4fc102928827cd729479747565521bf677d92aff",
+      "backup_items": 17,
+      "backup_skipped": 0
+    },
+    {
+      "selection": "sqlite-final",
+      "collected": 292,
+      "passed": 266,
+      "skipped": 26,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 162.949,
+      "junit_sha256": "3cd8009f5d25ffcf44f4504f3cc7c385c24b148180cc6a6600283e575c2aed87",
+      "backup_items": 17,
+      "backup_skipped": 1
+    },
+    {
+      "selection": "release-operator-yaml",
+      "collected": 30,
+      "passed": 30,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": 14.253,
+      "junit_sha256": "2b662ec6294650f291041159e05b82818b5a2b33107e6ee942f73228dfe979fc",
+      "backup_items": 0,
+      "backup_skipped": 0
+    },
+    {
+      "selection": "explicit-postgresql",
+      "collected": 24,
+      "passed": 24,
+      "deselected": 268,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": 83.678,
+      "junit_sha256": "4073209c30cd296cace45e619fb91eecf0c552f7cbba98c401fd7b150ec2222f"
+    }
+  ],
+  "catalog": {
+    "guarded_databases": 0,
+    "generated_roles": 0,
+    "control_privileges_unchanged": true
+  },
+  "preliminary_failed_run": {
+    "source_checkpoint": "569b30eafa4f83eeb53b9eda50aaf7831511b6c5",
+    "collected": 291,
+    "passed": 286,
+    "failed": 3,
+    "skipped": 2,
+    "passing_subtests": 15,
+    "seconds": 748.158,
+    "failures": [
+      {
+        "test": "tests.test_phase1.MigrationTests.test_clean_upgrade",
+        "classification": "Five-second dedicated control connection timeout before disposable database creation; no application operation executed"
+      },
+      {
+        "test": "tests.test_phase1.MigrationTests.test_populated_initial_upgrade_preserves_records_and_document_metadata",
+        "classification": "Five-second dedicated control connection timeout before disposable database creation; no application operation executed"
+      },
+      {
+        "test": "tests.test_phase1.ResourceAndPermissionTests.test_inactive_user_cannot_login",
+        "classification": "Five-second dedicated control connection timeout before disposable database creation; no application operation executed"
+      }
+    ],
+    "junit_sha256": "2393f6af82101e978f20d91af7fa278c80f52a9fadc0478fad9aa413abd47e07",
+    "followup": "Phase 1 diagnostic: 12 passed, 11 passing subtests; full serial PostgreSQL verification pending; no timeout/retry/security policy changed"
+  },
+  "investigations": [
+    "Initial six synthetic Git fixture teardown errors from Windows read-only object attributes; fixture-local correction, no ACL changes; old directories retained after automatic approval rejected cleanup",
+    "pip --target failed private temporary-directory ACL; supported pip --python into a new venv installed all 30 locked packages, no hash bypass",
+    "Initial runtime smoke caller opened transaction before SQLite migration; caller corrected, migration guard unchanged",
+    "Hosted zero-job YAML scalar failure then temporary-script import preamble failure; exact parser/execution-layout regressions passed before final eight-job hosted success"
+  ],
+  "warnings": [
+    "Existing Starlette/httpx TestClient adapter deprecation",
+    "Managed Windows pytest-cache ACL/path warning",
+    "pip temporary cleanup warnings retained; no external temp deletion"
+  ],
+  "scope": "Isolated synthetic databases/files/disposable keys only; no production database/schema/service change, release/deployment authorization, task registration, notifications or production key escrow. Current full PG/SQLite runs 292 collected, all regular cases pass with explicit skips; full PG executed all 17 backup cases. Phase 9 gates and Phase 10 release acceptance remain open."
+}

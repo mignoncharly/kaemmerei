@@ -362,7 +362,7 @@ Small independent work can proceed once its listed interface is stable. Keep the
 ### Tasks
 
 - [ ] P10-T01: Assign named accountable owners for the application, database, identity administration, approvals, privacy/records, backups, updates, incident response, and integration consumers. Record approvals with date and evidence reference.
-- [ ] P10-T02: Build an F1–F15 acceptance matrix with representative user journeys, permissions, known limitations, and evidence. Replace blanket completion claims with verified behavior and explicit release exclusions.
+- [x] P10-T02: Build an F1–F15 acceptance matrix with representative user journeys, permissions, known limitations, and evidence. Replace blanket completion claims with verified behavior and explicit release exclusions.
 - [ ] P10-T03: Decide each connector's scope: H&H, SSO/LDAP, product-specific DMS, automatic document intake, and procurement integration. For an included connector, obtain official interface specifications/test access, define mapping, scopes, credentials, retries/idempotency, reconciliation, error handling, and monitoring; implement and verify it before claiming delivery. Otherwise retain a documented backlog entry and manual operating procedure.
 - [ ] P10-T04: Approve retention/legal-hold/disposal and data-access policies. Verify the implemented controls match them, including exports, logs, event feeds, backups, and external systems. No automatic destruction while required policies are undecided.
 - [ ] P10-T05: Run end-to-end acceptance using sanitized examples: create/import, assign/delegate, upload/scan, request/decide/reopen, material edit, tax assessment, activation, reporting, synchronize/transfer/remove, archive, recover, and authorized disposal where enabled.
@@ -450,3 +450,13 @@ Phase 10 preparation: [acceptance worksheet](docs/PHASE10_ACCEPTANCE.md) maps
 F1-F15 to actual journeys/permissions/regressions and records connector, owner,
 pilot and release gaps. This is preparation only: Phase 9 entry gates remain
 open; no production release, named appointment or external workflow is activated.
+
+
+U021 final: P10-T02 technical matrix prepared in docs/PHASE10_ACCEPTANCE.md;
+Phase 9 entry gates and Phase 10 release acceptance remain open. DBA TLS policy,
+30-package hashed runtime and deterministic source release technically verified
+at 3442ad8: native PG 290 passed/2 local skips, SQLite 266/26, 15 subtests each;
+explicit PG 24, release/TLS/YAML 30. All eight exact-source hosted jobs passed
+(39666552361). Final catalog 0 guarded databases/0 generated roles. Full evidence,
+retained failures and remaining engineering/operating gates: HANDOFF U021.
+No production rollout, external workflow or named responsibility assignment.

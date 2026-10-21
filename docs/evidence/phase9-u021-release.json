@@ -1,0 +1,19 @@
+{
+  "build": {
+    "source_commit": "3442ad89d7dcc60e9adb5b38301bb79950d70f04",
+    "migration_head": "0023_human_mfa",
+    "file_count": 103,
+    "artifact_sha256": "0238d2466e82f2fb9d7a35ce26c62d9b9a8550ea3d2a3c9f5fc92b64702e92a4",
+    "bytes": 914376
+  },
+  "smoke": {
+    "status": "packaged-runtime-smoke-passed",
+    "migration_head": "0023_human_mfa",
+    "database": "in-memory SQLite only",
+    "source_commit": "3442ad89d7dcc60e9adb5b38301bb79950d70f04",
+    "artifact_sha256": "0238d2466e82f2fb9d7a35ce26c62d9b9a8550ea3d2a3c9f5fc92b64702e92a4"
+  },
+  "date": "2026-10-21",
+  "clean_native_windows_runtime": "30 exact locked packages, offline required hashes, pure-runtime smoke and pip check passed",
+  "scope": "Deterministic committed-source artifact built twice; checksum/member/migration verification and packaged in-memory startup passed. No signing/release authorization or production deployment."
+}

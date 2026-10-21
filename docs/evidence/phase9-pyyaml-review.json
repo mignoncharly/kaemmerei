@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-21",
+  "package": "PyYAML",
+  "version": "6.0.3",
+  "scope": "Development-only YAML safe parser; runtime lock unchanged",
+  "source": "https://api.osv.dev/v1/query",
+  "matches": 0,
+  "errors": 0,
+  "pagination": false,
+  "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "wheel_sha256": "4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac",
+  "note": "Known indexed matches only; not a general security certificate or broader tool review"
+}

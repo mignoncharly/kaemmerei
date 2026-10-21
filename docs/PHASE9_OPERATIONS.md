@@ -901,3 +901,30 @@ passing subtests (291 collected, 718.11s). The earlier run had 286 passed/3 fail
 database creation. Dedicated Phase 1 diagnostic then passed 12 tests/11 subtests.
 No connect timeout, safety check or retry policy changed. Final 292-item serial
 PostgreSQL/current SQLite and exact-source hosted results follow after completion.
+
+
+### U021 final checkpoint - source 3442ad8 (2026-10-21)
+
+- **292 collected**. Final serial native PostgreSQL: **290 passed, 2 expected local skips, 15 passing subtests**, 550.44s. Final SQLite: **266 passed, 26 explicit skips, 15 passing subtests**, 162.96s. Zero failures/errors/xfails in final runs. Full PG executed all 17 backup cases. Clean/populated/repeated PostgreSQL migrations remain at 0023_human_mfa.
+- Explicit PostgreSQL: **24 passed, 268 deselected, zero skips**, 83.68s. Release/operator/YAML regressions: **30 passed**, 14.25s. Both security and packaging regressions are normal tests; no checks were disabled.
+- **All eight exact-source hosted jobs passed** for 3442ad89d7dcc60e9adb5b38301bb79950d70f04: [run 39666552361](https://github.com/mignoncharly/kaemmerei/actions/runs/39666552361). This includes existing native/service PostgreSQL, real browser/scanner, SQLite, clean Windows/Linux runtime installation and startup BEFORE dev dependencies, and cross-platform byte comparison. Run/jobs/steps/seven artifact metadata entries inspected; agent did not download hosted archives. CI itself compared its two source archives.
+- Fresh native Windows venv: 30 locked runtime versions installed with required official wheel hashes; version inventory/pip check passed. Development-only PyYAML 6.0.3 reviewed separately: OSV returned zero indexed matches/errors/pagination; broader tool/OS/advisory update operations remain open.
+- Local source artifact built twice identically: **103 manifested files plus the manifest**, 914,376 bytes, SHA-256 `0238d2466e82f2fb9d7a35ce26c62d9b9a8550ea3d2a3c9f5fc92b64702e92a4`. Fresh pure-runtime packaged imports, migrations/startup/shutdown passed using only in-memory SQLite. It is a source/configuration-template bundle, not a full development checkout or approved production release; final release-document curation remains P10-T09 work.
+- Final read-only catalog: **0 guarded test databases, 0 generated roles**, control privileges unchanged. No existing cluster/service/business database changed, no deployment/notification/key escrow activated. Existing user launcher whitespace retained. Earlier six failed synthetic Git fixture directories remain ignored after automatic cleanup approval rejection; they are not business data and were not deleted by another route.
+- Earlier failures remain in the evidence: three five-second control-connection timeouts before DB creation in a preliminary overlapping run; Phase 1 diagnostic and later full/serial checks pass. YAML pre-job and temporary-script import failures were corrected with exact regressions. Migration smoke caller fixed without weakening the existing transaction guard. No timeout/retry/permission check was suppressed. Existing Starlette/httpx TestClient and managed pytest-cache warnings remain; pip temp-cleanup warnings retained.
+- **P10-T02 technical preparation complete:** F1-F15 journeys, permissions, automated references, scope limits and role-only ownership/pilot/release worksheets exist in PHASE10_ACCEPTANCE.md. Manual pilot, independent security/AT review, municipal/domain/records acceptance and release authorization are **not performed/recorded**. Phase 9 entry gates and Phase 10 release acceptance remain open.
+
+Evidence: [local](evidence/phase9-u021-local.json), [hosted](evidence/phase9-ci-39666552361.json), [source artifact](evidence/phase9-u021-release.json), [runtime lock provenance](evidence/phase9-runtime-lock-provenance.json), [development parser review](evidence/phase9-pyyaml-review.json), [Phase 10 preparation](evidence/phase10-preparation.json).
+
+Final acceptance checklist:
+
+- [x] Production DBA policy rejects unsafe TLS/environment before connection, with redacted errors; development remains usable. Actual production TLS handshake is a separate unverified gate.
+- [x] Hash-pinned runtime installation, deterministic source manifest and packaged runtime verified locally and on Windows/Linux CI.
+- [x] Full SQLite/PostgreSQL and explicit real PostgreSQL checks pass; hosted exact-source evidence recorded.
+- [x] Test database/role cleanup verified; no business-data or cluster operation.
+- [x] Phase 10 acceptance matrix and reviewable worksheets prepared without invented approvals or scope waivers.
+- [ ] Phase 9 monitoring/job-heartbeat/backup-age checks, remaining maintenance schedules, representative mixed workload/recovery and live native deployment/TLS/storage acceptance.
+- [ ] Wider tool/update inventory, final release-document set and production custody/retention procedure adoption.
+- [ ] Independent security/usability/departmental pilot/business scope acceptance and production release authorization.
+
+Next ready engineering work remains Phase 9 monitoring/remaining jobs and representative mixed-load/recovery tests. These can proceed in isolation without municipal approval; no production operating model or deployment is presumed.
