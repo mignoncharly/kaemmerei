@@ -16,12 +16,25 @@ class Settings:
     maintenance_database_url: str | None = None
     enforce_database_security: bool = False
     mandatory_review_recipients: tuple[str, ...] = ('Kämmerei',)
+    clamav_executable: Path | None = None
+    clamav_database_dir: Path | None = None
+    scanner_timeout: int = 60
+    scanner_max_age_hours: int = 72
+    dms_allowed_hosts: tuple[str,...] = ()
 
     @property
     def production(self) -> bool:
         return self.environment == "production"
 
     def validate(self) -> None:
+        from app.documents import validate_storage_setting
+        validate_storage_setting(self.document_storage_dir)
+        if self.clamav_executable is not None and not self.clamav_executable.is_absolute():
+            raise ValueError('CLAMAV_EXECUTABLE must be an absolute administrator-controlled path')
+        if self.clamav_database_dir is not None and not self.clamav_database_dir.is_absolute():
+            raise ValueError('CLAMAV_DATABASE_DIR must be an absolute administrator-controlled path')
+        if not 1 <= self.scanner_timeout <= 300 or not 1 <= self.scanner_max_age_hours <= 168:
+            raise ValueError('Scanner timeout/freshness settings outside supported bounds')
         from app.options import REVIEW_RECIPIENTS
         if not self.mandatory_review_recipients or any(not x.strip() for x in self.mandatory_review_recipients):
             raise ValueError('At least one mandatory approval recipient must be configured')
@@ -48,9 +61,14 @@ def get_settings() -> Settings:
     db_url = os.getenv("DATABASE_URL", "sqlite:///./data/vertragsregister.sqlite3")
     defaults = "localhost,127.0.0.1" if environment == "development" else ""
     hosts = tuple(x.strip() for x in os.getenv("ALLOWED_HOSTS", defaults).split(",") if x.strip())
-    storage = Path(os.getenv("DOCUMENT_STORAGE_DIR", str(Settings.document_storage_dir))).expanduser().resolve()
+    storage = Path(os.getenv("DOCUMENT_STORAGE_DIR", str(Settings.document_storage_dir))).expanduser()
     settings = Settings(environment=environment, database_url=db_url, allowed_hosts=hosts,
                         document_storage_dir=storage,
+                        clamav_executable=Path(os.environ['CLAMAV_EXECUTABLE']) if os.getenv('CLAMAV_EXECUTABLE') else None,
+                        clamav_database_dir=Path(os.environ['CLAMAV_DATABASE_DIR']) if os.getenv('CLAMAV_DATABASE_DIR') else None,
+                        scanner_timeout=int(os.getenv('SCANNER_TIMEOUT','60')),
+                        scanner_max_age_hours=int(os.getenv('SCANNER_MAX_AGE_HOURS','72')),
+                        dms_allowed_hosts=tuple(x.strip().casefold() for x in os.getenv('DMS_ALLOWED_HOSTS','').split(',') if x.strip()),
                         mandatory_review_recipients=tuple(x.strip() for x in os.getenv('MANDATORY_REVIEW_RECIPIENTS','Kämmerei').split(',') if x.strip()),
                         integration_database_url=os.getenv('INTEGRATION_DATABASE_URL') or None,
                         migration_database_url=os.getenv('MIGRATION_DATABASE_URL') or None,

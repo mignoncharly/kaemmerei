@@ -40,7 +40,7 @@
    {% if user.role == 'admin' %}
    <select id="department_id" name="department_id" required><option value="">Bitte auswählen</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if values.get('department_id', '')|string == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select>
    {% else %}<div class="read-only">{{ user.department.name }}</div><p class="hint">Ihr Fachbereich wird automatisch übernommen.</p>{% endif %}</div>
-   {% if mode == 'new' %}<div class="wide"><label for="documents">Vertragsunterlagen (optional)</label><input id="documents" name="documents" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.png,.jpg,.jpeg,.gif" multiple><small class="hint">Bis zu 5 Dateien, jeweils maximal 25 MB. Weitere Dateien und DMS-Verknüpfungen können später am Vertrag ergänzt werden.</small></div>{% endif %}
+   {% if mode == 'new' %}<div class="wide"><label for="documents">Vertragsunterlagen (optional)</label><input id="documents" name="documents" type="file" accept=".pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.csv,.png,.jpg,.jpeg,.gif" multiple><small class="hint">Bis zu 5 Dateien, jeweils maximal 25 MB. Weitere Dateien und DMS-Verknüpfungen können später am Vertrag ergänzt werden.</small></div>{% endif %}
   </div>
   <div class="form-actions"><a class="button subtle" href="{{ '/' if mode == 'new' else '/contracts/' ~ contract.id }}">Abbrechen</a><button type="submit" class="button primary">{{ 'Vertrag speichern' if mode == 'new' else 'Änderungen speichern' }}</button></div>
  </form>

@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phase 1 technically verified on 2026-10-21 by successful Linux SQLite/PostgreSQL verification and pytest jobs; phases 2–10 not started.\
+Plan status: Phases 1-4 technically verified; Phase 5 P05-T01-T08 implemented, final verification in progress. Owner acceptance and production release remain pending.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -220,14 +220,14 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 ### Tasks
 
-- [ ] P05-T01: Move storage configuration into validated application settings. Keep private storage outside static/web roots. Verify resolved file paths remain under the configured storage root; require approved storage-key format and least-privilege filesystem access.
-- [ ] P05-T02: Add document state (`pending`, `quarantined`, `available`, `rejected`, `superseded`, `disposed` as needed), content digest, verified media type, scan result/version/time, and provenance. Existing unscanned files must be marked accordingly, not silently trusted.
-- [ ] P05-T03: Validate container contents for Office/OpenDocument uploads rather than accepting any ZIP prefix. Define the accepted macro/active-content policy. Integrate a maintained malware scanner and quarantine workflow; scanner failure must leave new files unavailable pending retry or explicit policy handling.
-- [ ] P05-T04: Implement recoverable file staging. Persist a pending metadata/job record and deterministic storage operation; make finalization/scanning retryable and idempotent. Expose only finalized clean content. Reconcile abandoned staging, orphan files, missing blobs, and digest mismatches without deleting unclassified files automatically.
-- [ ] P05-T05: Apply authorization and availability state checks to preview, download, API download, and range requests. Log permitted/denied access as required without logging document contents, raw tokens, or sensitive URLs. Consider a separate preview origin/sandbox for active formats according to security review.
-- [ ] P05-T06: Add audited replacement/supersession of documents and correction of DMS links. Preserve prior versions and invalidate affected approvals. External URLs remain links unless an explicitly scoped connector is implemented; use HTTP(S) validation and an approved DMS-domain policy if required.
-- [ ] P05-T07: Design retention classification, legal holds, disposal eligibility, authorized approval, deletion/anonymization jobs, and audit evidence. Cover blobs, metadata, revision snapshots, audit records, exports, backups, and external DMS ownership. Implement only approved retention rules; default to no destructive automatic disposal while those decisions are pending.
-- [ ] P05-T08: Document consistent database/document backup and restore, shared storage requirements for multiple workers, capacity monitoring, and integrity reconciliation commands.
+- [x] P05-T01: Move storage configuration into validated application settings. Keep private storage outside static/web roots. Verify resolved file paths remain under the configured storage root; require approved storage-key format and least-privilege filesystem access.
+- [x] P05-T02: Add document state (`pending`, `quarantined`, `available`, `rejected`, `superseded`, `disposed` as needed), content digest, verified media type, scan result/version/time, and provenance. Existing unscanned files must be marked accordingly, not silently trusted.
+- [x] P05-T03: Validate container contents for Office/OpenDocument uploads rather than accepting any ZIP prefix. Define the accepted macro/active-content policy. Integrate a maintained malware scanner and quarantine workflow; scanner failure must leave new files unavailable pending retry or explicit policy handling.
+- [x] P05-T04: Implement recoverable file staging. Persist a pending metadata/job record and deterministic storage operation; make finalization/scanning retryable and idempotent. Expose only finalized clean content. Reconcile abandoned staging, orphan files, missing blobs, and digest mismatches without deleting unclassified files automatically.
+- [x] P05-T05: Apply authorization and availability state checks to preview, download, API download, and range requests. Log permitted/denied access as required without logging document contents, raw tokens, or sensitive URLs. Consider a separate preview origin/sandbox for active formats according to security review.
+- [x] P05-T06: Add audited replacement/supersession of documents and correction of DMS links. Preserve prior versions and invalidate affected approvals. External URLs remain links unless an explicitly scoped connector is implemented; use HTTP(S) validation and an approved DMS-domain policy if required.
+- [x] P05-T07: Design retention classification, legal holds, disposal eligibility, authorized approval, deletion/anonymization jobs, and audit evidence. Cover blobs, metadata, revision snapshots, audit records, exports, backups, and external DMS ownership. Implement only approved retention rules; default to no destructive automatic disposal while those decisions are pending.
+- [x] P05-T08: Document consistent database/document backup and restore, shared storage requirements for multiple workers, capacity monitoring, and integrity reconciliation commands.
 
 ### Verification and exit criteria
 

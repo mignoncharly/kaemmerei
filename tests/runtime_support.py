@@ -89,6 +89,8 @@ def runtime_environment():
                 from app.main import create_app
                 app=create_app(Settings(database_url=urls['web'],integration_database_url=urls['integration'],
                     enforce_database_security=True,document_storage_dir=owner.state.document_storage_dir))
+                from tests.scanner_support import CleanScanner
+                app.state.document_scanner=CleanScanner()
                 try:
                     with TestClient(app) as client:
                         yield RuntimeEnvironment(client,app,owner,names,urls)

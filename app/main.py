@@ -23,6 +23,7 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
+from app.documents import ensure_storage, stage_upload, new_document, process_document, download_response, audit_denied, ClamAVScanner, MEDIA
 from app.models import ReviewDecision
 from app.config import Settings, get_settings
 from app.authorization import can_decide_review, contract_query, contract_scope, load_child, load_contract
@@ -43,25 +44,7 @@ BASE = Path(__file__).resolve().parent
 MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
 MAX_DOCUMENTS_PER_UPLOAD = 5
 REMINDER_WINDOW_DAYS = 90
-DOCUMENT_TYPES = {
-    ".pdf": "application/pdf",
-    ".doc": "application/msword",
-    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ".xls": "application/vnd.ms-excel",
-    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ".ppt": "application/vnd.ms-powerpoint",
-    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    ".odt": "application/vnd.oasis.opendocument.text",
-    ".ods": "application/vnd.oasis.opendocument.spreadsheet",
-    ".odp": "application/vnd.oasis.opendocument.presentation",
-    ".rtf": "application/rtf",
-    ".txt": "text/plain",
-    ".csv": "text/csv",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".gif": "image/gif",
-}
+DOCUMENT_TYPES = MEDIA
 TEMPLATES = Jinja2Templates(directory=str(BASE / "templates"))
 TEMPLATES.env.globals['new_request_id']=lambda: str(uuid4())
 TEMPLATES.env.filters["euro"] = lambda amount: format_euro(amount)
@@ -321,65 +304,30 @@ def format_euro(amount) -> str:
 
 
 async def store_uploaded_document(upload: UploadFile, storage_dir: Path) -> dict:
-    filename = Path(upload.filename or "").name.strip()
-    suffix = Path(filename).suffix.lower()
-    if not filename or len(filename) > 200 or suffix not in DOCUMENT_TYPES:
-        await upload.close()
-        raise HTTPException(status_code=400, detail="Dateityp nicht unterstützt. Erlaubt sind PDF, Office-/OpenDocument-, RTF-, Text-, CSV- und Bilddateien.")
-    key = f"{uuid4().hex}{suffix}"
-    temp_path = storage_dir / f".{key}.upload"
-    final_path = storage_dir / key
-    size = 0
-    prefix = b""
-    contains_nul = False
-    try:
-        storage_dir.mkdir(parents=True, exist_ok=True)
-        with temp_path.open("xb") as output:
-            while chunk := await upload.read(64 * 1024):
-                if len(prefix) < 16:
-                    prefix += chunk[:16 - len(prefix)]
-                contains_nul = contains_nul or b"\x00" in chunk
-                size += len(chunk)
-                if size > MAX_DOCUMENT_BYTES:
-                    raise HTTPException(status_code=413, detail="Dateien dürfen höchstens 25 MB groß sein")
-                output.write(chunk)
-        ext = suffix
-        if ext == ".pdf":
-            valid = prefix.startswith(b"%PDF-")
-        elif ext in (".doc", ".xls", ".ppt"):
-            valid = prefix.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1")
-        elif ext in (".docx", ".xlsx", ".pptx", ".odt", ".ods", ".odp"):
-            valid = prefix.startswith(b"PK\x03\x04")
-        elif ext == ".rtf":
-            valid = prefix.lstrip().startswith(b"{\\rtf")
-        elif ext in (".txt", ".csv"):
-            valid = not contains_nul
-        elif ext == ".png":
-            valid = prefix.startswith(b"\x89PNG\r\n\x1a\n")
-        elif ext in (".jpg", ".jpeg"):
-            valid = prefix.startswith(b"\xff\xd8\xff")
-        elif ext == ".gif":
-            valid = prefix.startswith((b"GIF87a", b"GIF89a"))
-        else:
-            valid = False
-        if size == 0 or not valid:
-            raise HTTPException(status_code=400, detail="Dateiinhalt und Dateiendung stimmen nicht überein")
-        os.replace(temp_path, final_path)
-        return {"filename": filename, "storage_key": key, "size_bytes": size,
-                "content_type": DOCUMENT_TYPES[suffix], "path": final_path}
-    except Exception:
-        temp_path.unlink(missing_ok=True)
-        final_path.unlink(missing_ok=True)
-        raise
-    finally:
-        await upload.close()
+    return await stage_upload(upload,storage_dir)
+
+
+def safe_external_url(settings,document):
+    if document.state!='link':return None
+    try:return approved_external_url(settings,document.external_url)
+    except HTTPException:return None
+
+
+def approved_external_url(settings,value):
+    url=validate_external_document_url(value)
+    host=urlsplit(url).hostname.casefold()
+    if settings.dms_allowed_hosts and host not in settings.dms_allowed_hosts:
+        raise HTTPException(400,'DMS domain is not approved')
+    if settings.production and urlsplit(url).scheme!='https':
+        raise HTTPException(400,'Production DMS links require HTTPS')
+    return url
 
 
 def validate_external_document_url(value: str) -> str:
     url = value.strip()
     try:
         parsed = urlsplit(url)
-        valid = (len(url) <= 2048 and parsed.scheme.lower() in ("http", "https")
+        valid = (not any(ord(c)<32 for c in url) and len(url) <= 2048 and parsed.scheme.lower() in ("http", "https")
                  and bool(parsed.hostname) and parsed.username is None and parsed.password is None)
     except ValueError:
         valid = False
@@ -557,7 +505,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             'reload_url':'/'.join(request.url.path.split('/')[:3]),'user':None},status_code=409)
 
     app.state.config = settings
-    app.state.document_storage_dir = Path(settings.document_storage_dir).expanduser().resolve()
+    app.state.document_storage_dir = ensure_storage(settings)
+    app.state.document_scanner = ClamAVScanner(settings)
     app.state.session_factory = make_session_factory(engine)
     app.state.engine = engine
     app.state.integration_engine = make_engine(Settings(database_url=settings.integration_database_url)) if settings.integration_database_url else engine
@@ -571,9 +520,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "same-origin"
-        response.headers["Content-Security-Policy"] = (
+        response.headers.setdefault("Content-Security-Policy", (
             "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; "
-            "form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+            "form-action 'self'; frame-ancestors 'none'; base-uri 'none'"))
         response.headers["Cache-Control"] = "no-store"
         if settings.production:
             response.headers["Strict-Transport-Security"] = "max-age=31536000"
@@ -765,9 +714,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "content_type": document.content_type,
                 "size_bytes": document.size_bytes,
                 "source": "dms" if document.external_url else "upload",
-                "external_url": document.external_url,
+                "external_url": (safe_external_url(request.app.state.config,document) if document.external_url else None),
+                "state":document.state,"sha256":document.sha256,
                 "download_url": (f"{api_root}/api/v1/contracts/{contract.id}/documents/{document.id}"
-                                 if document.storage_key else None),
+                                 if document.state=='available' else None),
             } for document in documents_by_contract.get(contract.id, [])],
             "updated_at": contract.updated_at.isoformat() + "Z",
         } for contract in contracts]
@@ -779,14 +729,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def api_document(request: Request, contract_id: int, document_id: int,
                      db: Session = Depends(get_db)):
         token = require_integration_token(request, db)
-        contract, document = load_child(db, token, contract_id, ContractDocument, document_id)
-        if not document.storage_key:
-            raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
-        path = request.app.state.document_storage_dir / document.storage_key
-        if not path.is_file():
-            raise HTTPException(status_code=404, detail="Datei nicht gefunden")
-        headers = {"Content-Disposition": f"attachment; filename*=UTF-8''{quote(document.original_filename, safe='')}"}
-        return FileResponse(path, media_type=document.content_type, headers=headers)
+        try:
+            contract, document = load_child(db, token, contract_id, ContractDocument, document_id)
+        except HTTPException:
+            audit_denied(db,document_id,token=token)
+            raise
+        return download_response(db,request.app.state.config,document,request,token=token)
 
     @app.get("/admin/users/new", response_class=HTMLResponse)
     def new_user_page(request: Request, db: Session = Depends(get_db)):
@@ -1372,6 +1320,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await upload.close()
             raise
         stored_documents = []
+        pending_ids = []
         try:
             for upload in uploads:
                 stored_documents.append(await store_uploaded_document(upload, request.app.state.document_storage_dir))
@@ -1387,10 +1336,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.add(Revision(contract_id=contract.id, actor_id=user.id, action="created",
                             before=None, after=snapshot(contract)))
             for stored in stored_documents:
-                document = ContractDocument(
-                    contract_id=contract.id, uploaded_by_id=user.id,
-                    original_filename=stored["filename"], storage_key=stored["storage_key"],
-                    content_type=stored["content_type"], size_bytes=stored["size_bytes"])
+                document = new_document(db,contract,user,stored)
+                pending_ids.append(document.id)
                 db.add(document)
                 db.flush()
                 db.add(Revision(contract_id=contract.id, actor_id=user.id, action="document_uploaded",
@@ -1399,17 +1346,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                                     "size_bytes": stored["size_bytes"],
                                                     "uploaded_at": document.uploaded_at.isoformat()}))
             db.commit()
+            for pending_id in pending_ids:
+                try:
+                    process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
+                except Exception:
+                    # Committed jobs survive failed finalization/archive races.
+                    db.rollback()
+
         except HTTPException as exc:
             db.rollback()
-            for stored in stored_documents:
-                stored["path"].unlink(missing_ok=True)
             return html(request, "form.html", {**base_context(request, user, csrf), "mode": "new",
                         "values": form_values(form), "departments": departments,
                         "error": str(exc.detail)}, exc.status_code)
         except Exception:
             db.rollback()
-            for stored in stored_documents:
-                stored["path"].unlink(missing_ok=True)
             raise
         finally:
             for upload in uploads:
@@ -1438,7 +1388,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                .order_by(ContractDocument.uploaded_at.desc(), ContractDocument.id.desc())).all()
         return html(request, "detail.html", {**base_context(request, user, csrf),
                     "contract": contract, "history": history, "request_id":str(uuid4()),
-                    "documents": documents, "tasks": tasks, "task_assignees": task_assignees,
+                    "documents": documents, "dms_links":{d.id:safe_external_url(request.app.state.config,d) for d in documents}, "tasks": tasks, "task_assignees": task_assignees,
                     "contract_reviews": contract_reviews,
                     "decision_history":db.scalars(select(ReviewDecision).where(ReviewDecision.contract_id==contract.id).order_by(ReviewDecision.id.desc())).all(),
                     "assignment_teams": db.scalars(select(RecipientTeam).where(RecipientTeam.is_active.is_(True))).all() if user.role == 'admin' else [],
@@ -1604,14 +1554,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=400, detail="Bitte mindestens eine Datei ausw?hlen")
         material_change(db,contract,user)
         stored_documents = []
+        pending_ids = []
         try:
             for upload in uploads:
                 stored_documents.append(await store_uploaded_document(upload, request.app.state.document_storage_dir))
             for stored in stored_documents:
-                document = ContractDocument(
-                    contract_id=contract.id, uploaded_by_id=user.id,
-                    original_filename=stored["filename"], storage_key=stored["storage_key"],
-                    content_type=stored["content_type"], size_bytes=stored["size_bytes"])
+                document = new_document(db,contract,user,stored)
+                pending_ids.append(document.id)
                 db.add(document)
                 db.flush()
                 db.add(Revision(contract_id=contract.id, actor_id=user.id, action="document_uploaded",
@@ -1620,10 +1569,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                                     "size_bytes": stored["size_bytes"],
                                                     "uploaded_at": document.uploaded_at.isoformat()}))
             db.commit()
+            for pending_id in pending_ids:
+                try:
+                    process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
+                except Exception:
+                    # Committed jobs survive failed finalization/archive races.
+                    db.rollback()
+
         except Exception:
             db.rollback()
-            for stored in stored_documents:
-                stored["path"].unlink(missing_ok=True)
             raise
         finally:
             for upload in uploads:
@@ -1644,11 +1598,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         label = str(form.get("document_name", "")).strip()
         if not label or len(label) > 200:
             raise HTTPException(status_code=400, detail="Bitte eine Bezeichnung mit h?chstens 200 Zeichen angeben")
-        external_url = validate_external_document_url(str(form.get("external_url", "")))
+        external_url = approved_external_url(request.app.state.config,str(form.get("external_url", "")))
         material_change(db,contract,user)
         document = ContractDocument(contract_id=contract.id, uploaded_by_id=user.id,
                                     original_filename=label, storage_key=None,
-                                    content_type="application/x-dms-link", external_url=external_url,
+                                    content_type="application/x-dms-link", external_url=external_url, state="link",provenance="external_link",scan_result="not_applicable",
                                     size_bytes=0)
         db.add(document)
         db.flush()
@@ -1663,18 +1617,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def get_document(request: Request, contract_id: int, document_id: int,
                      download: bool = False, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
-        check_read(user, contract)
-        _parent, document = load_child(db, user, contract_id, ContractDocument, document_id)
-        if not document or document.contract_id != contract.id or not document.storage_key:
-            raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
-        path = request.app.state.document_storage_dir / document.storage_key
-        if not path.is_file():
-            raise HTTPException(status_code=404, detail="Datei nicht gefunden")
-        previewable = document.content_type == "application/pdf" or document.content_type.startswith("image/")
-        disposition = "inline" if previewable and not download else "attachment"
-        headers = {"Content-Disposition": f"{disposition}; filename*=UTF-8''{quote(document.original_filename, safe='')}"}
-        return FileResponse(path, media_type=document.content_type, headers=headers)
+        try:
+            contract = load_contract(db, user, contract_id)
+            check_read(user, contract)
+            _parent, document = load_child(db, user, contract_id, ContractDocument, document_id)
+        except HTTPException:
+            audit_denied(db,document_id,actor=user)
+            raise
+        return download_response(db,request.app.state.config,document,request,actor=user)
 
     @app.get("/contracts/{contract_id}/edit", response_class=HTMLResponse)
     def edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
@@ -1752,6 +1702,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         db.commit()
         return redirect(f"/contracts/{contract_id}?notice=archived")
 
+    from app.document_routes import install_document_routes
+    install_document_routes(app,get_db=get_db,user_csrf=user_csrf)
     from app.identity_routes import install_identity_routes
     install_identity_routes(app, get_db=get_db, html=html, base_context=base_context,
                             user_csrf=user_csrf, check_admin=check_admin)

@@ -87,3 +87,16 @@ Phase 1 extracts only explicit migration execution and reusable verification res
 - Expected failures count as open defects. Removing a marker requires target-phase evidence; an unexpected success fails the verification command and requires review.
 - R08 is partially addressed: harness repairs and initial matrix are delivered, while later feature, RLS, concurrency, and acceptance coverage remain outstanding.
 - Zero Critical/High findings, explicit Medium risk decisions, named owners, privacy/security/domain acceptance, and recovery evidence remain production gates in the plan.
+
+## Phase 5 document lifecycle (U013)
+
+Implementation and operator procedures: [Phase 5 report](PHASE5_DOCUMENT_LIFECYCLE.md).
+New tests cover non-clean scanner outcomes, exact-byte hash/range handling,
+container/active-content rejection, storage confinement, four processing crash
+points, metadata commit failure/orphans, non-destructive reconciliation, retained
+held predecessors, audited DMS correction, archive during slow scan and actual
+SQLite/PostgreSQL database-and-blob restore with authorization. Synthetic fixture
+scanner is not real malware detection evidence. A separate hosted job requires
+real ClamAV and current official definitions; Windows local scanner/symlink skips
+remain explicit. Final local and hosted results are recorded in U013/evidence.
+D05/D06 and production rollout are separate acceptance gates.

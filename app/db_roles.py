@@ -91,6 +91,6 @@ def validate_runtime_engine(engine, expected_kind):
             raise ValueError('Database runtime role registry mismatch')
         if connection.scalar(text("SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','ohvr_security') AND pg_has_role(current_user,c.relowner,'MEMBER')")):
             raise ValueError('Runtime role owns or inherits schema objects')
-        row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events','review_decisions')")).one()
-        if row[0]!=8 or not row[1]:
+        row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events','review_decisions','document_jobs')")).one()
+        if row[0]!=9 or not row[1]:
             raise ValueError('Required forced RLS policies are missing')

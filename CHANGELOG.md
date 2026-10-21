@@ -1,5 +1,16 @@
 # Änderungen
 
+## 21. Oktober 2026 — Phase 5: Private Dokumente, Quarantäne und Wiederherstellung
+
+- P05-T01–T08: begrenzte Inhaltsprüfung, fail-closed ClamAV-Anbindung, Hashprüfung,
+  dauerhafte Metadaten/Jobs, wiederholbare Veröffentlichung und sichere Downloads.
+- Auditiertes Ersetzen und DMS-Korrigieren mit alten Versionen, Freigabeentwertung
+  und Erhalt gesetzter Aufbewahrungssperren; keine automatische Löschung.
+- Additive Migration 0018 mit ungeprüftem Altbestand, Job-RLS und Zugriffsprotokoll;
+  keine Geschäftsdatenmigration. Echte PostgreSQL-Dump/Restore-Regression ergänzt.
+- Tests, Betreiberbefehle, Sicherungs-/Aufbewahrungskonzept und Grenzen stehen in
+  docs/PHASE5_DOCUMENT_LIFECYCLE.md und HANDOFF U013. D05/D06 bleiben offen.
+
 ## 21. Oktober 2026 — Phase 4: Freigabe, Steuerprüfung und Archivbarriere
 
 - Neue Migration 0017: Inhaltsrevisionen, Task-/Prüfversionen, unveränderbare Entscheidungsnachweise und explizit ungeprüfte Altbestände; keine Produktivdaten migriert.

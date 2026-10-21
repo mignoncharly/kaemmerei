@@ -111,6 +111,11 @@ class MigrationTests(unittest.TestCase):
                             self.assertEqual(connection.scalar(text("SELECT count(*) FROM revisions")), 1)
                             self.assertEqual(connection.scalar(text("SELECT original_filename FROM contract_documents")), "synthetic.pdf")
                             self.assertEqual(connection.scalar(text("SELECT content_type FROM contract_documents")), "application/pdf")
+                            legacy=connection.execute(text('SELECT state,scan_result,provenance,sha256,scanner_version,scanned_at,legal_hold,retention_class FROM contract_documents')).one()
+                            self.assertEqual(tuple(legacy[:3]),('legacy_unverified','unverified','legacy_unverified'))
+                            self.assertEqual(tuple(legacy[3:6]),(None,None,None))
+                            self.assertFalse(legacy[6])
+                            self.assertEqual(legacy[7],'unclassified')
                         connection.commit()
                         upgrade_connection(connection)  # Head is idempotent.
                 finally:
@@ -141,7 +146,7 @@ class ResourceAndPermissionTests(unittest.TestCase):
                 db.add(IntegrationToken(name="Synthetic", token_prefix=credential[:16], token_hash=hash_value(credential),
                                         department_id=1, created_by_id=1))
                 db.commit()
-            self.assertEqual((app.state.document_storage_dir / key).read_bytes(), content)
+            self.assertEqual((app.state.document_storage_dir / 'blobs' / key).read_bytes(), content)
             path = f"/contracts/{contract_id}/documents/{doc_id}"
             self.assertEqual(client.get(path).content, content)
             self.assertIn("attachment", client.get(path + "?download=1").headers["content-disposition"])
@@ -151,7 +156,7 @@ class ResourceAndPermissionTests(unittest.TestCase):
                 login(other_client, "admin")
                 create_contract(other_client)
                 self.assertEqual(other_client.get(path).status_code, 404)
-                self.assertFalse((other_app.state.document_storage_dir / key).exists())
+                self.assertFalse((other_app.state.document_storage_dir / 'blobs' / key).exists())
 
     def test_inactive_user_cannot_login(self):
         with environment_context(backend()) as (client, app):

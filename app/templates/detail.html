@@ -80,12 +80,22 @@
  <div class="panel-heading"><div><h2>Zugehörige Unterlagen</h2><p class="history-subtitle">Dateien und Verknüpfungen zum Dokumentenmanagement</p></div><span class="count">{{ documents|length }} Unterlage{% if documents|length != 1 %}n{% endif %}</span></div>
  {% if documents %}<ul class="document-list">{% for document in documents %}<li>
   <div class="document-meta"><strong>{% if document.external_url %}↗{% else %}▤{% endif %} {{ document.original_filename }}</strong><small>{% if document.external_url %}Verknüpfung zum Dokumentenmanagement{% else %}{{ (document.size_bytes / 1048576)|round(2) }} MB · {{ document.content_type }}{% endif %} · hinzugefügt von {{ document.uploaded_by.username }} · {{ document.uploaded_at.strftime('%d.%m.%Y %H:%M') }} UTC</small></div>
-  <div class="document-actions">{% if document.external_url %}<a class="button secondary" href="{{ document.external_url }}" target="_blank" rel="noopener noreferrer">Im DMS öffnen</a>{% else %}{% if document.content_type == 'application/pdf' or document.content_type.startswith('image/') %}<a class="button secondary" href="/contracts/{{ contract.id }}/documents/{{ document.id }}" target="_blank" rel="noopener">Vorschau</a>{% endif %}<a class="button subtle" href="/contracts/{{ contract.id }}/documents/{{ document.id }}?download=1">Herunterladen</a>{% endif %}</div>
+  <p>Status: {{ document.state }}; scan: {{ document.scan_result }}; SHA-256: {{ document.sha256 or 'unverified' }}{% if document.legal_hold %}; HOLD{% endif %}</p>
+  <div class="document-actions">{% if dms_links.get(document.id) %}<a class="button secondary" href="{{ dms_links[document.id] }}" target="_blank" rel="noopener noreferrer">Im DMS öffnen</a>{% elif document.state=='available' %}<a class="button secondary" href="/contracts/{{ contract.id }}/documents/{{ document.id }}?download=1">Herunterladen</a>{% else %}<span>Kein Download: Prüfung oder Abgleich erforderlich.</span>{% endif %}</div>
+  {% if can_edit and document.state not in ('superseded','disposed') %}<details><summary>Dokument ersetzen / korrigieren</summary>
+  {% if document.external_url %}<form method="post" action="/contracts/{{ contract.id }}/documents/{{ document.id }}/link">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="request_id" value="{{ new_request_id() }}"><input type="hidden" name="version" value="{{ document.version }}">
+   <label>Neue DMS-Adresse<input type="url" name="external_url" required maxlength="2048"></label><button type="submit">Neue Linkversion speichern</button></form>
+  {% else %}<form method="post" enctype="multipart/form-data" action="/contracts/{{ contract.id }}/documents/{{ document.id }}/replace">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="request_id" value="{{ new_request_id() }}"><input type="hidden" name="version" value="{{ document.version }}">
+   <input name="document" type="file" required><button type="submit">Neue Version prüfen lassen</button></form>{% endif %}
+  {% if user.role=='admin' and not document.legal_hold %}<form method="post" action="/contracts/{{ contract.id }}/documents/{{ document.id }}/hold"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="request_id" value="{{ new_request_id() }}"><input type="hidden" name="version" value="{{ document.version }}"><button type="submit">Aufbewahrungssperre setzen</button></form>{% endif %}
+  </details>{% endif %}
  </li>{% endfor %}</ul>{% else %}<p class="empty">Für diesen Vertrag sind noch keine Unterlagen hinterlegt.</p>{% endif %}
  {% if can_edit %}<div class="document-tools">
   <form class="document-upload" action="/contracts/{{ contract.id }}/documents" method="post" enctype="multipart/form-data">
    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="request_id" value="{{ new_request_id() }}">
-   <div><label for="documents">Dateien hochladen</label><input id="documents" name="documents" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.png,.jpg,.jpeg,.gif" multiple required><small class="hint">Bis zu 5 Dateien, jeweils maximal 25 MB. PDF und Bilder können in der Vorschau geöffnet werden.</small></div>
+   <div><label for="documents">Dateien hochladen</label><input id="documents" name="documents" type="file" accept=".pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.csv,.png,.jpg,.jpeg,.gif" multiple required><small class="hint">Bis zu 5 Dateien, jeweils maximal 25 MB. Downloads erst nach erfolgreicher Inhalts- und Malwareprüfung; keine Inline-Vorschau.</small></div>
    <button class="button primary" type="submit">Unterlagen hinzufügen</button>
   </form>
   <form class="document-link-form" action="/contracts/{{ contract.id }}/documents/link" method="post">

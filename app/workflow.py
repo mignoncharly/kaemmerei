@@ -111,6 +111,8 @@ def decide(db,user,contract,review,status,reason):
     if status=='approved' and (review.assigned_user_id!=user.id or review.team_id is None or
             user.id in (contract.created_by_id,contract.material_actor_id)):
         raise HTTPException(403,'Independent assigned approver required')
+    if status=='approved':
+        require_available_documents(db,contract)
     if review.content_revision not in (None,contract.content_revision):
         raise HTTPException(409,'Request refers to an older content revision')
     if review.status in TERMINAL and status=='open':
@@ -128,6 +130,7 @@ def decide(db,user,contract,review,status,reason):
 
 
 def activation(db,contract,recipients):
+    require_available_documents(db,contract)
     for recipient in recipients:
         if not db.scalar(select(ReviewDecision.id).join(ContractReview,ContractReview.id==ReviewDecision.review_id).where(
             ContractReview.contract_id==contract.id,ContractReview.recipient==recipient,
@@ -136,6 +139,13 @@ def activation(db,contract,recipients):
             ReviewDecision.content_revision==contract.content_revision,ReviewDecision.status=='approved')):
             raise HTTPException(409,'Current independent approval missing: '+recipient)
     contract.approval_provenance='verified'
+
+
+def require_available_documents(db,contract):
+    from app.models import ContractDocument
+    if db.scalar(select(ContractDocument.id).where(ContractDocument.contract_id==contract.id,
+            ContractDocument.state.not_in(('available','link','superseded'))).limit(1)):
+        raise HTTPException(409,'Pending, rejected or unverified documents must be reconciled before approval')
 
 
 def tax_values(user,contract,values):

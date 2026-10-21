@@ -130,7 +130,20 @@ class Revision(Base):
 
 class ContractDocument(Base):
     __tablename__ = "contract_documents"
+    __table_args__=(CheckConstraint("state IN ('legacy_unverified','pending','quarantined','available','rejected','superseded','disposed','link')",name='document_state'),)
     id: Mapped[int] = mapped_column(primary_key=True)
+    state: Mapped[str] = mapped_column(String(24),nullable=False,default='quarantined',server_default='legacy_unverified')
+    sha256: Mapped[str | None] = mapped_column(String(64))
+    verified_media_type: Mapped[str | None] = mapped_column(String(120))
+    scan_result: Mapped[str] = mapped_column(String(24),nullable=False,default='pending',server_default='unverified')
+    scanner_version: Mapped[str | None] = mapped_column(String(200))
+    scanned_at: Mapped[datetime | None] = mapped_column(DateTime)
+    provenance: Mapped[str] = mapped_column(String(24),nullable=False,default='upload',server_default='legacy_unverified')
+    version: Mapped[int] = mapped_column(Integer,nullable=False,default=1,server_default='1')
+    replaces_id: Mapped[int | None] = mapped_column(ForeignKey('contract_documents.id',ondelete='RESTRICT'))
+    replaces_version: Mapped[int | None] = mapped_column(Integer)
+    legal_hold: Mapped[bool] = mapped_column(Boolean,nullable=False,default=False,server_default='0')
+    retention_class: Mapped[str] = mapped_column(String(40),nullable=False,default='unclassified',server_default='unclassified')
     contract_id: Mapped[int] = mapped_column(ForeignKey("contracts.id", ondelete="RESTRICT"), nullable=False, index=True)
     uploaded_by_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -141,6 +154,16 @@ class ContractDocument(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     contract: Mapped[Contract] = relationship()
     uploaded_by: Mapped[User] = relationship()
+
+
+class DocumentJob(Base):
+    __tablename__='document_jobs'
+    document_id: Mapped[int] = mapped_column(ForeignKey('contract_documents.id',ondelete='RESTRICT'),primary_key=True)
+    contract_id: Mapped[int] = mapped_column(ForeignKey('contracts.id',ondelete='RESTRICT'),nullable=False)
+    state: Mapped[str] = mapped_column(String(24),nullable=False,default='pending',server_default='pending')
+    attempts: Mapped[int] = mapped_column(Integer,nullable=False,default=0,server_default='0')
+    last_error: Mapped[str | None] = mapped_column(String(40))
+    updated_at: Mapped[datetime] = mapped_column(DateTime,nullable=False,default=now_utc)
 
 
 class ContractTask(Base):

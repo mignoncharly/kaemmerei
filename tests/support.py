@@ -124,6 +124,8 @@ def environment_context(backend: str = "sqlite"):
                 settings = Settings(database_url=database_url, allowed_hosts=("testserver", "localhost"),
                                     document_storage_dir=documents)
                 app = create_app(settings)
+                from tests.scanner_support import CleanScanner
+                app.state.document_scanner=CleanScanner()
                 try:
                     with app.state.engine.connect() as connection:
                         upgrade_connection(connection)
