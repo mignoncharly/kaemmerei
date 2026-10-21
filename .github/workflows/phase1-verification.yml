@@ -112,6 +112,13 @@ jobs:
       - run: python -m pip install -r requirements-dev.txt
       - name: Install matching PostgreSQL 18 backup and restore client
         run: |
+          set -euo pipefail
+          # Ubuntu's default major need not match the PostgreSQL 18 service.
+          # Use the PostgreSQL project's signed repository, not an unsigned mirror.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          . /etc/os-release
+          printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt %s-pgdg main\n' "$VERSION_CODENAME" | sudo tee /etc/apt/sources.list.d/ohvr-pgdg.list > /dev/null
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-18
           /usr/lib/postgresql/18/bin/pg_dump --version

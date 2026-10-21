@@ -2,6 +2,7 @@
 from fastapi import Depends,HTTPException,Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
+from starlette.concurrency import run_in_threadpool
 from app.authorization import load_child
 from app.models import ContractDocument,DocumentJob,Revision
 from app.security import require_csrf
@@ -36,7 +37,7 @@ def install_document_routes(app,*,get_db,user_csrf):
         db.add(Revision(contract_id=contract.id,actor_id=user.id,action='document_uploaded',before={'document_id':old.id},
             after={'document_id':document.id,'sha256':document.sha256,'replaces_id':old.id}))
         db.commit()
-        try:process_document(db,app.state.config,app.state.document_scanner,document.id,user=user)
+        try:await run_in_threadpool(process_document,db,app.state.config,app.state.document_scanner,document.id,user=user)
         except Exception:db.rollback()
         return RedirectResponse(f'/contracts/{contract_id}',status_code=303)
 

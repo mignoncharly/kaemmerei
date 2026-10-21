@@ -120,6 +120,9 @@ def test_valid_containers_and_nonmacro_policy():
     assert validate_content(container({'mimetype':'application/vnd.oasis.opendocument.text','content.xml':'<document/>','META-INF/manifest.xml':'<manifest/>'}),'.odt').endswith('text')
     for suffix in ('.doc','.xls','.ppt','.rtf'):
         with pytest.raises(ValueError):validate_content(b'legacy active container',suffix)
+    for encoding in ('utf-16','utf-32'):
+        hidden='<!DOCTYPE x [<!ENTITY e "active">]><document>&e;</document>'.encode(encoding)
+        with pytest.raises(ValueError):validate_content(container({'[Content_Types].xml':types,'word/document.xml':hidden}),'.docx')
 
 
 @pytest.mark.parametrize('reply',[
@@ -256,25 +259,32 @@ def test_archived_pending_jobs_cannot_publish(documents):
 def test_slow_scan_does_not_hold_writer_lock_and_cannot_publish_after_archive(documents):
     from concurrent.futures import ThreadPoolExecutor
     from threading import Event
-    record,doc,key=upload(documents,ResultScanner('unavailable'))
     client,app,owner=documents
+    assert login(client,'admin').status_code==303
+    record=create_contract(client)
     started,released=Event(),Event()
     class PausingScanner:
         def scan(self,data):
             started.set()
             assert released.wait(timeout=15)
             return ScanResult('clean','synthetic-pausing-scanner')
+    app.state.document_scanner=PausingScanner()
+    path=f'/contracts/{record}/documents'
+    csrf=csrf_from(client.get('/').text)
+    data=workflow_payload(client,path,{'csrf_token':csrf})
     def worker():
-        with owner.state.session_factory() as db:
-            return process_document(db,app.state.config,PausingScanner(),doc)
-    with ThreadPoolExecutor(max_workers=1) as pool:
+        return client.post(path,data=data,files={'documents':('slow.pdf',b'%PDF-1.4\nPaused','application/pdf')},follow_redirects=False)
+    with ThreadPoolExecutor(max_workers=2) as pool:
         task=pool.submit(worker)
         try:
             assert started.wait(timeout=10)
-            assert client.post(f'/contracts/{record}/archive',data={'csrf_token':csrf_from(client.get('/').text),'version':'2'},follow_redirects=False).status_code==303
+            archive=pool.submit(client.post,f'/contracts/{record}/archive',data={'csrf_token':csrf,'version':'2'},follow_redirects=False)
+            # A blocked ASGI event loop or held database writer lock would time out.
+            assert archive.result(timeout=5).status_code==303
         finally:released.set()
-        assert task.result(timeout=10)=='archived'
-    with owner.state.session_factory() as db:assert db.get(ContractDocument,doc).state=='quarantined'
+        assert task.result(timeout=10).status_code==303
+    with owner.state.session_factory() as db:
+        assert db.scalar(select(ContractDocument).where(ContractDocument.contract_id==record)).state=='quarantined'
 
 
 def test_metadata_commit_failure_leaves_classified_reconciliation_work(documents,monkeypatch):

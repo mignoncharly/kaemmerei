@@ -76,7 +76,8 @@ authorization/integrity, not proof a client completed the transfer.
    than risk deleting bytes after an uncertain commit.
 3. Read/verify exact bytes, release database locks, then perform external scanning.
 4. Reacquire identity and parent locks; revalidate authority, archive state and
-   current document. Verify the source bytes again. Atomically rename within the
+   current document. Verify the source bytes again. HTTP processing awaits a
+   thread-pool worker so the scanner cannot block the ASGI event loop. Atomically rename within the
    same filesystem (legacy flat file recovery copies and retains the original).
 5. Commit available state, scan evidence, job outcome and audit together. A crash
    after file publication but before commit leaves an unavailable metadata state;
@@ -242,3 +243,4 @@ The native PostgreSQL cluster, identity guard, passfiles and services are preser
 - [Official signature management](https://docs.clamav.net/manual/Usage/SignatureManagement.html)
 - [ClamAV CLI macro-alert option](https://github.com/Cisco-Talos/clamav/blob/main/docs/man/clamscan.1.in)
 - [PostgreSQL 18 pg_dump and row security](https://www.postgresql.org/docs/18/app-pgdump.html)
+- [Official signed PostgreSQL Ubuntu packages](https://www.postgresql.org/download/linux/ubuntu/)

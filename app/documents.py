@@ -119,7 +119,7 @@ def validate_content(data,suffix):
                 def xml(name):
                     if archive.getinfo(name).file_size>2*1024*1024:raise ValueError('XML part exceeds limit')
                     raw=archive.read(name)
-                    if b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper():raise ValueError('XML entities prohibited')
+                    if b'\x00' in raw or b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper():raise ValueError('XML entities and NUL-encoded XML prohibited')
                     return ET.fromstring(raw)
                 if suffix in ('.docx','.xlsx','.pptx'):
                     part={'.docx':'word/document.xml','.xlsx':'xl/workbook.xml','.pptx':'ppt/presentation.xml'}[suffix]

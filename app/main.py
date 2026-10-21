@@ -20,6 +20,7 @@ from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
@@ -1348,7 +1349,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.commit()
             for pending_id in pending_ids:
                 try:
-                    process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
+                    await run_in_threadpool(process_document,db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
                 except Exception:
                     # Committed jobs survive failed finalization/archive races.
                     db.rollback()
@@ -1571,7 +1572,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.commit()
             for pending_id in pending_ids:
                 try:
-                    process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
+                    await run_in_threadpool(process_document,db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
                 except Exception:
                     # Committed jobs survive failed finalization/archive races.
                     db.rollback()
