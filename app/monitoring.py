@@ -82,6 +82,13 @@ def operational_health(engine, storage, status_directory, receipt, verifier, *,
         checks['security_activity'] = max(metrics['security_denials_15m'], metrics['login_attempts_15m']) < security_threshold
     except Exception:
         checks['database'] = False
+    if production:
+        try:
+            from app.server_security import validate_server_security
+            validate_server_security(engine)
+            checks['server_security_baseline'] = True
+        except Exception:
+            checks['server_security_baseline'] = False
     try:
         from app.documents import reject_links
         reject_links(storage)

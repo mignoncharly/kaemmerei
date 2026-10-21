@@ -505,6 +505,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 from app.db_roles import validate_runtime_engine
                 validate_runtime_engine(engine, 'web')
                 validate_runtime_engine(app.state.integration_engine, 'integration')
+            if settings.production:
+                from app.server_security import validate_server_security
+                for target in {engine,app.state.integration_engine}:
+                    validate_server_security(target)
             if settings.mfa_key_file is not None:
                 from app.mfa_codec import SeedCipher
                 if settings.production:

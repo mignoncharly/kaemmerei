@@ -9,6 +9,27 @@ from tests.support import disposable_database, scratch_directory
 
 
 @pytest.mark.postgresql
+def test_series_projection_upgrade_preserves_owner_acl_and_principal_guards(request):
+    if request.config.getoption('--database')!='postgresql':
+        pytest.skip('Actual PostgreSQL function catalog required')
+    with scratch_directory('ohvr-series-upgrade-') as directory:
+        with disposable_database('postgresql',Path(directory)) as target:
+            engine=make_engine(Settings(database_url=target))
+            try:
+                with engine.connect() as connection:
+                    upgrade_connection(connection,'0025_history_series')
+                    query=text("SELECT prosrc,proowner,proacl::text,prosecdef,proconfig,provolatile FROM pg_proc WHERE oid='ohvr_security.financial_history_series(timestamp[])'::regprocedure")
+                    before=connection.execute(query).one();connection.commit()
+                    upgrade_connection(connection)
+                    after=connection.execute(query).one()
+                    assert after[1:]==before[1:]
+                    assert after[0].split(' RETURN QUERY ')[0]==before[0].split(' RETURN QUERY ')[0]
+                    connection.commit();upgrade_connection(connection)
+                    assert connection.execute(query).one()==after
+            finally:engine.dispose()
+
+
+@pytest.mark.postgresql
 def test_series_matches_scalar_history_with_transfer_archive_unknowns_and_permissions(request):
     if request.config.getoption('--database')!='postgresql':
         pytest.skip('Actual restricted PostgreSQL history required')

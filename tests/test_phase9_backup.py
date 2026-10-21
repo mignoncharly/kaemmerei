@@ -46,6 +46,15 @@ def pg_bin(engine):
 
 
 @pytest.mark.postgresql
+def test_direct_production_backup_rejects_unverified_tls_before_output(request):
+    if request.config.getoption('--database')!='postgresql':pytest.skip('Actual named PostgreSQL fixture required')
+    with environment_context('postgresql') as (_,owner):
+        options=BackupOptions(Path('unused'),Path('unused'),'invalid',Path('unused'),Path('unused'),Path('unused'),production=True)
+        with pytest.raises(ValueError,match='verify-full'):
+            create_backup(owner.state.engine,owner.state.config,options,database=owner.state.engine.url.database)
+
+
+@pytest.mark.postgresql
 @pytest.mark.parametrize('representative',[False,True],ids=['small','10k-contracts-50k-documents'])
 def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(backup_keys,request,representative):
     if request.config.getoption('--database')!='postgresql':pytest.skip('Actual isolated PostgreSQL backup required')

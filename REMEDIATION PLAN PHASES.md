@@ -84,6 +84,7 @@ IDs stabilize the review findings for implementation tracking. Related findings 
 | R40 | Nice | Temporary package files and duplicate environments in workspace/distribution | 9 |
 | R42 (new U017) | High | Maintainer framework/parser advisories identified U017; compatible patched dependencies and 28-package runtime OSV review verified for 1649b15; broader release checks remain | 9 (P09-T11) |
 | R41 | Nice | Token owner, rotation, and deactivation semantics unspecified | 6 |
+| R43 (new U022) | High release gate | Observed native PostgreSQL 18.3 server/client is in official affected ranges. Production security floors added; actual patched host/client verification and applicability review remain open. No exploit confirmed; see docs/NATIVE_SECURITY_BASELINE.md. | 9, 10 |
 
 Scope gaps become release blockers when required by the accepted release scope. Record that decision rather than assigning them an unsupported vulnerability severity.
 

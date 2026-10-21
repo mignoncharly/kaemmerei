@@ -139,6 +139,12 @@ def execute():
     engine = make_engine(settings)
     SessionFactory = make_session_factory(engine)
     try:
+        if settings.production and args.command != 'operations-health':
+            from app.server_security import validate_server_security
+            try:
+                validate_server_security(engine)
+            except Exception:
+                raise SystemExit('Production database security baseline validation failed; use a reviewed patched server and protected connection configuration') from None
         if args.command == 'operations-health':
             from pathlib import Path
             from app.monitoring import operational_health

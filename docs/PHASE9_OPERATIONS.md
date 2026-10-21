@@ -2,6 +2,11 @@
 
 ## U022 local maintenance and monitoring
 
+Native review: [NATIVE_SECURITY_BASELINE](NATIVE_SECURITY_BASELINE.md) records
+official server/client advisories, observed local 18.3 and production-only patch
+floors. R43 remains open until patched host/client verification; local synthetic
+regressions do not close it. No native service, ACL or installed tool was changed.
+
 The first full mixed run at `99b1fcd` is retained in
 [failed workload evidence](evidence/phase9-u022-mixed-before.json). Reports missed
 the 2s target (5.747s p95). Its repeated 60 logins from one IP correctly exceeded
