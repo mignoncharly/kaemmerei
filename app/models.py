@@ -119,6 +119,8 @@ class SyncSnapshotItem(Base):
 
 class LoginAttempt(Base):
     __tablename__ = "login_attempts"
+    __table_args__ = (Index('ix_login_attempts_key_created','key_hash','created_at'),
+                      Index('ix_login_attempts_created_at','created_at'))
     id: Mapped[int] = mapped_column(primary_key=True)
     key_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)

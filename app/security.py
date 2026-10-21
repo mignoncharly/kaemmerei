@@ -84,6 +84,32 @@ def throttled(db: Session, key: str) -> bool:
     return count >= 8
 
 
+def reserve_login(db: Session, username: str, ip: str) -> bool:
+    """Reserve work while the caller holds the identity lock, before Argon2.
+
+    Shared database counters expire after 15 minutes; no permanent account lock.
+    Successful credentials do not erase the aggregate spraying budget.
+    """
+    from ipaddress import ip_address, ip_network
+    try:
+        address = ip_address(ip)
+        network = str(ip_network(f'{address}/{24 if address.version==4 else 64}', strict=False))
+    except ValueError:
+        network = 'unknown'
+    dimensions = [('account', username.strip().casefold(), 32), ('ip',ip,32),
+                  ('network',network,128), ('global','all',512)]
+    cutoff = now_utc() - timedelta(minutes=15)
+    keys = [(hash_value(f'login-budget:{kind}:{value}'), limit) for kind,value,limit in dimensions]
+    counts = dict(db.execute(select(LoginAttempt.key_hash,func.count()).where(
+        LoginAttempt.key_hash.in_([key for key,_ in keys]), LoginAttempt.created_at>=cutoff
+    ).group_by(LoginAttempt.key_hash)).all())
+    if any(counts.get(key,0)>=limit for key,limit in keys):
+        return False
+    db.add_all(LoginAttempt(key_hash=key) for key,_ in keys)
+    db.flush()
+    return True
+
+
 def record_failure(db: Session, key: str) -> None:
     db.add(LoginAttempt(key_hash=key))
     db.commit()

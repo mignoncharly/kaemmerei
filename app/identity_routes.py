@@ -1,3 +1,4 @@
+from app.request_boundary import parsed_form
 from app.presentation import safe_values
 """Identity/catalog routes, installed without replacing existing application routes."""
 from fastapi import Depends, HTTPException, Request
@@ -28,8 +29,8 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         return html(request, 'password.html', base_context(request, user, csrf))
 
     @app.post('/account/password')
-    async def change_password(request: Request, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0, max_fields=4)
+    def change_password(request: Request, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=0, max_fields=4)
         request.state.safe_values = safe_values(form)
         lock_identities(db)
         user, csrf = user_csrf(request, db)
@@ -76,8 +77,8 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
             'events': db.scalars(select(IdentityAudit).order_by(IdentityAudit.id.desc()).limit(100)).all()})
 
     @app.post('/admin/identities/{entity}/{identity_id}')
-    async def maintain_identity(request: Request, entity: str, identity_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0, max_fields=7)
+    def maintain_identity(request: Request, entity: str, identity_id: int, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=0, max_fields=7)
         request.state.safe_values = safe_values(form)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
@@ -130,8 +131,8 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         return RedirectResponse('/admin/identities', status_code=303)
 
     @app.post('/admin/recipient-memberships')
-    async def membership(request: Request, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0, max_fields=4)
+    def membership(request: Request, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=0, max_fields=4)
         request.state.safe_values = safe_values(form)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
@@ -155,9 +156,9 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         return RedirectResponse('/admin/identities', status_code=303)
 
     @app.post('/contracts/{contract_id}/reviews/{review_id}/assignment')
-    async def assign_review(request: Request, contract_id: int, review_id: int, db: Session = Depends(get_db)):
+    def assign_review(request: Request, contract_id: int, review_id: int, db: Session = Depends(get_db)):
         from app.workflow import begin_mutation, expected_version
-        form = await request.form(max_files=0, max_fields=5)
+        form = parsed_form(request, max_files=0, max_fields=5)
         request.state.safe_values = safe_values(form)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))

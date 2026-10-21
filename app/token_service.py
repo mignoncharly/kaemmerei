@@ -1,3 +1,4 @@
+from app.request_boundary import parsed_form
 from app.presentation import safe_values
 """Explicit service ownership, bounded grants, overlapping rotation and deferred usage."""
 from datetime import timedelta
@@ -34,8 +35,10 @@ def grant_fields(db,form,user):
 
 def install_token_routes(app,*,get_db,user_csrf,render):
     @app.post('/admin/integrations/{token_id}/rotate')
-    async def rotate(request:Request,token_id:int,db=Depends(get_db)):
-        form=await request.form(max_fields=2);user,csrf=user_csrf(request,db)
+    def rotate(request:Request,token_id:int,db=Depends(get_db)):
+        user,csrf=user_csrf(request,db)
+        if user.role!='admin':raise HTTPException(403,'Administrator required')
+        form=parsed_form(request, max_fields=2)
         request.state.safe_values = safe_values(form)
         require_csrf(request,db,str(form.get('csrf_token','')));lock_actor(db,user)
         if user.role!='admin':raise HTTPException(403,'Administrator required')
@@ -52,8 +55,8 @@ def install_token_routes(app,*,get_db,user_csrf,render):
         return render(request,user,csrf,db,new_token=raw)
 
     @app.post('/admin/integrations/{token_id}/scope')
-    async def rescope(request:Request,token_id:int,db=Depends(get_db)):
-        form=await request.form(max_fields=8);user,csrf=user_csrf(request,db)
+    def rescope(request:Request,token_id:int,db=Depends(get_db)):
+        form=parsed_form(request, max_fields=8);user,csrf=user_csrf(request,db)
         request.state.safe_values = safe_values(form)
         require_csrf(request,db,str(form.get('csrf_token','')));lock_actor(db,user)
         if user.role!='admin':raise HTTPException(403,'Administrator required')

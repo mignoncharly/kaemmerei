@@ -158,7 +158,39 @@ def validate_content(data,suffix):
     return MEDIA[suffix]
 
 
-async def stage_upload(upload,root):
+def storage_budget(root, settings):
+    """Called under the existing cross-process identity mutation lock.
+
+    Count orphan/staged bytes too. A volume quota remains required for external
+    writers and multipart temporary storage; this function deletes nothing.
+    """
+    import shutil
+    used = 0
+    for path in root.iterdir():
+        reject_links(path)
+        if path.name in ('staging','blobs') and path.is_dir():continue
+        if not path.is_file():raise HTTPException(507,'Unexpected storage entry; reconciliation required')
+        used += path.stat().st_size
+    for directory in ('staging','blobs'):
+        parent = root / directory
+        reject_links(parent)
+        if not parent.exists():continue
+        for path in parent.iterdir():
+            reject_links(path)
+            if not path.is_file():raise HTTPException(507,'Unexpected storage entry; reconciliation required')
+            used += path.stat().st_size
+    return min(MAX_BYTES, settings.document_storage_quota_bytes-used,
+               shutil.disk_usage(root).free-settings.document_storage_reserve_bytes)
+
+
+def stage_upload_sync(upload, root, settings=None):
+    """Run the existing bounded staging routine from a synchronous request worker."""
+    import asyncio
+    budget = storage_budget(root,settings) if settings is not None else MAX_BYTES
+    return asyncio.run(stage_upload(upload, root, max_additional_bytes=budget))
+
+
+async def stage_upload(upload,root,*,max_additional_bytes=MAX_BYTES):
     filename=(upload.filename or '').replace('\\','/').rsplit('/',1)[-1].strip()
     suffix=Path(filename).suffix.casefold()
     if len(filename)>200 or suffix not in MEDIA:
@@ -173,6 +205,7 @@ async def stage_upload(upload,root):
             while chunk:=await upload.read(65536):
                 size+=len(chunk)
                 if size>MAX_BYTES:raise HTTPException(413,'Document exceeds 25 MB')
+                if size>max_additional_bytes:raise HTTPException(507,'Private storage quota or free-space reserve exceeded')
                 stream.write(chunk)
             stream.flush();os.fsync(stream.fileno())
         data=read_private(path)

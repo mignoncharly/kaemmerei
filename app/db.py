@@ -18,6 +18,11 @@ def make_engine(settings: Settings) -> Engine:
         if name != ":memory:":
             Path(name).parent.mkdir(parents=True, exist_ok=True)
         kwargs["connect_args"] = {"check_same_thread": False, "timeout": 15}
+    else:
+        kwargs.update(pool_size=settings.database_pool_size, max_overflow=0,
+                      pool_timeout=settings.database_pool_timeout)
+        kwargs['connect_args'] = {'connect_timeout':5, 'options':
+            f'-c statement_timeout={settings.database_statement_timeout_ms} -c lock_timeout=5000'}
     engine = create_engine(settings.database_url, **kwargs)
     if settings.database_url.startswith("sqlite:///"):
         @event.listens_for(engine, "connect")

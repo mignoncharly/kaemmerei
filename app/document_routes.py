@@ -1,3 +1,4 @@
+from app.request_boundary import parsed_form
 from app.presentation import safe_values
 """Authorized lifecycle operations retain predecessors and prohibit disposal."""
 from fastapi import Depends,HTTPException,Request
@@ -8,7 +9,7 @@ from app.authorization import load_child
 from app.models import ContractDocument,DocumentJob,Revision
 from app.security import require_csrf
 from app.workflow import begin_mutation,expected_version,material_change,submission
-from app.documents import stage_upload,new_document,process_document
+from app.documents import stage_upload_sync,new_document,process_document
 from app.identity_service import audit
 
 
@@ -24,8 +25,8 @@ def install_document_routes(app,*,get_db,user_csrf):
         return user,contract,document
 
     @app.post('/contracts/{contract_id}/documents/{document_id}/replace')
-    async def replace_document(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
-        form=await request.form(max_files=1,max_fields=4)
+    def replace_document(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
+        form=parsed_form(request, max_files=1,max_fields=4)
         request.state.safe_values = safe_values(form)
         user,contract,old=writable(request,db,form,contract_id,document_id)
         upload=form.get('document')
@@ -33,20 +34,20 @@ def install_document_routes(app,*,get_db,user_csrf):
         if db.scalar(select(ContractDocument.id).where(ContractDocument.replaces_id==old.id,
                 ContractDocument.state.in_(('pending','quarantined')))):
             raise HTTPException(409,'A replacement is already pending; recover its job')
-        stored=await stage_upload(upload,app.state.document_storage_dir)
+        stored=stage_upload_sync(upload,app.state.document_storage_dir,app.state.config)
         material_change(db,contract,user)
         document=new_document(db,contract,user,stored,replaces=old)
         db.add(Revision(contract_id=contract.id,actor_id=user.id,action='document_uploaded',before={'document_id':old.id},
             after={'document_id':document.id,'sha256':document.sha256,'replaces_id':old.id}))
         db.commit()
-        try:await run_in_threadpool(process_document,db,app.state.config,app.state.document_scanner,document.id,user=user)
+        try:process_document(db,app.state.config,app.state.document_scanner,document.id,user=user)
         except Exception:db.rollback()
         return RedirectResponse(f'/contracts/{contract_id}',status_code=303)
 
     @app.post('/contracts/{contract_id}/documents/{document_id}/link')
-    async def correct_link(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
+    def correct_link(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
         from app.main import approved_external_url
-        form=await request.form(max_files=0,max_fields=5)
+        form=parsed_form(request, max_files=0,max_fields=5)
         request.state.safe_values = safe_values(form)
         user,contract,old=writable(request,db,form,contract_id,document_id)
         if not old.external_url:raise HTTPException(400,'Only existing DMS links can be corrected here')
@@ -66,8 +67,8 @@ def install_document_routes(app,*,get_db,user_csrf):
         return RedirectResponse(f'/contracts/{contract_id}',status_code=303)
 
     @app.post('/contracts/{contract_id}/documents/{document_id}/hold')
-    async def hold(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
-        form=await request.form(max_files=0,max_fields=4)
+    def hold(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
+        form=parsed_form(request, max_files=0,max_fields=4)
         request.state.safe_values = safe_values(form)
         user,_=user_csrf(request,db)
         if user.role!='admin':raise HTTPException(403,'Records administrator required')

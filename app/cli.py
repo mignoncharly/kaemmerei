@@ -53,6 +53,7 @@ def main():
         if not selected or not selected.startswith('postgresql+psycopg://'):
             raise SystemExit('Explicit MAINTENANCE_DATABASE_URL or MIGRATION_DATABASE_URL required for this operator command')
         settings = replace(settings, database_url=selected)
+        settings.validate()
     engine = make_engine(settings)
     SessionFactory = make_session_factory(engine)
     try:

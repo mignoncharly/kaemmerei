@@ -1,5 +1,7 @@
+from app.request_boundary import parsed_form
 """Server-rendered, department-scoped contract register (no external services)."""
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
@@ -17,10 +19,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import delete, func, select, update, text
 from sqlalchemy.orm.attributes import set_committed_value
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError, TimeoutError as PoolTimeout, OperationalError
+from sqlalchemy.orm import Session, joinedload
 from starlette.datastructures import UploadFile
-from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
@@ -45,7 +46,7 @@ from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FIN
                          TASK_KINDS, TASK_STATUSES, TAX_REVIEW_STATUSES)
 from app.security import (COOKIE_NAME, attempt_key, clear_failures, cookie_response,
                           get_login_session, get_user, hash_value, new_session, record_failure,
-                          ph, require_csrf, require_user, throttled, verify_password)
+                          ph, require_csrf, require_user, throttled, verify_password, reserve_login)
 
 BASE = Path(__file__).resolve().parent
 MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
@@ -92,7 +93,7 @@ def get_db(request: Request):
         db.info['enforce_rls'] = request.app.state.config.enforce_database_security
         db.info['request_context'] = {'session_hash':hash_value(cookie) if cookie and len(cookie)<=150 else '',
                                       'token_hash':hash_value(credential) if scheme.casefold()=='bearer' and credential.startswith('ohvr_') and len(credential)<=128 else '',
-                                      'correlation_id':str(uuid4())}
+                                      'correlation_id':getattr(request.state,'correlation_id',str(uuid4()))}
         yield db
 
 
@@ -141,6 +142,16 @@ def user_csrf(request: Request, db: Session) -> tuple[User, str]:
 
 def require_integration_token(request: Request, db: Session) -> IntegrationToken:
     scheme, _separator, credential = request.headers.get("authorization", "").partition(" ")
+    from app.api_rate import reserve_api
+    # Separate short transaction: never commit an application read/sync snapshot.
+    if not getattr(request.state,'api_admitted',False):
+        if not reserve_api(request.app.state.integration_session_factory,
+                enforced=request.app.state.config.enforce_database_security,
+                credential=credential[:512], address=request.client.host if request.client else 'unknown'):
+            raise HTTPException(429,'API request budget exhausted',headers={'Retry-After':'60'})
+        # v2 deliberately authenticates again after its serialization barrier.
+        # That revalidation must not start a second independent write transaction.
+        request.state.api_admitted=True
     if scheme.casefold() != "bearer" or not credential.startswith("ohvr_") or len(credential) > 128:
         raise HTTPException(status_code=401, detail="Bearer-Token erforderlich",
                             headers={"WWW-Authenticate": "Bearer"})
@@ -301,8 +312,9 @@ def format_euro(amount) -> str:
     return f"{whole}{',' + cents if cents != '00' else ''} €"
 
 
-async def store_uploaded_document(upload: UploadFile, storage_dir: Path) -> dict:
-    return await stage_upload(upload,storage_dir)
+def store_uploaded_document(upload: UploadFile, storage_dir: Path, settings=None) -> dict:
+    from app.documents import stage_upload_sync
+    return stage_upload_sync(upload,storage_dir,settings)
 
 
 def safe_external_url(settings,document):
@@ -532,12 +544,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return JSONResponse({'detail':'Invalid request parameters'},status_code=422)
         return await http_error(request,HTTPException(422))
 
+    @app.exception_handler(PoolTimeout)
+    async def database_capacity_error(request, exc):
+        return await http_error(request,HTTPException(503,'Database capacity exhausted',headers={'Retry-After':'5'}))
+
+    @app.get('/health/live', include_in_schema=False)
+    def live():
+        return Response(status_code=204)
+
+    @app.get('/health/ready', include_in_schema=False)
+    def ready():
+        try:
+            for target in {engine, app.state.integration_engine}:
+                with target.connect() as connection:
+                    connection.execute(text('SELECT 1'))
+        except (OperationalError, PoolTimeout):
+            return Response(status_code=503)
+        return Response(status_code=204)
+
     app.state.config = settings
     app.state.document_storage_dir = ensure_storage(settings)
     app.state.document_scanner = ClamAVScanner(settings)
     app.state.session_factory = make_session_factory(engine)
     app.state.engine = engine
-    app.state.integration_engine = make_engine(Settings(database_url=settings.integration_database_url)) if settings.integration_database_url else engine
+    app.state.integration_engine = make_engine(replace(settings,database_url=settings.integration_database_url)) if settings.integration_database_url else engine
     app.state.integration_session_factory = make_session_factory(app.state.integration_engine)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
     app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
@@ -569,8 +599,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return cookie_response(response, token, production=settings.production, hours=settings.session_hours)
 
     @app.post("/login", response_class=HTMLResponse)
-    async def login(request: Request, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0, max_fields=3)
+    def login(request: Request, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=0, max_fields=3)
         request.state.safe_values = form_values(form)
         # Serialize credential verification/session creation with password reset
         # and permission changes; no commit may release this lock in between.
@@ -580,7 +610,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         password = str(form.get("password", ""))
         ip = request.client.host if request.client else "unknown"
         key = attempt_key(username, ip)
-        if len(username) > 80 or len(password) > 512 or throttled(db, key):
+        if len(username) > 80 or len(password) > 512 or throttled(db, key) or not reserve_login(db, username, ip):
             return html(request, "login.html", {"csrf_token": guest.csrf_token, "username": username[:80],
                          "error": "Anmeldung vorübergehend nicht möglich. Bitte später erneut versuchen."}, 429)
         user = db.scalar(select(User).where(User.username == username, User.is_active.is_(True)))
@@ -596,8 +626,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return cookie_response(redirect("/?notice=login"), token, production=settings.production, hours=settings.session_hours)
 
     @app.post("/logout")
-    async def logout(request: Request, db: Session = Depends(get_db)):
-        form = await request.form()
+    def logout(request: Request, db: Session = Depends(get_db)):
+        form = parsed_form(request)
         request.state.safe_values = form_values(form)
         login_session = require_csrf(request, db, str(form.get("csrf_token", "")))
         db.delete(login_session)
@@ -633,10 +663,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return render_integrations(request, user, csrf, db)
 
     @app.post("/admin/integrations", response_class=HTMLResponse)
-    async def create_integration(request: Request, db: Session = Depends(get_db)):
+    def create_integration(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_admin(user)
-        form = await request.form(max_fields=20)
+        form = parsed_form(request, max_fields=20)
         request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         lock_actor(db,user)
@@ -675,10 +705,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return render_integrations(request, user, csrf, db, new_token=raw_token)
 
     @app.post("/admin/integrations/{token_id}/revoke")
-    async def revoke_integration(request: Request, token_id: int, db: Session = Depends(get_db)):
+    def revoke_integration(request: Request, token_id: int, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
         check_admin(user)
-        form = await request.form(max_fields=2)
+        form = parsed_form(request, max_fields=2)
         request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         lock_actor(db,user)
@@ -807,10 +837,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "departments": departments, "roles": USER_ROLES, "error": error}, status_code)
 
     @app.post("/admin/users/new", response_class=HTMLResponse)
-    async def create_user(request: Request, db: Session = Depends(get_db)):
+    def create_user(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_admin(user)
-        form = await request.form(max_fields=10)
+        form = parsed_form(request, max_fields=10)
         request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
@@ -840,13 +870,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return render_user_form(request, user, csrf, db, "edit", values, target)
 
     @app.post("/admin/users/{user_id}/edit", response_class=HTMLResponse)
-    async def update_user(request: Request, user_id: int, db: Session = Depends(get_db)):
+    def update_user(request: Request, user_id: int, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_admin(user)
         target = db.get(User, user_id)
         if not target:
             raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
-        form = await request.form(max_fields=10)
+        form = parsed_form(request, max_fields=10)
         request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
@@ -877,7 +907,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                          status: str = "", tax_review_status: str = "", db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
         _filters, stmt = listing_spec(db, user, locals())
-        contracts_to_export = db.scalars(stmt.limit(EXPORT_MAX_ROWS+1)).all()
+        contracts_to_export = db.scalars(stmt.options(joinedload(Contract.department)).limit(EXPORT_MAX_ROWS+1)).all()
         if len(contracts_to_export) > EXPORT_MAX_ROWS:
             raise HTTPException(413, 'Der Export ist auf 5000 Verträge begrenzt. Bitte die Filter eingrenzen.')
         payment_labels = dict(PAYMENT_INTERVALS)
@@ -885,6 +915,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         tax_labels = dict(TAX_REVIEW_STATUSES)
         status_labels = dict(CONTRACT_STATUSES)
         rows = []
+        export_bytes = 0
+        from time import monotonic
+        export_started = monotonic()
         for contract in contracts_to_export:
             values = {
                 "contract_number": contract.contract_number,
@@ -910,8 +943,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "is_archived": bool(contract.archived_at),
                 "department": contract.department.name,
             }
-            rows.append([values[field] for field, _label in EXPORT_COLUMNS])
+            row = [values[field] for field, _label in EXPORT_COLUMNS]
+            export_bytes += sum(len(str(value).encode('utf-8')) for value in row if value is not None)
+            if export_bytes>8*1024*1024 or monotonic()-export_started>10:
+                raise HTTPException(413,'Export byte/time budget exceeded; narrow the filters')
+            rows.append(row)
         content = make_xlsx([label for _field, label in EXPORT_COLUMNS], rows)
+        if len(content)>8*1024*1024 or monotonic()-export_started>15:
+            raise HTTPException(413,'Export byte/time budget exceeded; narrow the filters')
         return Response(content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         headers={"Content-Disposition": 'attachment; filename="vertragsregister_export.xlsx"'})
 
@@ -1031,17 +1070,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "reminder_window_days": REMINDER_WINDOW_DAYS})
 
     @app.post("/contracts/import", response_class=HTMLResponse)
-    async def import_contracts(request: Request, db: Session = Depends(get_db)):
+    def import_contracts(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_write(user)
-        form = await request.form(max_files=1, max_fields=2)
+        form = parsed_form(request, max_files=1, max_fields=2)
         request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         upload = form.get("file")
         if not isinstance(upload, UploadFile) or not upload.filename.lower().endswith(".xlsx"):
             raise HTTPException(status_code=400, detail="Bitte eine .xlsx-Datei auswählen.")
-        data = await upload.read(10 * 1024 * 1024 + 1)
-        await upload.close()
+        data = upload.file.read(10 * 1024 * 1024 + 1)
+        upload.file.close()
         if len(data) > 10 * 1024 * 1024:
             raise HTTPException(status_code=413, detail="Die Excel-Datei darf höchstens 10 MB groß sein.")
         try:
@@ -1241,10 +1280,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                      "values": {}, "departments": departments})
 
     @app.post("/contracts/new")
-    async def save_new(request: Request, db: Session = Depends(get_db)):
+    def save_new(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_write(user)
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         lock_actor(db,user)
@@ -1259,18 +1298,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             tax_values(user,None,values)
         except ValidationError as exc:
             for upload in uploads:
-                await upload.close()
+                upload.file.close()
             return html(request, "form.html", {**base_context(request, user, csrf), "mode": "new",
                         "values": form_values(form), "departments": departments, "error": str(exc)}, 422)
         except HTTPException:
             for upload in uploads:
-                await upload.close()
+                upload.file.close()
             raise
         stored_documents = []
         pending_ids = []
         try:
             for upload in uploads:
-                stored_documents.append(await store_uploaded_document(upload, request.app.state.document_storage_dir))
+                stored_documents.append(store_uploaded_document(upload, request.app.state.document_storage_dir, request.app.state.config))
             if values["tax_review_status"] == "completed":
                 values["tax_reviewed_by_id"] = user.id
                 values["tax_reviewed_at"] = now_utc()
@@ -1295,7 +1334,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.commit()
             for pending_id in pending_ids:
                 try:
-                    await run_in_threadpool(process_document,db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
+                    process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
                 except Exception:
                     # Committed jobs survive failed finalization/archive races.
                     db.rollback()
@@ -1310,7 +1349,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise
         finally:
             for upload in uploads:
-                await upload.close()
+                upload.file.close()
         return redirect(f"/contracts/{contract.id}?notice=created")
 
     @app.get("/contracts/{contract_id}", response_class=HTMLResponse)
@@ -1350,8 +1389,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         can_decide_review(db,user,contract,review),CONTRACT_REVIEW_STATUSES) for review in contract_reviews}})
 
     @app.post("/contracts/{contract_id}/tasks")
-    async def create_contract_task(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+    def create_contract_task(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
@@ -1375,9 +1414,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return redirect(f"/contracts/{contract.id}?notice=task_created")
 
     @app.post("/contracts/{contract_id}/tasks/{task_id}")
-    async def update_contract_task(request: Request, contract_id: int, task_id: int,
+    def update_contract_task(request: Request, contract_id: int, task_id: int,
                                    db: Session = Depends(get_db)):
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
@@ -1406,8 +1445,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return redirect(f"/contracts/{contract.id}?notice=task_updated")
 
     @app.post("/contracts/{contract_id}/reviews")
-    async def create_contract_review(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+    def create_contract_review(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
@@ -1442,9 +1481,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return redirect(f"/contracts/{contract.id}?notice=review_created")
 
     @app.post("/contracts/{contract_id}/reviews/{review_id}")
-    async def update_contract_review(request: Request, contract_id: int, review_id: int,
+    def update_contract_review(request: Request, contract_id: int, review_id: int,
                                      db: Session = Depends(get_db)):
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         # Consume bounded form input before taking shared identity/parent locks.
         lock_identities(db)
@@ -1484,8 +1523,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return redirect(f"/contracts/{contract.id}?notice=review_updated")
 
     @app.post("/contracts/{contract_id}/documents")
-    async def upload_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+    def upload_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
@@ -1504,7 +1543,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         pending_ids = []
         try:
             for upload in uploads:
-                stored_documents.append(await store_uploaded_document(upload, request.app.state.document_storage_dir))
+                stored_documents.append(store_uploaded_document(upload, request.app.state.document_storage_dir, request.app.state.config))
             for stored in stored_documents:
                 document = new_document(db,contract,user,stored)
                 pending_ids.append(document.id)
@@ -1518,7 +1557,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.commit()
             for pending_id in pending_ids:
                 try:
-                    await run_in_threadpool(process_document,db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
+                    process_document(db,request.app.state.config,request.app.state.document_scanner,pending_id,user=user)
                 except Exception:
                     # Committed jobs survive failed finalization/archive races.
                     db.rollback()
@@ -1528,12 +1567,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise
         finally:
             for upload in uploads:
-                await upload.close()
+                upload.file.close()
         return redirect(f"/contracts/{contract_id}?notice=document_uploaded")
 
     @app.post("/contracts/{contract_id}/documents/link")
-    async def link_external_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+    def link_external_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
@@ -1588,8 +1627,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "contract": contract, "values": values, "departments": departments})
 
     @app.post("/contracts/{contract_id}/edit")
-    async def save_edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0, max_fields=32)
+    def save_edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = parsed_form(request, max_files=0, max_fields=32)
         request.state.safe_values = form_values(form)
         user, csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
@@ -1632,10 +1671,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return redirect(f"/contracts/{contract_id}?notice=updated")
 
     @app.post("/contracts/{contract_id}/archive")
-    async def archive(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0,max_fields=5)
-        request.state.safe_values = form_values(form)
+    def archive(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user = require_user(request, db)
+        form = parsed_form(request, max_files=0,max_fields=5)
+        request.state.safe_values = form_values(form)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
@@ -1662,6 +1701,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from app.identity_routes import install_identity_routes
     install_identity_routes(app, get_db=get_db, html=html, base_context=base_context,
                             user_csrf=user_csrf, check_admin=check_admin)
+    from app.request_boundary import RequestBoundary
+    app.add_middleware(RequestBoundary, settings=settings)
     return app
 
 
