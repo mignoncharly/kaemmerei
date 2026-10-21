@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 3 P03-T01–T08 implemented. Restricted LOGIN-role RLS, schema integrity and protected audit tested locally; see U011 and docs/PHASE3_DATABASE_SECURITY.md for verification and hosted status.\
+Current stage: Phase 3 P03-T01–T08 technically verified locally and in all three hosted jobs. Restricted LOGIN-role RLS, schema integrity and protected audit delivered; see U011 and docs/PHASE3_DATABASE_SECURITY.md. DBA/security and production acceptance remain pending.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -31,7 +31,7 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | PostgreSQL/migrations | Native Windows 18.3; clean/populated head 0016 and restricted runtime roles pass in isolated databases. Error 87 historical; independent launcher ACL limitation unchanged. Production roles not deployed. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main; Phase 3 source/hosted evidence tracked in U011. Earlier Phase 1/2 implementation and CI evidence retained. |
+| Source commit/branch | main; Phase 3 implementation 5986a7473e3772e0f9a4e390aadc979101a1f9a9 passed all three jobs in run 39600834032. Earlier evidence retained. |
 | Completed deliverables | Plan/handoff; Phase 1 harness, isolated storage/configuration, migration fixtures, stdlib runner, CI definitions, baseline/matrix docs, corrected German project status |
 | Application remediation | Document storage now per app instance; migrations accept explicit test connections. Business authorization/workflow findings remain open |
 
@@ -56,7 +56,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 |---|---|---|---|---|---|
 | 1 — Baseline and verification | Verified / technically complete | P01-T01–T08 | Preserved; native Windows application/identity probes and hosted checks pass; independent agent launcher retry is ACL-limited | Engineering: Codex; no production acceptance | Preserve U009 evidence |
 | 2 — Authorization and identities | Verified technically; owner acceptance pending | P02-T01–T08 | 66 PostgreSQL passed; 65 SQLite passed + one PostgreSQL-only skip; hosted three jobs passed for 9fde6c0 | Engineering: Codex; municipal owners unassigned | Next technical phase: P03-T01; municipal D01/D02 acceptance required before production |
-| 3 — Schema, roles, RLS, audit | Implemented; verification tracked in U011 | P03-T01–T08 | Actual restricted LOGIN-role tests; schema equality and rejected legacy migration on both backends | Engineering: Codex; DBA/security owner acceptance pending | Finish hosted verification and record exact source/run; then P04-T01 |
+| 3 — Schema, roles, RLS, audit | Verified technically; DBA/security acceptance pending | P03-T01–T08 | PostgreSQL 81 passed; SQLite 69 passed + 12 PG-only skips; explicit PostgreSQL 12 passed; all three hosted jobs passed | Engineering: Codex; DBA/security owner unassigned | Next technical phase P04-T01; review D03 before business deployment |
 | 4 — Workflow/archive/concurrency | Not started | None | Not run | Unassigned | Define material content revision and mutation protocol |
 | 5 — Document lifecycle | Not started | None | Not run | Unassigned | Define storage states, quarantine, recovery, and retention |
 | 6 — Integration synchronization | Not started | None | Not run | Unassigned | Specify versioned cursor/feed/scope-removal contract |
@@ -122,10 +122,10 @@ Append exact commands only after identifying the correct environment. Record dat
 | Documentation cross-reference/content review | Workspace Markdown | Phase 1 and Phase 2 implementation tracked separately; policy/release acceptance explicitly open | U010; historical U002/U004 preserved |
 | Python syntax/source snapshot | Workspace source | 31 Python files AST-parsed; 38 source/config inputs fingerprinted | U004; .verification/phase1-source-sha256.json |
 | Existing application tests | Migrated disposable SQLite | 10/10 passed through unittest adapter | U003; .verification/phase1-sqlite.log |
-| New regression tests | Migrated disposable SQLite / native PostgreSQL 18.3 | PostgreSQL 66 passed; SQLite 65 passed + one PostgreSQL-only skip; no xfails; 15 subtests passed on each | U010; docs/evidence/phase2-local.json |
-| Clean Alembic upgrade | Disposable SQLite / PostgreSQL | Head 0014 and repeat upgrade passed locally and in three hosted jobs | U010; phase2 local/CI evidence |
-| Populated baseline upgrade | Disposable SQLite / PostgreSQL | Original 0001/0003 fixture and new populated 0013→0014 identity/contact/review preservation pass | U010; MigrationTests and tests/test_phase2.py |
-| Direct pytest | Local Windows and hosted Ubuntu, SQLite / PostgreSQL | Full suites pass; final targeted PostgreSQL Phase 2 has 21 passes; explicit PostgreSQL lifecycle one pass | U010; CI run 39594698525 and local JUnit hashes |
+| New regression tests | Migrated disposable SQLite / native PostgreSQL 18.3 | PostgreSQL 81 passed; SQLite 69 passed + 12 PostgreSQL-only skips; no xfails; 15 subtests passed on each | U011; docs/evidence/phase3-local.json |
+| Clean Alembic upgrade | Disposable SQLite / PostgreSQL | Head 0016, schema equality and repeat upgrade pass | U011; full suite and tests/test_phase3_schema.py |
+| Populated baseline upgrade | Disposable SQLite / PostgreSQL | Original fixtures plus invalid legacy abort, reviewed synthetic correction and historical audit outcome preservation pass | U010/U011; MigrationTests, tests/test_phase2.py, tests/test_phase3_schema.py |
+| Direct pytest | Local Windows, SQLite / PostgreSQL | Full suites pass; explicit PostgreSQL selection 12 passed, zero skips; hosted result in U011 | U011; local JUnit hashes and Phase 3 CI evidence |
 | RLS/application-role isolation | Actual separate PostgreSQL LOGIN roles | 11 Phase 3 tests passed; explicit selection also includes application lifecycle | U011; tests/test_phase3.py |
 | Concurrent archive/review/task writes | PostgreSQL | Not run | None |
 | File scan/recovery fault cases | Isolated document storage | Not implemented / not run | None |
@@ -284,12 +284,12 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Scope:** User authorized the next phase of the named ten-phase plan. P03-T01–T08 implemented; phases 1/2 preserved. Unrelated Start-TestDatabase.ps1 whitespace edit remains untouched and excluded from commits.
 - **Implementation:** Forward integrity/security migrations, safe schema/legacy inventory, tax reviewer FK, portable constraints, separate web/integration/maintenance LOGIN roles and NOLOGIN audit owner, forced parent-scoped RLS, narrow authentication/locking functions, per-transaction validated request context, deferred credential columns and append-only events. CLI/Alembic use explicit operator/maintenance connections. See docs/PHASE3_DATABASE_SECURITY.md for grants and threat boundaries.
 - **Migration/data:** Head 0016 verified on synthetic clean/populated databases. Invalid legacy associations abort without repair; test explicitly corrects its synthetic mapping then upgrades. Historical denied audit outcomes preserved and unknown historical correlation stays NULL. No business data inspected/migrated, no role/password production deployment, no cluster deletion/reinitialization/service change.
-- **Verification:** Full local PostgreSQL 81 passed, zero failures/skips/xfails, 15 passing subtests (153.32s). Explicit actual PostgreSQL selection 12 passed, 69 deselected, no skips/xfails (54.89s); 11 restricted-role cases plus application lifecycle. SQLite full 69 passed, 12 PostgreSQL-only skips and 15 passing subtests; final repeat and hosted result tracked in the report/evidence. Final portable migration/schema selection 4/4 passed on both backends, including legacy audit outcome preservation.
+- **Verification:** Full local PostgreSQL 81 passed, zero failures/skips/xfails, 15 passing subtests (153.32s). Explicit actual PostgreSQL selection 12 passed, 69 deselected, no skips/xfails (54.89s); 11 restricted-role cases plus application lifecycle. Final SQLite full 69 passed, 12 PostgreSQL-only skips and 15 passing subtests (32.58s). Final portable migration/schema selection 4/4 passed on both backends, including legacy audit outcome preservation. Local JUnit hashes: docs/evidence/phase3-local.json. Remaining unsuppressed warnings: Starlette/AnyIO deprecation and managed Windows pytest-cache ACL.
 - **Safety:** Read-only final catalog check: zero harness databases and zero generated temporary roles remain. Test role creation/cleanup validates database OID/owner/comment and generated role OID/comment; interruption journal contains no secrets. Native passfiles/binary identity/startup corrections preserved; no Docker local dependency introduced.
 - **Investigation:** Initial role ownership transfer/cleanup errors corrected; exact temporary roles positively identified and cleaned. Restricted roles exposed audit RETURNING visibility and parent-lock/UPDATE policy incompatibilities, both corrected. SQLite table rebuild now preserves status CHECK and transactional FK integrity. A test's unsupported recipient fixture was corrected to an existing recipient, without weakening validation.
-- **Hosted:** Pending actual Phase 3 run at this entry's creation; YAML alone is not acceptance. CI service job now supplies a synthetic test-only bootstrap connection; native job uses its private marked-cluster bootstrap. Exact implementation/run/job/artifact evidence will be added after publication.
+- **Hosted:** Implementation 5986a7473e3772e0f9a4e390aadc979101a1f9a9 pushed successfully to authorized main. Actual [run 39600834032](https://github.com/mignoncharly/kaemmerei/actions/runs/39600834032) completed successfully: sqlite, PostgreSQL 18 and native-postgresql jobs all passed. Dependency install, full migrations/tests and explicit PostgreSQL/RLS selections passed. Run/job/step and three artifact metadata inspected; archives not downloaded. Evidence: docs/evidence/phase3-ci-39600834032.json. Native bootstrap uses the existing marked cluster/private passfile; CI service bootstrap credential is synthetic.
 - **Boundaries:** Shared-role GUC RLS protects omitted filters, not unrestricted application SQL/database credential compromise. Identity is a transaction snapshot and revalidated next transaction. Events cover committed changes; rolled-back denials need separate operational logging. SQLite has no RLS. DBA/security D03 acceptance, business migration, backup/restore rehearsal and production release remain open; Phase 4 owns content-bound approvals/aggregate races.
-- **Next:** Verify actual hosted jobs, publish final evidence, then P04-T01. No deployment approval is inferred.
+- **State/next:** Phase 3 technically verified. Publish final evidence, then P04-T01 aggregate mutation protocol. DBA/security D03 acceptance, production legacy-data inventory and operational restore remain separate; no deployment approval is inferred.
 
 ### Update entry template — copy for the next update
 

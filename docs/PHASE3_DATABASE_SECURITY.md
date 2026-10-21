@@ -167,10 +167,67 @@ self-escalation, pooled reuse, post-commit reads, audit mutation, narrow mainten
 owner rejection, schema equality, invalid direct writes and legacy migration abort.
 Full R01/R04/R10 and Phase 2 regressions remain in the complete suite.
 
-Local final results and hosted evidence are recorded below after execution.
+### Local results
+
+Source: `5986a7473e3772e0f9a4e390aadc979101a1f9a9`. Windows, Python 3.14.3,
+pytest 9.1.1, native PostgreSQL 18.3. [Machine-readable results](evidence/phase3-local.json)
+contain local JUnit hashes; ignored `.verification` XML remains on this workstation.
+
+| Run | Selected | Passed | Skipped | Failed / xfailed | Time |
+|---|---:|---:|---:|---:|---:|
+| Full PostgreSQL | 81 | 81 | 0 | 0 / 0 | 153.32s |
+| Full SQLite | 81 | 69 | 12 PostgreSQL-only | 0 / 0 | 32.58s |
+| Explicit PostgreSQL selection | 12 | 12 | 0 | 0 / 0 | 54.89s |
+| Final schema/legacy selection, each backend | 4 | 4 | 0 | 0 / 0 | SQLite 3.26s; PostgreSQL 11.90s |
+
+Both full runs additionally passed 15 subtests. The explicit selection deselected
+69 ordinary tests and executed 11 restricted-role cases plus the PostgreSQL
+application lifecycle. The final legacy-schema selection verifies the last historical
+audit-outcome correction. Two remaining warnings in final full runs: Starlette/AnyIO
+deprecated BlockingPortal alias and managed Windows pytest cache ACL. Neither is
+suppressed. Read-only cleanup check found zero harness databases and zero generated
+temporary roles. Production database/schema/storage and unrelated services were untouched.
+
+### Hosted verification
+
+Implementation pushed successfully to configured `main`; actual Phase 3 run:
+[39600834032](https://github.com/mignoncharly/kaemmerei/actions/runs/39600834032).
+Completed successfully for the exact implementation SHA above. SQLite,
+PostgreSQL 18 and native-postgresql jobs all passed, including dependency
+installation, migrations, full pytest and both PostgreSQL jobs' explicit
+integration/RLS selection. Run/job/step and all three uploaded artifact metadata
+were inspected through the GitHub API; artifact archives were not downloaded.
+[Hosted evidence](evidence/phase3-ci-39600834032.json) records the actual conclusions.
+**Phase 3 technical gate is verified locally and in hosted CI.** Production
+DBA/security acceptance, business-data migration and restore rehearsal remain open.
 Hosted success is not inferred from YAML. CI includes native PostgreSQL and
 PostgreSQL 18 service jobs, full suites and explicit PostgreSQL test selection;
 the service bootstrap password is synthetic and confined to the disposable runner.
+
+### Acceptance checklist
+
+- [x] Clean/populated migration and invalid legacy abort preserve data on both backends.
+- [x] Schema inventory has no unexplained structural differences; tax reviewer FK enforced.
+- [x] Real restricted LOGIN roles enforce parent/child isolation and denied modifications.
+- [x] Authentication bootstrap, password rotation, assigned decisions and maintenance work under real grants.
+- [x] Pool reuse, malformed/missing identity, revocation and post-commit reads checked.
+- [x] Audit/event updates/deletes/TRUNCATE denied under runtime roles; separate ownership checked.
+- [x] Full regular suites and actual PostgreSQL tests pass; R01/R04/R10 remain passing regressions.
+- [x] SQLite and shared-login SQL-execution threat boundaries documented.
+- [x] Hosted Phase 3 run completion inspected and recorded.
+- [ ] DBA/security D03 acceptance, production legacy inventory/migration and restore rehearsal.
+
+### Affected implementation files
+
+| Area | Files |
+|---|---|
+| Migration and schema | alembic/env.py, versions/0015_schema_integrity.py, versions/0016_database_security.py, sql/0016_security.sql, app/schema_rules.py, app/schema_inventory.py, app/models.py |
+| Roles/operator operations | app/db_roles.py, scripts/configure_database_roles.py, app/cli.py, app/config.py, .env.example |
+| Request/transaction authorization | app/db.py, app/authorization.py, app/main.py, app/security.py, app/identity_service.py |
+| Regression and CI | tests/runtime_support.py, tests/test_phase3.py, tests/test_phase3_schema.py, pytest.ini, .github/workflows/phase1-verification.yml |
+
+0015 and its Phase 3 rule definitions must remain immutable after application;
+future changes require a new forward migration, rather than editing historical rules.
 
 ### Investigation history
 

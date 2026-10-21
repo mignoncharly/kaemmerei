@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-21",
+  "platform": "Windows",
+  "python": "3.14.3",
+  "pytest": "9.1.1",
+  "postgresql": "18.3",
+  "migration_head": "0016_database_security",
+  "implementation_commit": "5986a7473e3772e0f9a4e390aadc979101a1f9a9",
+  "cleanup": {
+    "harness_databases": 0,
+    "temporary_roles": 0
+  },
+  "business_databases_migrated": false,
+  "production_accepted": false,
+  "runs": [
+    {
+      "junit_file": "phase3-sqlite.xml",
+      "sha256": "ef308624a44864477b2b4b65731f56261afc41513ab017ecf9b2f5e251a1eb15",
+      "collected_selected": 81,
+      "passing_subtests": 15,
+      "passed": 69,
+      "skipped": 12,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 0,
+      "seconds": "32.580"
+    },
+    {
+      "junit_file": "phase3-postgresql.xml",
+      "sha256": "9e14088382d03e591a42e3a8b8b7508e031cedb6822449612a1b9e0aded6e4a4",
+      "collected_selected": 81,
+      "passing_subtests": 15,
+      "passed": 81,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 0,
+      "seconds": "153.321"
+    },
+    {
+      "junit_file": "phase3-postgresql-explicit.xml",
+      "sha256": "329788e72f346c3954ef61942787ef0715cea916465b745c0a398283f410962a",
+      "collected_selected": 12,
+      "passing_subtests": 0,
+      "passed": 12,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 69,
+      "seconds": "54.892"
+    }
+  ],
+  "warnings": [
+    "Starlette/AnyIO deprecated BlockingPortal alias",
+    "Managed Windows pytest cache ACL warning"
+  ],
+  "warnings_suppressed": false
+}

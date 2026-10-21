@@ -21,7 +21,7 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 |---|---|---|
 | 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Lokal PostgreSQL: 44 bestanden, keine Fehler/Skips/Xfails; SQLite: 43 bestanden, ein PostgreSQL-spezifischer Skip. R01/R04/R10 behoben. Aktueller CI-Nachweis im Abnahmebericht. |
 | 2 | Anwendungsberechtigungen und Identitäten | P02-T01–T08 implementiert und lokal SQLite/PostgreSQL geprüft; technische Rollenmatrix und CI-Nachweis in PHASE2_AUTHORIZATION.md. Fachliche Freigabe bleibt offen. |
-| 3 | Datenbankrollen, Constraints, RLS und geschützte Auditablage | P03-T01–T08 umgesetzt; Nachweise und Freigabegrenzen in [Phase 3](PHASE3_DATABASE_SECURITY.md) |
+| 3 | Datenbankrollen, Constraints, RLS und geschützte Auditablage | P03-T01–T08 technisch verifiziert: PostgreSQL 81 bestanden, SQLite 69 + 12 PG-Skips, drei CI-Jobs erfolgreich; DBA-/Produktivfreigabe offen. [Phase 3](PHASE3_DATABASE_SECURITY.md) |
 | 4–5 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit, Dokumentensicherheit | Nicht begonnen |
 | 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
 | 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |

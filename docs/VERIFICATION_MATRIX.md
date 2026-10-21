@@ -6,9 +6,13 @@ Phase 2 update U010: [adopted capability matrix and migration/verification repor
 Full local PostgreSQL: 66 passed; SQLite: 65 passed + one PostgreSQL-only skip; 15 subtests passed on both.
 All three hosted jobs passed for Phase 2 implementation 9fde6c0. Current Phase 3 evidence: [database security report](PHASE3_DATABASE_SECURITY.md). Content-bound approvals remain Phase 4 work.
 
+Phase 3 U011: PostgreSQL 81 passed; SQLite 69 passed + 12 PostgreSQL-only skips;
+15 passing subtests per full suite. Explicit PostgreSQL selection: 12 passed, zero
+skips. Hosted run 39600834032 passed all three jobs for 5986a74. No production acceptance.
+
 ## Permission regression matrix
 
-The desired rules below are implementation targets. They do not claim that future approval, delegation, RLS, or retention capabilities already exist. `Expected failure` means the desired assertion currently fails and remains an OPEN finding. A setup/migration/transport failure is not an acceptable expected failure.
+The desired rules below are implementation targets with current evidence identified individually. Future content-bound approval, delegation and retention capabilities remain open. `Expected failure` means the desired assertion currently fails and remains an OPEN finding. A setup/migration/transport failure is not an acceptable expected failure.
 
 | Case | Principal / resource | Desired result | Current evidence or pending phase |
 |---|---|---|---|
