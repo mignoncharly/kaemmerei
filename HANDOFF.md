@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 1 technical verification complete: Linux CI passed SQLite/PostgreSQL verification and direct pytest. Local Docker installation and repository branch-rule administration remain host/account tasks.\
+Current stage: Phase 1 technical verification complete. Local setup now defaults to native PostgreSQL without Docker; native-manager checks and a new native Linux CI job track the change. First Windows initialization remains a host-permission task.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -144,7 +144,7 @@ For future updates, record schema revisions, backfill counts, legacy exceptions,
 
 1. Phase 1 technical verification is complete; preserve the successful run URL and source commit recorded in U006.
 2. Next application remediation: P02-T01–T03, capability matrix and centralized metadata/query scoping. Phase 2 is not started in this update.
-3. Optional host setup: install/start Docker Desktop with Linux containers, then execute scripts/Complete-Phase1Setup.ps1 for local development checks.
+3. Local host setup: run scripts/Complete-Phase1Setup.ps1 from a normal authorized PowerShell. Native PostgreSQL is now the default; Docker installation is not required. This managed session cannot set owner-only ACLs on native storage.
 4. Repository owner/admin should require the successful sqlite/postgresql checks on main through branch protection/rulesets; this account setting is not yet applied. Remove no expected-failure markers without target-finding evidence.
 
 The user authorized Phase 1 implementation and repository/CI setup on 2026-10-21. Technical artifacts and Linux verification are delivered. Local engine installation, branch-rule administration, and production acceptance remain separately recorded.
@@ -225,6 +225,17 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Phase state:** Phase 1 -> Verified / technically complete. No production acceptance; phases 2–10 not started. R01/R04/R10 remain expected failures. R08 later-feature coverage remains open in the assigned phases.
 - **Remaining limitations:** Docker engine installation requires host access outside this managed workspace; no Docker executable or connected desktop/browser is available. Local Compose execution remains unverified. No authenticated GitHub administrative API/browser capability is available to apply branch protection. Linux CI is now the working authoritative alternative to the blocked Windows bootstrap.
 - **Next action:** Publish this evidence update. Begin Phase 2 only when authorized; local Docker setup and repository-owner branch rules can be completed independently.
+
+### U007 — 2026-10-21 — Native PostgreSQL as the local default
+
+- **Authorization:** User selected native PostgreSQL instead of mandatory local Docker and instructed implementation.
+- **Changes:** Added scripts/native_test_database.py and native start/stop PowerShell wrappers. Start-TestDatabase and Complete-Phase1Setup now default to Native, support explicit Existing endpoints, and retain Docker only as an optional backend. Added .local-postgres to ignores and moved the previous Docker launcher to Start-DockerTestDatabase.ps1. Updated local setup/README guidance.
+- **Isolation/security:** Dedicated marked cluster under .local-postgres, loopback port 55432, SCRAM, no Unix sockets, separate bootstrap/test passfiles, restricted LOGIN/CREATEDB test identity, no password in connection metadata. No adoption of unmarked storage, no business-service reuse, no cluster deletion or Windows service registration, no bypass of token/ACL checks. Owner-only storage protection is required before any credential is written.
+- **Existing service:** postgresql-x64-18 is running. CIM/registry service configuration was unavailable to this session; its contents were not inspected and no test connection was made to it.
+- **Local verification:** Ten native-manager safety unit checks passed; all five setup/launcher PowerShell scripts parsed successfully. Actual native Windows startup failed at icacls directory protection (exit 5), before credentials were written or initdb called. No existing PostgreSQL service changed. The safe non-secret marker allows retry from the authorized host terminal.
+- **CI:** Existing authoritative SQLite/PostgreSQL 18 jobs retained. Added a native-postgresql Ubuntu 24.04 job using the runner's installed PostgreSQL binaries (runner currently documents version 16), testing native startup, migrated application checks, direct pytest, and shutdown without Docker. Target-major PostgreSQL 18 coverage remains in the original service-container job. Actual run evidence will be appended after push.
+- **State:** Native implementation delivered; real Windows startup remains host-blocked. Phase 1's previously verified technical gate is preserved; no production acceptance and R01/R04/R10 remain open.
+- **Next action:** Publish source and inspect all three actual CI jobs. First local initialization is one prepared command in a normal authorized PowerShell; no Docker installation is required.
 
 ### Update entry template — copy for the next update
 

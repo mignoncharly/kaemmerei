@@ -2,6 +2,8 @@
 
 Recorded: 2026-10-21. Implementer: Codex. Scope: P01-T01–T08 technical foundation.
 
+Native setup update (U007): local setup now defaults to the installed native PostgreSQL binaries, with a separate marked cluster and private passfiles under ignored .local-postgres. Docker is optional locally. Ten native-manager safety checks pass; this session's actual Windows startup attempt stopped at denied owner-only directory ACLs before credentials were written. A native Linux CI job is added alongside the existing successful PostgreSQL 18/SQLite jobs. See [VERIFICATION_SETUP.md](VERIFICATION_SETUP.md) and HANDOFF for the latest run evidence.
+
 Subsequent setup updates (U005/U006): Git is initialized and main was published to https://github.com/mignoncharly/kaemmerei.git. Source commit d9e39e520495928355dfe02b198c56150bf82077 passed both Linux CI jobs in [run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046), including PostgreSQL and direct pytest. See [evidence](evidence/phase1-ci-39571113046.json). Earlier no-repository, missing-pytest, and blocked-bootstrap observations below remain historical local-environment evidence. Docker Compose/host setup automation is supplied; actual local Docker execution remains unverified. See [VERIFICATION_SETUP.md](VERIFICATION_SETUP.md).
 
 ## Source and runtime

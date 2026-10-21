@@ -1,5 +1,11 @@
 # Änderungen
 
+## 21. Oktober 2026 — Native PostgreSQL-Testinstanz
+
+- Lokale Einrichtung standardmäßig auf native PostgreSQL-Binärdateien umgestellt; Docker bleibt optional.
+- Separate gekennzeichnete Testinstanz, private Passdateien, eingeschränktes Testkonto und Start-/Stoppbefehle ergänzt. Bestehender Windows-Dienst unverändert.
+- Zehn Sicherheitsprüfungen für den nativen Manager bestanden; neue native Linux-CI-Prüfung ergänzt. Windows-Start in der verwalteten Sitzung durch verweigerte Ordnerrechte blockiert; erste Einrichtung in normaler autorisierter PowerShell erforderlich.
+
 ## 21. Oktober 2026 — Veröffentlichung und erfolgreicher Linux-CI-Nachweis
 
 - Quellstand d9e39e5 auf main im angegebenen GitHub-Repository veröffentlicht.

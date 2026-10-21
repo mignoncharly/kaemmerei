@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 .venv-test/
 .env.test
+.local-postgres/
 .env
 *.sqlite3
 *.sqlite3-*

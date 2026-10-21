@@ -6,6 +6,36 @@ concurrency:
   group: phase1-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  native-postgresql:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: python -m pip install -r requirements-dev.txt
+      - name: Native manager unit safety checks
+        run: python -m unittest tests.test_native_database -v
+      - name: Provision and verify native PostgreSQL without Docker
+        shell: bash
+        run: |
+          set -euo pipefail
+          PG_BIN="$(pg_config --bindir)"
+          export OHVR_NATIVE_BIN="$PG_BIN"
+          trap 'python scripts/native_test_database.py stop --bin "$OHVR_NATIVE_BIN"' EXIT
+          mkdir -p .verification
+          python scripts/native_test_database.py start --bin "$PG_BIN" > .verification/native-connection.json
+          export TEST_POSTGRES_ADMIN_URL="$(python -c 'import json; print(json.load(open(".verification/native-connection.json"))["url"])')"
+          export PGPASSFILE="$(python -c 'import json; print(json.load(open(".verification/native-connection.json"))["passfile"])')"
+          python scripts/verify_phase1.py --database postgresql
+          python -m pytest -q --database postgresql --junitxml=.verification/native-postgresql-pytest.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-postgresql-verification
+          path: |
+            .verification/phase1-postgresql.json
+            .verification/native-postgresql-pytest.xml
   sqlite:
     runs-on: ubuntu-latest
     steps:

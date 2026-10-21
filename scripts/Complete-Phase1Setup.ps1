@@ -1,5 +1,8 @@
 param(
     [string]$Python = "py",
+    [ValidateSet("Native","Docker","Existing")][string]$DatabaseBackend = "Native",
+    [string]$PostgresBin = "C:\Program Files\PostgreSQL\18\bin",
+    [ValidateRange(1024,65535)][int]$PostgresPort = 55432,
     [switch]$Push
 )
 $ErrorActionPreference = "Stop"
@@ -25,7 +28,7 @@ try {
     Invoke-Checked -Executable $testPython -Arguments @("-m", "pip", "install", "-r", "requirements-dev.txt")
     Invoke-Checked -Executable $testPython -Arguments @("scripts/verify_phase1.py", "--database", "sqlite")
     Invoke-Checked -Executable $testPython -Arguments @("-m", "pytest", "-q", "--database", "sqlite", "--junitxml=.verification/sqlite-pytest.xml")
-    & (Join-Path $PSScriptRoot "Start-TestDatabase.ps1")
+    & (Join-Path $PSScriptRoot "Start-TestDatabase.ps1") -Backend $DatabaseBackend -Python $testPython -PostgresBin $PostgresBin -Port $PostgresPort
     Invoke-Checked -Executable $testPython -Arguments @("scripts/verify_phase1.py", "--database", "postgresql")
     Invoke-Checked -Executable $testPython -Arguments @("-m", "pytest", "-q", "--database", "postgresql", "--junitxml=.verification/postgresql-pytest.xml")
     Write-Output "Local verification passed. Known expected failures remain open findings; production is not accepted."

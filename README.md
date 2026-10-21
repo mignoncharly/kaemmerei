@@ -8,7 +8,7 @@ Das Vertragsregister ist eine deutschsprachige Webanwendung zur Erfassung, Suche
 
 ## Verifizierter Stand und offene Fehler
 
-Phase 1 der [Nachbesserungsplanung](REMEDIATION%20PLAN%20PHASES.md) stellt eine isolierte Prüfbasis bereit: reparierte Testhilfen, anwendungsbezogener Dokumentenspeicher und echte Alembic-Migrationen in Testdatenbanken. Der lokale SQLite-Lauf umfasst 22 Prüfungen: 19 bestanden, drei erwartete Fehler reproduzieren offene Befunde. Alle zehn ursprünglichen Anwendungstests bestehen. Der [Linux-CI-Lauf 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) hat SQLite-/PostgreSQL-Prüfungen und direkte pytest-Ausführung erfolgreich abgeschlossen. Phase 1 ist damit technisch verifiziert; eine Produktivfreigabe ist damit nicht verbunden. Der lokale Windows-initdb-Tokenfehler bleibt eine Hosteinschränkung; ein getrennter Docker-Testdienst ist vorbereitet.
+Phase 1 der [Nachbesserungsplanung](REMEDIATION%20PLAN%20PHASES.md) stellt eine isolierte Prüfbasis bereit: reparierte Testhilfen, anwendungsbezogener Dokumentenspeicher und echte Alembic-Migrationen in Testdatenbanken. Der lokale SQLite-Lauf umfasst 22 Prüfungen: 19 bestanden, drei erwartete Fehler reproduzieren offene Befunde. Alle zehn ursprünglichen Anwendungstests bestehen. Der [Linux-CI-Lauf 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) hat SQLite-/PostgreSQL-Prüfungen und direkte pytest-Ausführung erfolgreich abgeschlossen. Phase 1 ist damit technisch verifiziert; eine Produktivfreigabe ist damit nicht verbunden. Für lokale Prüfungen ist jetzt eine getrennte native PostgreSQL-Instanz vorgesehen; Docker ist auf dem eigenen Rechner optional. Die erste Windows-Einrichtung muss wegen der Hosteinschränkungen gegebenenfalls in einer normalen autorisierten PowerShell erfolgen.
 
 Bekannte Fehler betreffen unter anderem fachbereichsfremde Werte in Filterlisten, Schreibrechte von Prüfern bei Freigaben, Änderungen an archivierten Prüfvorgängen, Zugriffe bei deaktiviertem Fachbereich, unvollständige Änderungsabrufe der API und historische Finanzsummen. Freigaben sind noch nicht an eine geprüfte Vertragsfassung gebunden. Diese Befunde bleiben offen; vorhandene Funktionen sind noch keine fachlich oder betrieblich abgenommene Lösung.
 
@@ -145,13 +145,16 @@ Die Phase-1-Prüfbasis ist zusätzlich ohne pytest über die Python-Standardbibl
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\verify_phase1.py --database sqlite
-# Separaten lokalen PostgreSQL-Cluster initialisieren, prüfen und beenden:
-& .\scripts\verify_phase1_postgres.ps1 -Python '.\.venv\Scripts\python.exe'
+# Getrennte native Testinstanz starten; bestehende Windows-Dienste bleiben unberührt:
+& .\scripts\Start-TestDatabase.ps1 -Python '.\.venv\Scripts\python.exe'
+.\.venv\Scripts\python.exe scripts\verify_phase1.py --database postgresql
+# Nur die eigene Testinstanz stoppen; Daten bleiben erhalten:
+& .\scripts\Stop-NativeTestDatabase.ps1 -Python '.\.venv\Scripts\python.exe'
 ```
 
 Im gegenwärtigen Arbeitsverzeichnis ist die getestete Python-Umgebung `C:\kämmerei\.venv\Scripts\python.exe`; die projektlokale Umgebung ist noch nicht eingerichtet. Für eine Neuinstallation gelten die Installationsschritte oben. Ergebnisse und Gründe für nicht ausgeführte Prüfungen stehen im Phase-1-Nachweis. Erwartete Fehler zählen weiterhin als offene Befunde. Der Prüflauf aktualisiert `.verification/phase1-<Datenbank>.json`; dort gespeicherte Daten sind synthetisch und gehören nicht in eine Veröffentlichung.
 
-Für einen ausdrücklich bereitgestellten lokalen Testcluster lässt sich alternativ `TEST_POSTGRES_ADMIN_URL` setzen und `scripts\verify_phase1.py --database postgresql` beziehungsweise `pytest --database postgresql` ausführen. Die Adresse muss auf die Verwaltungsdatenbank `postgres` zeigen; jede Prüfung legt eine neue Datenbank mit zufälligem Namen an. Niemals hierfür einen produktiven Cluster verwenden. Die CI-Definition führt diese Abläufe getrennt für SQLite und PostgreSQL aus; der erfolgreiche Lauf ist im [Nachweis](docs/evidence/phase1-ci-39571113046.json) dokumentiert. Für die lokale Einrichtung mit Docker und optionalem Push steht `scripts\Complete-Phase1Setup.ps1` bereit; siehe [Einrichtung](docs/VERIFICATION_SETUP.md).
+Für einen ausdrücklich bereitgestellten lokalen Testcluster lässt sich alternativ `TEST_POSTGRES_ADMIN_URL` setzen und `scripts\verify_phase1.py --database postgresql` beziehungsweise `pytest --database postgresql` ausführen. Die Adresse muss auf die Verwaltungsdatenbank `postgres` zeigen; jede Prüfung legt eine neue Datenbank mit zufälligem Namen an. Niemals hierfür einen produktiven Cluster verwenden. Die CI-Definition führt diese Abläufe getrennt für SQLite und PostgreSQL aus; der erfolgreiche Lauf ist im [Nachweis](docs/evidence/phase1-ci-39571113046.json) dokumentiert. `scripts\Complete-Phase1Setup.ps1` richtet standardmäßig die native Testinstanz ein und unterstützt optionalen Push; Docker bleibt über `-DatabaseBackend Docker` wählbar. Siehe [Einrichtung](docs/VERIFICATION_SETUP.md).
 
 Die Anwendung verwendet FastAPI, SQLAlchemy, Alembic, Jinja2 und SQLite in der lokalen Standardkonfiguration. Die Weboberfläche ist serverseitig gerendert und verwendet keine externen CDNs.
 
