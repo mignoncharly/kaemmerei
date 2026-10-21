@@ -18,6 +18,34 @@ SCAN_LOCK = 724931822
 MAX_ATTEMPTS = 5
 
 
+def publish_events(engine, *, limit=500):
+    """Bounded atomic publication under the API's existing sequencing lock.
+
+    No event/cursor/snapshot retention deletion while records policy is pending.
+    """
+    from app.monitoring import require_operator
+    from app.models import SyncState, SyncOutbox, SyncEvent
+    from app.db import make_session_factory
+    if type(limit) is not int or not 1 <= limit <= 500:
+        raise ValueError('Event batch must be 1..500')
+    if engine.dialect.name != 'postgresql':
+        raise ValueError('Scheduled publication requires PostgreSQL')
+    with engine.connect() as connection:
+        require_operator(connection)
+    with make_session_factory(engine)() as db:
+        state = db.scalar(select(SyncState).where(SyncState.id == 1).with_for_update())
+        rows = db.scalars(select(SyncOutbox).where(SyncOutbox.published_seq.is_(None))
+                          .order_by(SyncOutbox.id).limit(limit)).all()
+        for row in rows:
+            state.next_seq += 1
+            db.add(SyncEvent(seq=state.next_seq, event_key=row.event_key,
+                contract_id=row.contract_id, old_department_id=row.old_department_id,
+                new_department_id=row.new_department_id, kind=row.kind))
+            row.published_seq = state.next_seq
+        db.commit()
+        return {'published': len(rows), 'retention_deletion': False}
+
+
 @contextmanager
 def scan_coordinator(engine):
     if engine.dialect.name != 'postgresql':

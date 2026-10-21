@@ -20,7 +20,9 @@ ROOT_FILES=frozenset(('README.md','CHANGELOG.md','alembic.ini','requirements.txt
 SCRIPTS=frozenset(('scripts/configure_database_roles.py','scripts/render_windows_tasks.py','scripts/build_release.py'))
 DOCS=frozenset(('docs/PHASE3_DATABASE_SECURITY.md','docs/PHASE4_WORKFLOW.md','docs/PHASE5_DOCUMENT_LIFECYCLE.md',
     'docs/PHASE6_INTEGRATION_SYNC.md','docs/PHASE7_FINANCE_DATES_EXCEL.md','docs/PHASE8_FRONTEND_NAVIGATION.md',
-    'docs/PHASE9_OPERATIONS.md'))
+    'docs/PHASE9_OPERATIONS.md','docs/PHASE10_ACCEPTANCE.md','docs/PILOT_DECISIONS.md',
+    'docs/DOMAIN_RULE_REQUIREMENTS.md','docs/HOSTING_ASSESSMENT.md','docs/RELEASE_RUNBOOK.md',
+    'docs/rules/finance-v1.json','docs/rules/deadlines-v1.json','docs/rules/records-v1.json'))
 DEPLOY=frozenset(('deploy/windows/Invoke-Ohvr.ps1','deploy/windows/logging.json',
                   'deploy/windows/Caddyfile.example','deploy/windows/web-config.example.json'))
 REQUIRED=frozenset(('app/main.py','alembic/env.py','alembic.ini','requirements.txt','requirements.lock','docs/PHASE9_OPERATIONS.md'))

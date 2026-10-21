@@ -1,0 +1,69 @@
+{
+  "format": "ohvr-domain-requirements-v1",
+  "domain": "deadlines",
+  "version": 1,
+  "supersedes": null,
+  "state": "pending",
+  "approval": null,
+  "questions": [
+    "Define contractual date sources and whether an estimate may ever become a confirmed deadline.",
+    "Define notice receipt vs dispatch, legal/contractual precedence, month-end/leap-day and renewal anchor examples.",
+    "Confirm jurisdiction, holidays/business calendar, timezone and non-working-day treatment; do not assume statutory rules.",
+    "Define manual confirmed date/source, overrides, review authority, invalidation on edits and reminder/escalation scope."
+  ],
+  "cases": [
+    {
+      "id": "DEADLINES-001",
+      "inputs": {
+        "end_date": "2028-02-29",
+        "notice_months": 3
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "DEADLINES-002",
+      "inputs": {
+        "end_date": "2026-01-31",
+        "renewal_months": 1,
+        "as_of": "2026-03-01"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "DEADLINES-003",
+      "inputs": {
+        "end_date": "2026-12-31",
+        "notice_months": 0,
+        "receipt_date": null
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "DEADLINES-004",
+      "inputs": {
+        "end_date": "2026-10-31",
+        "status": "terminated"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "DEADLINES-005",
+      "inputs": {
+        "manual_task_due_date": "2026-10-30",
+        "source": "synthetic manual input",
+        "calendar_rule": null
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    }
+  ]
+}

@@ -22,6 +22,7 @@
  </div>
 </header>
 <main class="container" id="main-content" tabindex="-1">
+{% if user %}<div class="notice" role="note">Technischer Pilot · Finanz- und Fristenregeln sind fachlich noch nicht bestätigt. Erfasste Werte und berechnete Kalendertermine dienen der Orientierung; verbindliche Ergebnisse bitte manuell prüfen und dokumentieren.</div>{% endif %}
 {% if notice %}<div class="notice" id="success-notice" role="status" aria-live="polite">{{ notice }} <button type="button" class="link-button" data-dismiss-notice="success-notice" aria-label="Erfolgsmeldung schließen">Schließen</button></div>{% endif %}
 {% block content %}{% endblock %}
 </main>

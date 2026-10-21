@@ -1,0 +1,52 @@
+{
+  "format": "ohvr-platform-inventory-v1",
+  "observed_at": "2026-10-21T21:35:59.346000+00:00",
+  "system": "Windows",
+  "release": "11",
+  "version": "10.0.26200",
+  "tools": {
+    "python": {
+      "state": "observed",
+      "version": "Python 3.14.3",
+      "sha256": "97c3228a59dcc05a771ab4eeec8126ce3f36ebb53616b479adc9f2c8050a9e84"
+    },
+    "powershell": {
+      "state": "observed",
+      "version": "5.1.26100.9444",
+      "sha256": "8bb6fa8c283b4d92120b1ef249a9b311b0f804d4cabbe9981159976c8be76a5e"
+    },
+    "caddy": {
+      "state": "not_observed"
+    },
+    "clamscan": {
+      "state": "not_observed"
+    },
+    "psql": {
+      "state": "observed",
+      "version": "psql (PostgreSQL) 18.3",
+      "sha256": "832f7fdf02c1c592f2df5f8bf48b6cfbc1e2bfd713f0822d1ac6724a312b5895"
+    },
+    "pg_dump": {
+      "state": "observed",
+      "version": "pg_dump (PostgreSQL) 18.3",
+      "sha256": "ef67845c7d08384c6514f4b6f4ea5f997ecb149bf3a78063dab25d0686e421a0"
+    },
+    "pg_restore": {
+      "state": "observed",
+      "version": "pg_restore (PostgreSQL) 18.3",
+      "sha256": "0561ed28de98e32828a59303504d8af8b4371c1ad24dbb764e3453564c28f54d"
+    },
+    "age": {
+      "state": "observed",
+      "version": "v1.3.2",
+      "sha256": "2821a4ed191da07372acd302e5f6feae7a7985e285e1417765ebe74025af45f0"
+    },
+    "age-keygen": {
+      "state": "observed",
+      "version": "v1.3.2",
+      "sha256": "1549c7049be32695594bedd09bbd352a94b6013a9d5c43364f3c6cd7a09ab61c"
+    }
+  },
+  "scope": "Local development tooling only; not STRATO or production inventory",
+  "advisory_review": "Separate maintained-advisory review and host patch acceptance required"
+}

@@ -397,6 +397,35 @@
             "notice_missed",
             "legal_cancellation_verified"
           ]
+        },
+        "rule_status": {
+          "type": "object",
+          "description": "Pending domain clarification; no authoritative accounting, legal deadline or disposal rule.",
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "finance": {
+              "const": "pending"
+            },
+            "deadlines": {
+              "const": "pending"
+            },
+            "records": {
+              "const": "pending"
+            },
+            "automated_disposal": {
+              "const": false
+            }
+          },
+          "required": [
+            "version",
+            "finance",
+            "deadlines",
+            "records",
+            "automated_disposal"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

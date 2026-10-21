@@ -46,7 +46,8 @@ def pg_bin(engine):
 
 
 @pytest.mark.postgresql
-def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(backup_keys,request):
+@pytest.mark.parametrize('representative',[False,True],ids=['small','10k-contracts-50k-documents'])
+def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(backup_keys,request,representative):
     if request.config.getoption('--database')!='postgresql':pytest.skip('Actual isolated PostgreSQL backup required')
     keys=backup_keys
     with runtime_environment() as runtime:
@@ -61,6 +62,10 @@ def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(bac
             user_id=user.id;encrypted_seed=cipher.encrypt(user_id,seed)
             db.add(MfaCredential(user_id=user_id,seed_ciphertext=encrypted_seed,enabled=True,last_step=123))
             db.commit()
+            if representative:
+                from scripts.synthetic_workload import seed_recovery
+                profile=seed_recovery(owner,user_id)
+                request.node.user_properties.append(('synthetic_profile',json.dumps(profile)))
             history=list(db.scalars(select(Revision.id).where(Revision.contract_id==record)))
         # A valid orphan is retained, not deleted or silently omitted.
         orphan=uuid4().hex+'.txt'
@@ -68,19 +73,19 @@ def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(bac
         directory=keys.root/'backups';directory.mkdir()
         tools=pg_bin(owner.state.engine)
         options=BackupOptions(directory,keys.executable,keys.sha256,keys.recipients,keys.signer,
-            tools/('pg_dump.exe' if os.name=='nt' else 'pg_dump'),seconds=60)
+            tools/('pg_dump.exe' if os.name=='nt' else 'pg_dump'),seconds=300 if representative else 60)
         started=monotonic()
         result=create_backup(owner.state.engine,owner.state.config,options,database=owner.state.engine.url.database)
         backup_seconds=monotonic()-started
         job=directory/result['job']
         metadata,_=verify_receipt(job/'receipt.json',keys.verifier)
-        assert result['status']=='complete' and metadata['file_count']==2
+        assert result['status']=='complete' and metadata['file_count']==(502 if representative else 2)
         assert not (job/'database.dump').exists()
         assert set(path.name for path in job.iterdir())=={'stage.json','receipt.json',metadata['ciphertext_file']}
         recovery=keys.root/'recovery';recovery.mkdir()
         started=monotonic()
         prepared=prepare_restore(job/'receipt.json',keys.verifier,keys.identity,recovery,
-            keys.executable,keys.sha256,seconds=60)
+            keys.executable,keys.sha256,seconds=300 if representative else 60)
         assert (prepared/'ready.json').is_file() and not (prepared/'authenticated.tar').exists()
         assert (prepared/'documents'/'staging'/orphan).read_bytes()==b'Synthetic orphan'
         with disposable_database('postgresql',prepared) as url:
@@ -91,7 +96,7 @@ def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(bac
             with (prepared/'database.dump').open('rb') as source:
                 subprocess.run([str(restore),'--exit-on-error','--no-owner','--no-privileges','--dbname',target.database],
                     stdin=source,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
-                    env=_pg_environment(target,60),check=True,timeout=60)
+                    env=_pg_environment(target,300),check=True,timeout=300)
             engine=make_engine(replace(owner.state.config,database_url=url,document_storage_dir=prepared/'documents'))
             try:
                 with make_session_factory(engine)() as db:
@@ -104,6 +109,14 @@ def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(bac
                     assert factor.seed_ciphertext==encrypted_seed and factor.last_step==123
                     assert cipher.decrypt(user_id,factor.seed_ciphertext)==seed
                     assert db.scalar(text('SELECT count(*) FROM pg_class WHERE relname IN (\'contracts\',\'mfa_credentials\') AND relforcerowsecurity'))==2
+                    if representative:
+                        assert db.scalar(text('SELECT count(*) FROM contracts'))==10000
+                        assert db.scalar(text('SELECT count(*) FROM contract_documents'))==50000
+                        assert db.scalar(text('SELECT count(*) FROM revisions'))>=20000
+                        # Verify every restored blob, not just the HTTP example.
+                        for item in db.scalars(select(ContractDocument).where(ContractDocument.storage_key.is_not(None))):
+                            data=(prepared/'documents'/'blobs'/item.storage_key).read_bytes()
+                            assert len(data)==item.size_bytes and sha256(data).hexdigest()==item.sha256
                 # Reapply explicit runtime grants on the NEW target after import,
                 # then verify effective permissions using actual restricted LOGINs.
                 with engine.begin() as connection:
@@ -126,7 +139,11 @@ def test_actual_encrypted_consistent_backup_and_guarded_new_database_restore(bac
         restore_seconds=monotonic()-started
         # Measured tiny synthetic exercise, explicitly not a production RTO claim.
         request.node.user_properties.extend([('backup_seconds',round(backup_seconds,3)),('restore_seconds',round(restore_seconds,3))])
-        assert backup_seconds<60 and restore_seconds<60
+        snapshot_age=(datetime.now(timezone.utc)-datetime.fromisoformat(metadata['created_at'])).total_seconds()
+        request.node.user_properties.extend([('snapshot_age_seconds',round(snapshot_age,3)),
+            ('rto_target_seconds',14400),('rpo_target_seconds',86400)])
+        assert backup_seconds<(300 if representative else 60) and restore_seconds<(14400 if representative else 60)
+        assert snapshot_age<86400
         # Guarded overlap is a failure, never a second successful backup.
         before=set(directory.iterdir())
         with owner.state.engine.connect() as held:

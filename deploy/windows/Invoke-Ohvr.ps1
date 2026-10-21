@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('web','scan','purge','reconcile','integration-status','backup')][string]$Role,
+    [Parameter(Mandatory)][ValidateSet('web','scan','purge','reconcile','integration-status','backup','events','monitor')][string]$Role,
     [Parameter(Mandatory)][string]$Python,
     [Parameter(Mandatory)][string]$Project,
     [Parameter(Mandatory)][string]$Config
@@ -39,13 +39,16 @@ try {
         'FORM_MAX_FILES','FORM_FIELD_BYTES','DATABASE_POOL_SIZE','DATABASE_POOL_TIMEOUT',
         'DATABASE_STATEMENT_TIMEOUT_MS','DOCUMENT_STORAGE_QUOTA_BYTES','DOCUMENT_STORAGE_RESERVE_BYTES',
         'MANDATORY_REVIEW_RECIPIENTS','DMS_ALLOWED_HOSTS','REQUIRE_MFA','MFA_KEY_FILE','TEMP','TMP')
+    $common += @('OPS_STATUS_DIRECTORY')
     $allowed = $common
+    $monitorNames = @('MONITOR_BACKUP_DIRECTORY','MONITOR_BACKUP_VERIFIER')
+    if ($Role -eq 'monitor') { $allowed += $monitorNames }
     $backupNames = @('BACKUP_DATABASE','BACKUP_DIRECTORY','BACKUP_AGE_EXECUTABLE','BACKUP_AGE_SHA256',
         'BACKUP_RECIPIENTS_FILE','BACKUP_SIGNING_KEY_FILE','BACKUP_PG_DUMP')
     if ($Role -eq 'backup') { $allowed += $backupNames }
     if ($Role -eq 'purge') { $allowed += 'MAINTENANCE_DATABASE_URL' }
     elseif ($Role -ne 'web') { $allowed += 'MIGRATION_DATABASE_URL' }
-    foreach ($name in ($common + $backupNames + @('MIGRATION_DATABASE_URL',
+    foreach ($name in ($common + $backupNames + $monitorNames + @('MIGRATION_DATABASE_URL',
             'MAINTENANCE_DATABASE_URL','PGPASSWORD','PGSERVICE','PGSERVICEFILE'))) {
         [Environment]::SetEnvironmentVariable($name, $null, 'Process')
     }
@@ -63,6 +66,9 @@ try {
         $null = Assert-LocalPath $value ($name -ne 'PGPASSFILE')
     }
     Set-Location -LiteralPath $Project
+    if ($Role -ne 'web') {
+        $null = Assert-LocalPath $env:OPS_STATUS_DIRECTORY $true
+    }
     if ($Role -eq 'web') {
         if ($env:TRUSTED_PROXY_NETWORKS -cne '127.0.0.1/32') {
             throw 'This template requires one IPv4 loopback TLS proxy.'
@@ -80,9 +86,15 @@ try {
             --directory $env:BACKUP_DIRECTORY --age $env:BACKUP_AGE_EXECUTABLE `
             --age-sha256 $env:BACKUP_AGE_SHA256 --recipients $env:BACKUP_RECIPIENTS_FILE `
             --signing-key $env:BACKUP_SIGNING_KEY_FILE --pg-dump $env:BACKUP_PG_DUMP
+    } elseif ($Role -eq 'monitor') {
+        foreach ($name in $monitorNames) {
+            $null = Assert-LocalPath ([Environment]::GetEnvironmentVariable($name, 'Process')) ($name -eq 'MONITOR_BACKUP_DIRECTORY')
+        }
+        & $Python -m app.cli operations-health --status-directory $env:OPS_STATUS_DIRECTORY `
+            --backup-directory $env:MONITOR_BACKUP_DIRECTORY --verifier $env:MONITOR_BACKUP_VERIFIER
     } else {
         $commands = @{'scan'='scan-pending'; 'purge'='purge-sessions';
-                      'reconcile'='document-reconcile'; 'integration-status'='integration-status'}
+                      'reconcile'='document-reconcile'; 'integration-status'='integration-status'; 'events'='events-publish'}
         & $Python -m app.cli $commands[$Role]
     }
     exit $LASTEXITCODE

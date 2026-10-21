@@ -1,5 +1,98 @@
 # Phase 9 - Availability and operations
 
+## U022 local maintenance and monitoring
+
+Current scope/status: [PILOT_DECISIONS](PILOT_DECISIONS.md). Earlier sections below
+are retained history; their evidence does not cover new source.
+
+`events-publish --limit 500` requires the explicit PostgreSQL schema operator. It
+uses the API's `sync_state` sequencing lock, atomically publishes a bounded batch
+of committed outbox rows and preserves every source event. Retry is idempotent;
+normal API snapshots retain their existing barrier. No event/cursor/snapshot/
+audit/backup retention deletion occurs. Expired credentials are denied on access
+and counted for review; no records policy is inferred.
+
+Set `OPS_STATUS_DIRECTORY` to a separately provisioned private local directory for
+scheduled CLI commands. OS locks prevent same-job overlap. Atomic status files
+contain only fixed job/state/UTC timestamps, never exceptions/record IDs/secrets.
+Interrupted runs remain unhealthy; failures replace earlier success. Production
+validates private ACLs. Keep this directory outside served/document paths, writable
+only by the authorized operators; the web/integration identity needs no access.
+
+| Job | Draft schedule | Success freshness |
+|---|---|---|
+| scan-pending | 2 minutes | 10 minutes |
+| purge-sessions | Hourly | 2 hours |
+| document-reconcile | Daily | 25 hours |
+| integration-status | Hourly | 2 hours |
+| events-publish | 2 minutes | 10 minutes |
+| backup-create | 12 hours | 14 hours, plus snapshot age check |
+| operations-health | 2 minutes | Review Task Scheduler LastRunTime/LastTaskResult locally |
+
+All Windows task drafts remain **disabled**, LeastPrivilege, IgnoreNew and retry
+on failure. No registration or service operation was performed. Authentication
+purge uses the existing maintenance-role function; other operator jobs use the
+explicit schema operator, never web/integration credentials. Reconciliation now
+returns exit 2 for missing/mismatched/orphan/unsafe storage; it never deletes files.
+Pending scans are assessed by their queue age/exhaustion separately.
+
+Local read-only health, using private operator configuration:
+
+```powershell
+python -m app.cli operations-health --status-directory 'D:\ohvr-private\ops' --backup-directory 'E:\ohvr-backups' --verifier 'C:\ohvr-private\receipt-verifier.pem'
+```
+
+Exit 0 means current checks pass; exit 2 requires local triage. Redacted JSON
+covers DB/query availability, scan backlog age/exhaustion, unpublished events,
+recent security denials/login-budget rows, disk reserve, failed/stale/interrupted
+jobs and signed fully hashed backup snapshot age (24h). Configurable bounds:
+`--security-threshold`, `--reserve-bytes`, `--maximum-backup-hours`. Counts represent
+events/budget rows, not unique people. Existing HTTP 503/redacted request logs
+expose pool exhaustion; actual host metrics/capacity acceptance remains open.
+
+Backup selection examines at most 4096 directory entries, chooses the newest
+receipt candidate by mtime, then requires its signature, exact ciphertext hash
+and signed snapshot/completion times. mtime is not success evidence; a corrupt
+candidate fails closed without fallback. Review preservation/storage capacity
+before reaching that bound; do not delete artifacts automatically.
+
+The disabled `monitor` role requires private data-only JSON settings
+`MONITOR_BACKUP_DIRECTORY`, `MONITOR_BACKUP_VERIFIER`, `OPS_STATUS_DIRECTORY` and
+common production/operator settings. The wrapper requires explicit local paths,
+rejects unknown keys and removes inherited credentials. Review monitor output
+and its own absence/failure through local Task Scheduler history. No external
+delivery is implemented/activated; tests cannot prove an operator responded.
+
+Representative opt-in workload:
+
+```powershell
+python -m scripts.benchmark_phase9 --mixed --contracts 10000 --documents 50000 --users 10 --rounds 5 --output '.verification/u022-mixed.json'
+```
+
+Only marked disposable PostgreSQL databases are used. Dated/unknown/zero/known
+inputs, 20k revisions, 1k tasks/reviews and 500 inert 64KiB PDFs supplement the
+10k/50k inventory. Timed waves interleave scoped dashboard/report/history detail,
+bounded XLSX, upload/scan, task/review requests, password login and downloads,
+using restricted department accounts and cross-department denial checks.
+`--real-scanner` requires explicit maintained ClamAV configuration and clean
+preflight; otherwise scanner timing is explicitly synthetic. This is not
+TLS/network, MFA-device, production queue or real antivirus throughput evidence.
+Adopted page/export targets remain 2s/15s; other operations use a separately
+labelled 15s engineering cap. Failures return exit 2 and remain evidence.
+
+Representative encrypted recovery verifies 10k contracts/50k document records,
+20k history and 500 inert PDFs alongside existing ID/hash/MFA/restricted-access
+checks. Every restored blob is verified. JUnit records backup/restore/snapshot
+age against 24h/4h targets; off-host scheduling/custody and actual-host RPO/RTO
+acceptance remain separate. [RELEASE_RUNBOOK](RELEASE_RUNBOOK.md) covers rollout,
+stop criteria and the remaining actual-host switching/recovery exercise.
+
+`scripts/inventory_platform.py` records local non-secret OS/tool versions and
+executable hashes without installing/changing software. Missing tools remain
+explicitly unobserved. Local inventory is neither STRATO-host evidence nor an
+advisory clearance; maintain native OS/PostgreSQL/Python/proxy/scanner/age update
+review under provisional operations responsibility, separately from the runtime lock.
+
 2026-10-21, update U017. **In progress, not accepted.** This continues the existing
 ten-phase plan after U016; it does not start Phase 10 or authorize a deployment.
 Implementation base: `b962824`; advisory guards: `1cecc54`; compatible patched dependency source: `1649b15`. Local verification results are recorded below

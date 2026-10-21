@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-8 technically verified; Phase 9 in progress (U017, final implementation 1649b15). Operations/identity/recovery, release tooling, earlier owner decisions and production acceptance remain pending.\
+Plan status: Phases 1-8 technically verified; Phase 9 in progress through U022; Phase 10 preparation continues. Approved synthetic pilot decisions are recorded in docs/PILOT_DECISIONS.md. Current-source evidence is in HANDOFF; real-data and production authorization remain separate and ungranted.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence

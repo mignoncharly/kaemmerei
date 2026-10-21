@@ -1,5 +1,12 @@
 # Arbeitsplan Vertragsregister
 
+U022: [pilot decisions](PILOT_DECISIONS.md) recorded; technical work continues on
+local monitoring/job evidence, bounded event publication, mixed workloads and
+representative encrypted recovery. Versioned pending [domain requirements](DOMAIN_RULE_REQUIREMENTS.md),
+read-only [STRATO assessment](HOSTING_ASSESSMENT.md) and [release/recovery runbook](RELEASE_RUNBOOK.md)
+prepared. Four separate release statuses apply; no real-data/production
+authorization. Current evidence/environment limitations are in HANDOFF U022.
+
 Phase 9 U017 checkpoint: bounded ingress, shared database throttling, synchronous request workers, capacity/TLS checks and correlation implemented in b962824, with parser/path guards and patched compatible dependencies in 1649b15. [Controls, limits and remaining operations work](PHASE9_OPERATIONS.md). All five hosted jobs passed for 1649b15; Phase 9 exit and production deployment remain open.
 
 Phase 8 U016: frontend/navigation technically verified for 6ebcaad: 178 collected; PG 176 passed + 2 local skips, SQLite 160 passed + 18; eight Phase 8 tests pass on both backends, all five hosted jobs including Chromium passed. [Behavior, browser constraints and evidence](PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.

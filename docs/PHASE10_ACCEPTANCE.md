@@ -5,6 +5,14 @@ Current evidence: [HANDOFF](../HANDOFF.md), [verification matrix](VERIFICATION_M
 [Phase 9 operations](PHASE9_OPERATIONS.md).
 
 **State: preparation only. No pilot, production deployment or release acceptance.**
+U022: [the decision record](PILOT_DECISIONS.md) approves Kämmerei plus one selected
+Fachbereich, internal/VPN, local TOTP, configurable provisional permissions, an
+empty register and synthetic data only. Acceptance participants: responsible
+Kämmerei representative, selected Kämmerei test users, and product owner/software
+engineer/project IT operator. These supersede the older unanswered scope and
+participant questions below. Written domain/records confirmation, independent
+review, real-data authorization and production authorization remain separate.
+No observed participant acceptance results are recorded yet.
 Phase 9's required engineering and operating gates remain open. This matrix
 organizes reviewable Phase 10 work; it does not waive the entry criteria or
 convert technical tests into business approval. Local development, test login,
@@ -93,7 +101,7 @@ head, platform, actual restricted-role identities, scan definition freshness and
 timestamp before a run. Do not record passwords, tokens, MFA seeds, personal
 contract data or recovery credentials.
 
-1. Provision synthetic active departments A/B and individual admin/department/
+1. Start empty without legacy migration. Provision synthetic Kämmerei/selected Fachbereich and individual admin/department/
    reviewer accounts; verify inactive membership and unauthenticated denial.
 2. Create a contract in A; find/filter/page it; deny B detail/API/child metadata.
 3. Import valid create-only rows; reject one invalid batch atomically. Reconcile

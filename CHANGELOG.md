@@ -1,5 +1,18 @@
 # Änderungen
 
+## U022 — synthetic pilot engineering continuation
+
+- Record approved scope/permissions/data/participant decisions and four release
+  statuses without assigning Judith or infrastructure privileges.
+- Add private locked job evidence, read-only operational checks, bounded atomic
+  event publication and disabled monitoring/event Windows task drafts.
+- Extend guarded mixed-workload and encrypted recovery exercises to dated/history/
+  file-backed 10k/50k fixtures; retain failed/unexecuted evidence explicitly.
+- Mark provisional business outputs, add versioned pending decision packets and
+  validators; preserve manual input and disabled automated disposal.
+- Investigate public STRATO capabilities without account changes; curate domain,
+  hosting, acceptance and rollout/recovery documents into source release artifacts.
+
 
 ## 2026-10-21 - Phase 9 U021: operator TLS and source release integrity
 

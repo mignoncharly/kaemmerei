@@ -13,7 +13,7 @@ BASE = dict(python=r'C:\ohvr\venv\Scripts\python.exe', project=r'C:\ohvr\release
             config=r'C:\ohvr-private\web.json', account=r'MUNICIPAL\ohvr-web')
 
 
-@pytest.mark.parametrize('role', ['web','scan','purge','reconcile','integration-status','backup'])
+@pytest.mark.parametrize('role', ['web','scan','purge','reconcile','integration-status','backup','events','monitor'])
 def test_windows_task_is_disabled_restricted_and_has_no_inline_secrets(role):
     raw = task_xml(role=role, **BASE)
     root = ET.fromstring(raw)
