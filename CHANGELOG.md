@@ -1,5 +1,12 @@
 # Änderungen
 
+## 21. Oktober 2026 — Veröffentlichung und erfolgreicher Linux-CI-Nachweis
+
+- Quellstand d9e39e5 auf main im angegebenen GitHub-Repository veröffentlicht.
+- GitHub-Actions-Lauf 39571113046 erfolgreich: SQLite-/PostgreSQL-Prüfungen und direkte pytest-Ausführung, beide JSON-/JUnit-Artefakte vorhanden.
+- Technisches Prüftor von Phase 1 geschlossen; R01/R04/R10 bleiben erwartete Fehler. Keine Produktivfreigabe.
+- Docker-Installation auf dem lokalen Host und GitHub-Branch-Schutz bleiben getrennte Host-/Kontoeinrichtung; Nachweise und aktueller Stand in HANDOFF U006.
+
 ## 21. Oktober 2026 — Git-/CI-/Testdienst-Vorbereitung
 
 - Projekt als lokales Git-Repository mit dem angegebenen GitHub-Ziel eingerichtet.

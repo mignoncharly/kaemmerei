@@ -1,7 +1,7 @@
 # Arbeitsplan Vertragsregister
 
 **Stand: 21. Oktober 2026**\
-**Projektstatus: F1–F15 als Prototyp vorhanden; zehnphasige Nachbesserung begonnen. Phase 1 technisch implementiert, PostgreSQL-Prüfnachweis und Abnahme offen.**
+**Projektstatus: F1–F15 als Prototyp vorhanden; zehnphasige Nachbesserung begonnen. Phase 1 technisch verifiziert durch erfolgreichen Linux-CI-Lauf; Produktivfreigabe offen.**
 
 ## Ziel
 
@@ -19,7 +19,7 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 
 | Phase | Inhalt | Stand |
 |---|---|---|
-| 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Implementiert; SQLite 19 bestanden/3 erwartete Fehler; PostgreSQL und direkte pytest-/CI-Ausführung noch nicht nachgewiesen |
+| 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Technisch verifiziert: Linux-CI für SQLite/PostgreSQL einschließlich direktem pytest erfolgreich; drei bekannte erwartete Fehler bleiben offen |
 | 2–3 | Anwendungsberechtigungen, Identitäten, Datenbankregeln und RLS | Nicht begonnen |
 | 4–5 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit, Dokumentensicherheit | Nicht begonnen |
 | 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
@@ -28,7 +28,7 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 
 Die [Prüfmatrix](VERIFICATION_MATRIX.md) benennt Rollen, Direktzugriffe, Kindobjekte und noch fehlende Prüfungen. [PHASE1_BASELINE.md](PHASE1_BASELINE.md) hält Umgebung, Befehle, Ergebnisse und Einschränkungen fest. Erwartete Fehler bleiben offen: fachbereichsfremde Filterwerte (R01), veränderbare archivierte Prüfvorgänge (R04) und Zugriff bei deaktiviertem Fachbereich (R10). Weitere Befunde werden in den jeweiligen Phasen behoben und geprüft.
 
-Vor dem Abschluss von Phase 1 muss der PostgreSQL-Prüflauf auf einem erlaubten, getrennten Testcluster tatsächlich erfolgreich ausgeführt und dokumentiert werden. Die lokale Initialisierung scheitert derzeit an Windows-Tokenfehler 87. Reguläre Vertragsdaten wurden hierfür nicht verwendet oder migriert.
+Der erforderliche PostgreSQL-Prüflauf und beide pytest-Jobs wurden im [Linux-CI-Lauf 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) erfolgreich ausgeführt; [Nachweis](evidence/phase1-ci-39571113046.json). Die lokale Windows-Initialisierung scheitert weiterhin an Tokenfehler 87, ist aber keine Voraussetzung für den nachgewiesenen Linux-Prüfweg. Reguläre Vertragsdaten wurden hierfür nicht verwendet oder migriert. Lokaler Docker-Testdienst und Hauptbranch-Schutzregeln bleiben getrennte Host-/Kontoeinrichtung.
 
 ## Noch zu klären
 

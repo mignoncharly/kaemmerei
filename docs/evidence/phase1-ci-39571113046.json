@@ -1,0 +1,166 @@
+{
+  "recorded_date": "2026-10-21",
+  "source": "GitHub REST API retrieved through connected Firecrawl read tools",
+  "run": {
+    "id": 39571113046,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "d9e39e520495928355dfe02b198c56150bf82077",
+    "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046",
+    "updated_at": "2026-10-21T08:41:52Z"
+  },
+  "jobs": [
+    {
+      "id": 119125228881,
+      "name": "postgresql",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046/job/119125228881",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create restricted disposable-database test role",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119125229357,
+      "name": "sqlite",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046/job/119125229357",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database sqlite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database sqlite --junitxml=.verification/sqlite-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12332072377,
+      "name": "postgresql-verification",
+      "size_in_bytes": 1415,
+      "expired": false
+    },
+    {
+      "id": 12331364024,
+      "name": "sqlite-verification",
+      "size_in_bytes": 1393,
+      "expired": false
+    }
+  ],
+  "limitations": [
+    "Artifact archives were not downloaded or parsed locally; API confirms successful upload and presence.",
+    "Local Docker engine is absent; local Compose orchestration remains unverified.",
+    "R01/R04/R10 remain expected failures; CI foundation success is not production acceptance."
+  ]
+}

@@ -2,7 +2,7 @@
 
 Recorded: 2026-10-21. Implementer: Codex. Scope: P01-T01–T08 technical foundation.
 
-Subsequent setup update (U005): Git has now been initialized on main with origin https://github.com/mignoncharly/kaemmerei.git. The no-repository observation below describes the earlier Phase 1 baseline. Docker Compose/host setup automation and stronger CI artifacts are now supplied; see [VERIFICATION_SETUP.md](VERIFICATION_SETUP.md). Actual remote publication, Docker/pytest execution, and hosted CI remain subject to the recorded access limitations.
+Subsequent setup updates (U005/U006): Git is initialized and main was published to https://github.com/mignoncharly/kaemmerei.git. Source commit d9e39e520495928355dfe02b198c56150bf82077 passed both Linux CI jobs in [run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046), including PostgreSQL and direct pytest. See [evidence](evidence/phase1-ci-39571113046.json). Earlier no-repository, missing-pytest, and blocked-bootstrap observations below remain historical local-environment evidence. Docker Compose/host setup automation is supplied; actual local Docker execution remains unverified. See [VERIFICATION_SETUP.md](VERIFICATION_SETUP.md).
 
 ## Source and runtime
 
@@ -14,7 +14,7 @@ Subsequent setup update (U005): Git has now been initialized on main with origin
 - Installed PostgreSQL executable: version 18.3 at `C:\Program Files\PostgreSQL\18\bin`. This identifies available binaries, not a verified running application database.
 - Source migration head: `0013_integration_tokens`, obtained through Alembic ScriptDirectory without opening the business database.
 - Post-implementation source fingerprint: `.verification/phase1-source-sha256.json`, 38 application/test/migration/script/configuration inputs with SHA-256 hashes. This is a local snapshot after Phase 1 edits, not an invented pre-change Git revision. All 31 Python source files in that inventory passed AST syntax parsing; documentation relative links were checked with no missing targets.
-- Linux/Python 3.14/PostgreSQL 18 CI jobs are supplied but have not run on a hosted runner. No wider runtime compatibility claim is made.
+- Linux/Python 3.14/PostgreSQL 18 jobs were initially unexecuted; U006 now records successful hosted execution for the source commit above. No wider runtime compatibility claim is made.
 
 ## Dependency inventory
 
@@ -67,8 +67,8 @@ Run commands from the project root using the verified interpreter, or an equival
 | Isolated storage/permissions/API checks | Pass; second app cannot resolve first app's upload | `ResourceAndPermissionTests` |
 | Production unsafe defaults/config refresh | Pass; no business connection | `ConfigurationTests` |
 | PostgreSQL disposable bootstrap | Failed before test execution: `initdb: could not create restricted token: error code 87` | `.verification/phase1-postgresql.log` |
-| PostgreSQL actual migrations/regression | Not run because cluster bootstrap failed | Required exit gate remains open |
-| pytest direct command / hosted CI | Not run locally / not submitted to a hosted runner | Definitions in `pytest.ini`, `tests/conftest.py`, `.github/workflows/phase1-verification.yml` |
+| PostgreSQL actual migrations/regression | Initial local attempt blocked; subsequently passed in authoritative Linux CI | U006; evidence/phase1-ci-39571113046.json |
+| pytest direct command / hosted CI | Local pytest still unavailable; both direct pytest jobs passed on hosted Ubuntu | U006; SQLite/PostgreSQL job conclusions and JSON/JUnit artifact metadata |
 
 ### Confirmed expected failures
 
@@ -86,6 +86,6 @@ For an already provisioned disposable CI/local cluster, `TEST_POSTGRES_ADMIN_URL
 
 ## Phase status
 
-P01-T01–T08 implementation artifacts are delivered. Local SQLite verification passes with the three recorded open defects. Phase 1 is **implemented with an outstanding PostgreSQL/CI verification gate**, not fully accepted/complete. D01–D13 remain unapproved, and production readiness is not established.
+P01-T01–T08 implementation artifacts are delivered and the technical verification gate is closed by successful Linux CI. Local SQLite passes with three recorded expected failures; hosted SQLite/PostgreSQL verification and direct pytest also pass. Phase 1 is **technically complete**, not production acceptance. D01–D13 remain unapproved, and production readiness is not established.
 
-Next: run the supplied PostgreSQL job on a permitted disposable cluster and the pytest jobs when dependencies are available; then close the Phase 1 gate with evidence. Phase 2's permission matrix and metadata scope fix are the next application remediation tasks. See [VERIFICATION_MATRIX.md](VERIFICATION_MATRIX.md) and [../HANDOFF.md](../HANDOFF.md).
+Next application remediation is Phase 2's permission matrix and metadata scope fix. Local Docker engine installation and repository branch protection remain host/account tasks. See [VERIFICATION_MATRIX.md](VERIFICATION_MATRIX.md) and [../HANDOFF.md](../HANDOFF.md).

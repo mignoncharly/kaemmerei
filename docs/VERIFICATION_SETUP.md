@@ -23,7 +23,7 @@ Use `-Python 'C:\path\to\python.exe'` if Python 3.14 is not available through `p
 - Docker Desktop installed and running with Linux containers. Official installation instructions: https://docs.docker.com/desktop/setup/install/windows-install/.
 - The Docker service is dedicated to synthetic tests, bound only to `127.0.0.1:55432`. It does not modify the existing Windows PostgreSQL service.
 
-Docker installation requires host access outside the workspace, and any installer terms must be handled by the user. The current managed session has no Docker executable, connected browser, or GitHub connector. Shell access to GitHub fails through the configured proxy. These are execution-environment limitations, not claims that the application code is fixed or that CI passed.
+Docker installation requires host access outside the workspace, and any installer terms must be handled by the user. The current managed session has no Docker executable, connected browser, or GitHub administrative connector. Direct shell remote/API reads fail through the configured proxy, but the authorized Git push succeeded. The source is published and both authoritative Linux CI jobs passed; local Docker installation and branch protection remain separate tasks.
 
 ## Dedicated PostgreSQL service
 
@@ -49,4 +49,4 @@ After the first successful CI run, require the `sqlite` and `postgresql` checks 
 
 ## Current evidence and next gate
 
-See HANDOFF and PHASE1_BASELINE for executed checks. PowerShell syntax validation is not a real Docker/pytest/CI execution. Phase 1 remains partially verified until actual PostgreSQL and pytest evidence is available. When the jobs run, record the source commit, run URL, job outcomes, artifacts, date, and remaining expected failures.
+See HANDOFF U006 and [CI evidence](evidence/phase1-ci-39571113046.json). Actual [run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) passed both SQLite and PostgreSQL verification/pytest jobs for source commit d9e39e520495928355dfe02b198c56150bf82077. Phase 1 is technically verified. PowerShell syntax/preflight checks do not establish that the local Docker service was run; that local capability remains unverified. R01/R04/R10 remain open, and no production acceptance is implied.

@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 1 implemented and partially verified; PostgreSQL, direct pytest, and hosted CI evidence outstanding.\
+Current stage: Phase 1 technical verification complete: Linux CI passed SQLite/PostgreSQL verification and direct pytest. Local Docker installation and repository branch-rule administration remain host/account tasks.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -28,10 +28,10 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Authorization | Application-level department checks; no database RLS policies observed |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
 | Tests | Actual source count: 10 original functions, all passing through stdlib adapter. Final suite: 22 checks, 19 passed, 3 expected failures; no errors/skips/unexpected successes |
-| PostgreSQL/migrations | SQLite clean/populated upgrades verified to head. PostgreSQL fixture/CI supplied; local initdb blocked by Windows restricted-token error 87. Production grants/RLS unverified |
+| PostgreSQL/migrations | Clean/populated upgrades and migrated application checks passed in Linux PostgreSQL CI. Windows initdb token error remains a local-host issue. Production grants/RLS unverified |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | Git initialized locally on main; origin is https://github.com/mignoncharly/kaemmerei.git. Remote access fails through configured proxy; see U005/U006 |
+| Source commit/branch | main published to https://github.com/mignoncharly/kaemmerei.git; source commit d9e39e520495928355dfe02b198c56150bf82077 passed CI run 39571113046; see U006 |
 | Completed deliverables | Plan/handoff; Phase 1 harness, isolated storage/configuration, migration fixtures, stdlib runner, CI definitions, baseline/matrix docs, corrected German project status |
 | Application remediation | Document storage now per app instance; migrations accept explicit test connections. Business authorization/workflow findings remain open |
 
@@ -54,7 +54,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 
 | Phase | State | Implemented tasks | Verification | Owner | Next action |
 |---|---|---|---|---|---|
-| 1 — Baseline and verification | Implemented, partially verified | P01-T01–T08 | SQLite: 19 pass, 3 expected failures; PostgreSQL/pytest/CI outstanding | Engineering: Codex; acceptance owner unassigned | Execute supplied jobs on an allowed disposable PostgreSQL runner |
+| 1 — Baseline and verification | Verified / technically complete | P01-T01–T08 | Linux CI SQLite and PostgreSQL jobs success, including direct pytest; local SQLite 19 pass/3 expected failures | Engineering: Codex; no production acceptance | Begin Phase 2 when authorized; optional local Docker and branch protection pending |
 | 2 — Authorization and identities | Not started | None | Not run | Unassigned | Adopt capability matrix; then scope all derived queries |
 | 3 — Schema, roles, RLS, audit | Not started | None | Not run | Unassigned | Inventory schema differences; design context/bootstrap |
 | 4 — Workflow/archive/concurrency | Not started | None | Not run | Unassigned | Define material content revision and mutation protocol |
@@ -80,7 +80,7 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R05 — Incremental synchronization | High | Open | None |
 | R06 — Historical financial population | High | Open | None |
 | R07 — Availability controls | High | Open | None |
-| R08 — Test foundation/coverage | High | Partially addressed; remains open | U003: original tests repaired and matrix/fixtures added; PostgreSQL/pytest and later coverage outstanding |
+| R08 — Test foundation/coverage | High | Phase 1 foundation verified; later coverage remains open | U003/U006: original harness and PostgreSQL/pytest/CI gates pass; later feature/RLS/concurrency coverage remains assigned to target phases |
 | R09–R14 — RLS, inactivity, concurrency, tax, audit, schema | Medium | Open | None |
 | R15–R16 — Document trust/recovery | Medium | Open | None |
 | R17–R20 — Financial/date correctness | Medium | Open | None |
@@ -104,7 +104,7 @@ All D01–D13 decisions in the plan are initially **Proposed / unapproved**. No 
 | D11–D12 — Hosting, recovery, identity | IT operations/security | Undecided targets/provider | Production acceptance depends on measured targets and identity choice |
 | D13 — Connectors and notifications | Product owner | Scope not accepted | Do not claim unimplemented connectors or delivery capabilities |
 
-**Current verification blockers:** Local PostgreSQL initdb cannot create a restricted Windows token (error 87). pytest is unavailable and network installation failed. SQLite stdlib verification is complete. PostgreSQL/pytest jobs need an allowed disposable runner; no business-policy approval is needed to run those synthetic jobs.
+**Phase 1 verification gate:** Closed technically by successful Linux CI run 39571113046. PostgreSQL and direct pytest succeeded on the hosted runner. Local Windows initdb still fails with token error 87; local pytest is unavailable and Docker is absent, but these no longer block the authoritative Linux verification. Branch protection has not been configured because authenticated repository-administration access is unavailable here.
 
 ## 7. Verification and environment ledger
 
@@ -118,8 +118,9 @@ Append exact commands only after identifying the correct environment. Record dat
 | Python syntax/source snapshot | Workspace source | 31 Python files AST-parsed; 38 source/config inputs fingerprinted | U004; .verification/phase1-source-sha256.json |
 | Existing application tests | Migrated disposable SQLite | 10/10 passed through unittest adapter | U003; .verification/phase1-sqlite.log |
 | New regression tests | Migrated disposable SQLite | Final suite 22 checks: 19 passed, 3 expected failures (R01/R04/R10) | U003; .verification/phase1-sqlite.json |
-| Clean Alembic upgrade | Disposable SQLite / PostgreSQL | SQLite passed incl. idempotent head; PostgreSQL not run (initdb failure) | U003; migration test and bootstrap log |
-| Populated baseline upgrade | Disposable SQLite / PostgreSQL | SQLite passed from populated 0001 through document seed at 0003 to head; PostgreSQL not run | U003; MigrationTests |
+| Clean Alembic upgrade | Disposable SQLite / PostgreSQL | Passed in hosted verification jobs; local SQLite also passed | U003/U006; docs/evidence/phase1-ci-39571113046.json |
+| Populated baseline upgrade | Disposable SQLite / PostgreSQL | Passed in hosted verification jobs from populated 0001 through document seed at 0003 to head | U003/U006; MigrationTests and CI evidence |
+| Direct pytest | Hosted Ubuntu, SQLite / PostgreSQL | Both commands succeeded; JUnit artifacts uploaded | U006; CI run 39571113046 and both verification artifacts |
 | RLS/application-role isolation | PostgreSQL restricted roles | Not implemented / not run | None |
 | Concurrent archive/review/task writes | PostgreSQL | Not run | None |
 | File scan/recovery fault cases | Isolated document storage | Not implemented / not run | None |
@@ -141,12 +142,12 @@ For future updates, record schema revisions, backfill counts, legacy exceptions,
 
 ## 9. Immediate next work
 
-1. Run the PostgreSQL verification on a permitted disposable cluster; do not use business databases or bypass sandbox restrictions to start the local server.
-2. Install development dependencies on an available runner and execute both pytest jobs. Capture actual commands, results, and failure evidence.
-3. Close Phase 1 acceptance after the actual PostgreSQL migration gate passes. Remove no expected-failure markers without target-finding evidence.
-4. Next application remediation: P02-T01–T03, capability matrix and centralized metadata/query scoping. Phase 2 is not started in this update.
+1. Phase 1 technical verification is complete; preserve the successful run URL and source commit recorded in U006.
+2. Next application remediation: P02-T01–T03, capability matrix and centralized metadata/query scoping. Phase 2 is not started in this update.
+3. Optional host setup: install/start Docker Desktop with Linux containers, then execute scripts/Complete-Phase1Setup.ps1 for local development checks.
+4. Repository owner/admin should require the successful sqlite/postgresql checks on main through branch protection/rulesets; this account setting is not yet applied. Remove no expected-failure markers without target-finding evidence.
 
-The user authorized Phase 1 implementation on 2026-10-21. Technical artifacts are delivered; outstanding verification is recorded separately from implementation.
+The user authorized Phase 1 implementation and repository/CI setup on 2026-10-21. Technical artifacts and Linux verification are delivered. Local engine installation, branch-rule administration, and production acceptance remain separately recorded.
 
 ## 10. Update history
 
@@ -212,6 +213,18 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Access findings:** Git is available; GitHub CLI and Docker are absent. No connected browser or GitHub connector is available. Shell `git ls-remote` fails connecting to github.com via configured proxy 127.0.0.1. No credentials were requested, exposed, or added to the repository; proxy/sandbox restrictions were not bypassed.
 - **Remaining host prerequisite:** Install/start Docker Desktop with Linux containers in an authorized host session and provide working package/GitHub network/authentication access. Then the prepared setup command can run all local checks and push reviewed commits.
 - **Next action:** Commit the reviewed source, attempt the authorized push, and record the actual result in U006. Hosted workflow/branch protection still require reachable authenticated GitHub access.
+
+### U006 — 2026-10-21 — Publication and successful authoritative Linux CI
+
+- **Source:** Committed the reviewed 62-file project as d9e39e520495928355dfe02b198c56150bf82077 with explicit Codex attribution. Published main to the user-specified GitHub repository; `git push -u origin main` exited 0. No business database, uploads, virtual environments, or real credentials were committed.
+- **Access correction:** Earlier `git ls-remote` and direct API curl requests failed through the configured proxy, but the authorized git push command succeeded using available Git authentication. U005's remote-read failure remains historical evidence, not a claim that publication is still blocked.
+- **Actual run:** https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046, status completed / conclusion success, source SHA d9e39e520495928355dfe02b198c56150bf82077, completed 2026-10-21T08:41:52Z.
+- **Verified jobs:** sqlite (119125229357) and postgresql (119125228881), both completed successfully. Each installed requirements-dev, ran scripts/verify_phase1.py against its backend, ran direct pytest, and uploaded artifacts. PostgreSQL container initialization and restricted test-role creation also succeeded.
+- **Artifacts:** sqlite-verification (12331364024) and postgresql-verification (12332072377), both present and unexpired at inspection. Artifact archives were not downloaded/parsed locally; GitHub API confirms successful upload and existence.
+- **Evidence:** docs/evidence/phase1-ci-39571113046.json records the actual run, jobs, step conclusions, source commit, and artifact metadata from GitHub's public REST API retrieved through the connected read tool.
+- **Phase state:** Phase 1 -> Verified / technically complete. No production acceptance; phases 2–10 not started. R01/R04/R10 remain expected failures. R08 later-feature coverage remains open in the assigned phases.
+- **Remaining limitations:** Docker engine installation requires host access outside this managed workspace; no Docker executable or connected desktop/browser is available. Local Compose execution remains unverified. No authenticated GitHub administrative API/browser capability is available to apply branch protection. Linux CI is now the working authoritative alternative to the blocked Windows bootstrap.
+- **Next action:** Publish this evidence update. Begin Phase 2 only when authorized; local Docker setup and repository-owner branch rules can be completed independently.
 
 ### Update entry template — copy for the next update
 

@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phase 1 implementation delivered on 2026-10-21; SQLite verified, PostgreSQL/pytest/hosted CI verification outstanding.\
+Plan status: Phase 1 technically verified on 2026-10-21 by successful Linux SQLite/PostgreSQL verification and pytest jobs; phases 2–10 not started.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -109,7 +109,7 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 **Priority:** High. **Findings:** R08, R37. **Entry:** Existing source available.
 
-**Implementation update (2026-10-21):** P01-T01–T08 artifacts delivered. Task checkboxes indicate implementation only. SQLite verification: 22 checks, 19 passed and 3 expected failures reproducing open defects. PostgreSQL initialization failed with Windows restricted-token error 87; direct pytest/hosted CI execution is unverified. The PostgreSQL exit gate remains open. Evidence: [docs/PHASE1_BASELINE.md](docs/PHASE1_BASELINE.md) and [docs/VERIFICATION_MATRIX.md](docs/VERIFICATION_MATRIX.md).
+**Implementation update (2026-10-21):** P01-T01–T08 delivered and the technical exit gate verified. Local SQLite: 22 checks, 19 passed and 3 expected failures. Authoritative [Linux CI run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) succeeded for SQLite and PostgreSQL, including direct pytest and migration checks. Windows initdb error 87 remains a local-host limitation; Docker setup automation is supplied but local engine installation is pending. Evidence: [CI record](docs/evidence/phase1-ci-39571113046.json), [baseline](docs/PHASE1_BASELINE.md), [matrix](docs/VERIFICATION_MATRIX.md), and HANDOFF U006. R01/R04/R10 remain open; this is not production acceptance.
 
 ### Tasks
 

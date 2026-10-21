@@ -37,13 +37,13 @@ The desired rules below are implementation targets. They do not claim that futur
 
 | Case | SQLite | PostgreSQL |
 |---|---|---|
-| Clean Alembic upgrade to head and idempotent repeat | Passed locally | Fixture/CI implemented; local cluster bootstrap blocked |
-| Populated 0001 -> 0003 -> head | Passed; record/version/revision/document metadata preserved | Same synthetic fixture ready; not executed locally |
-| Existing CRUD/authentication suite using migrated schema | 10 original checks passed | Ready through disposable database fixture; not executed locally |
-| Document isolation and new permission checks | 4 checks passed | Same suite ready; not executed locally |
+| Clean Alembic upgrade to head and idempotent repeat | Passed locally and in CI | Passed in Linux CI; local Windows bootstrap remains blocked |
+| Populated 0001 -> 0003 -> head | Passed; record/version/revision/document metadata preserved | Passed in Linux CI |
+| Existing CRUD/authentication suite using migrated schema | 10 original checks passed | Passed in Linux CI through both stdlib runner and direct pytest |
+| Document isolation and new permission checks | 4 checks passed | Passed in Linux CI |
 | Production configuration rejection | Passed (one check with six invalid-setting subcases) | No connection required |
 | Per-call document configuration | Passed | No connection required |
-| Known defects | R01/R04/R10 expected failures confirmed | Not verified |
+| Known defects | R01/R04/R10 expected failures confirmed | Target assertions remain expected failures; both Linux verification commands completed successfully |
 
 Migration preservation fixture uses synthetic records and metadata, not a copied business database. It does not constitute a full legacy production-data migration rehearsal. Existing schema differences, including the missing migrated tax-reviewer foreign key, remain R14 for Phase 3.
 
@@ -69,7 +69,7 @@ Phase 1 extracts only explicit migration execution and reusable verification res
 
 ## Release checks
 
-- Phase 1 exit requires working verification foundations and actual PostgreSQL migration evidence. It is not fully verified while local PostgreSQL and hosted CI remain unexecuted.
+- Phase 1 exit requires working foundations and actual PostgreSQL migration evidence. This technical gate is now met by [CI run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046), with [recorded evidence](evidence/phase1-ci-39571113046.json). Local Docker execution remains separately unverified.
 - Expected failures count as open defects. Removing a marker requires target-phase evidence; an unexpected success fails the verification command and requires review.
 - R08 is partially addressed: harness repairs and initial matrix are delivered, while later feature, RLS, concurrency, and acceptance coverage remain outstanding.
 - Zero Critical/High findings, explicit Medium risk decisions, named owners, privacy/security/domain acceptance, and recovery evidence remain production gates in the plan.
