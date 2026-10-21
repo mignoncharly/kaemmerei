@@ -26,7 +26,7 @@ from app.main import create_app
 from app.migrations import upgrade_connection
 settings=Settings(database_url='sqlite:///:memory:',document_storage_dir=Path(sys.argv[1])/'synthetic-documents')
 app=create_app(settings)
-with app.state.engine.begin() as connection:
+with app.state.engine.connect() as connection:
     upgrade_connection(connection)
     assert connection.scalar(text('SELECT version_num FROM alembic_version'))==sys.argv[2]
     assert connection.scalar(text('SELECT count(*) FROM users'))==0

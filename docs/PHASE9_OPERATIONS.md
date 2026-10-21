@@ -851,3 +851,14 @@ remaining maintenance jobs, actionable monitoring and backup-age checks, native
 proxy/service/TLS/ACL/capacity acceptance, wider tool advisory/update operations
 and production custody/retention adoption. P09-T11 is partial until those wider
 update/inventory gates are resolved. Phase 10 release/owner gates remain open.
+
+
+U021 investigation follow-up: the first real source artifact at 569b30e was
+built twice identically (103 files, 910,919 bytes; SHA-256
+`b58cc5025d5bd32e09aae9f5a4f62ccd56d197b698c6072d2c9ea61e4e40f9c7`).
+Initial packaged smoke failed because its caller began a transaction before
+SQLite migration. The existing migration guard correctly denied this. The
+verification caller now uses a plain connection, matching existing migration
+fixtures; no migration or application guard changed. The same artifact then
+passed fresh-runtime migrations/startup/shutdown in isolated in-memory SQLite.
+Final frozen-source local/hosted results and final artifact identity follow.

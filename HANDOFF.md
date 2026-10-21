@@ -487,3 +487,14 @@ U019 final verification: ece779758db1660c2a3314331cea97f63974c2e6 committed/push
 - Hosted workflow now has eight jobs: existing five, Windows/Linux locked-release checks and cross-platform byte comparison. Current-source hosted/full results pending. Latest targeted release/TLS 29 passed; preceding SQLite availability/MFA/TLS 47 passed/2 explicit PG skips.
 - Investigation: explicit UTF-8 fixes metadata decoding; own synthetic Git object read-only attributes handled in fixture cleanup; pip --target private-temp ACL failure resolved using supported pip --python into a new venv. Earlier six failed synthetic fixture directories retained after automatic cleanup approval rejection; no alternate deletion attempted. Pip temp warnings retained. User launcher whitespace preserved.
 - Next: freeze source, build/smoke actual archive with fresh runtime, full SQLite/PG/explicit PG tests, exact-source hosted evidence and final DB/role cleanup check. Phase 9 remains open; PHASE9_OPERATIONS U021 has commands and remaining gates.
+
+
+U021 investigation follow-up: the first real source artifact at 569b30e was
+built twice identically (103 files, 910,919 bytes; SHA-256
+`b58cc5025d5bd32e09aae9f5a4f62ccd56d197b698c6072d2c9ea61e4e40f9c7`).
+Initial packaged smoke failed because its caller began a transaction before
+SQLite migration. The existing migration guard correctly denied this. The
+verification caller now uses a plain connection, matching existing migration
+fixtures; no migration or application guard changed. The same artifact then
+passed fresh-runtime migrations/startup/shutdown in isolated in-memory SQLite.
+Final frozen-source local/hosted results and final artifact identity follow.
