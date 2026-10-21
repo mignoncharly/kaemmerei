@@ -515,3 +515,13 @@ actual regression references, connector scope ledger, provisional role-only
 ownership, manual pilot steps and release/rollback gates. It records no pilot,
 independent review, municipal approval or production acceptance. No scope gap is
 silently waived and Phase 9 entry conditions remain open.
+
+
+U021 second hosted attempt: 39665581505 started the application jobs; both
+new locked-release jobs failed at their Python build step and the dependent
+comparison was skipped. Job-log download returned HTTP 403. A local reproduction
+of the actual CI import preamble, executed as a temporary isolated script, failed
+with ModuleNotFoundError for scripts. GitHub Python-shell temporary scripts need
+an explicit checkout import path. Added that path and an execution-layout
+regression; source application and migration guards unchanged. Corrected retry
+requires its own actual hosted evidence; earlier failures remain recorded.

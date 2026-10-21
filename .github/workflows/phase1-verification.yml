@@ -29,7 +29,9 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import json
+          import json,sys
+          # GitHub executes Python shell steps from a temporary script directory.
+          sys.path.insert(0,str(Path.cwd()))
           from scripts.build_release import build,verify_bytes
           from scripts.verify_release_runtime import verify
           output=Path('.verification').resolve()

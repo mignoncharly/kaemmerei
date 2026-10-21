@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import sys
 from types import SimpleNamespace
 import subprocess
 import zipfile
@@ -165,3 +166,11 @@ def test_hosted_release_workflow_parses_and_requires_both_platforms():
     installs=[step.get('run','') for step in release['steps']]
     assert any('--require-hashes --only-binary=:all: -r requirements.lock' in command for command in installs)
     assert jobs['release-reproducibility']['needs']=='locked-release'
+    # GitHub's Python shell writes a file outside the checkout. Execute its
+    # actual import preamble from an isolated temporary script, not stdin.
+    code=next(step['run'] for step in release['steps'] if step.get('name')=='Build twice and compare exact bytes')
+    with scratch_directory('ci-python-path-') as directory:
+        probe=Path(directory)/'probe.py';probe.write_text(code.split('output=')[0],encoding='utf-8')
+        result=subprocess.run([sys.executable,'-I',str(probe)],cwd=root,
+            stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=30)
+        assert result.returncode==0
