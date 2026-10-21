@@ -22,6 +22,8 @@ from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
+from app.models import ReviewDecision
 from app.config import Settings, get_settings
 from app.authorization import can_decide_review, contract_query, contract_scope, load_child, load_contract
 from app.identity_service import audit, lock_identities, save_user, validate_user_fields
@@ -61,6 +63,7 @@ DOCUMENT_TYPES = {
     ".gif": "image/gif",
 }
 TEMPLATES = Jinja2Templates(directory=str(BASE / "templates"))
+TEMPLATES.env.globals['new_request_id']=lambda: str(uuid4())
 TEMPLATES.env.filters["euro"] = lambda amount: format_euro(amount)
 SUCCESS_NOTICES = {
     "login": "Anmeldung erfolgreich.",
@@ -228,14 +231,14 @@ def validate_task_fields(form, db: Session, contract: Contract, creating: bool =
 
 
 def task_snapshot(task: ContractTask) -> dict:
-    return {"task_id": task.id, "task_title": task.title, "task_kind": task.kind,
+    return {"task_id": task.id, "version":task.version, "task_title": task.title, "task_kind": task.kind,
             "task_status": task.status, "task_description": task.description,
             "task_due_date": task.due_date.isoformat() if task.due_date else "",
             "assigned_to": task.assigned_user.username if task.assigned_user else ""}
 
 
 def review_snapshot(review: ContractReview) -> dict:
-    return {"review_id": review.id, "recipient": review.recipient,
+    return {"review_id": review.id, "version":review.version,"content_revision":review.content_revision,"provenance":review.provenance, "recipient": review.recipient,
             "recipient_detail": review.recipient_detail, "subject": review.subject,
             "request_text": review.request_text, "status": review.status,
             "result_text": review.result_text,
@@ -547,6 +550,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="OPEN.HERZ Vertragsregister", docs_url=None, redoc_url=None,
                   openapi_url=None, lifespan=lifespan)
+    @app.exception_handler(WorkflowConflict)
+    async def workflow_conflict(request, exc):
+        return TEMPLATES.TemplateResponse(request=request, name='workflow_conflict.html', context={
+            'request':request,'submitted':exc.submitted,'current_version':exc.current_version,
+            'reload_url':'/'.join(request.url.path.split('/')[:3]),'user':None},status_code=409)
+
     app.state.config = settings
     app.state.document_storage_dir = Path(settings.document_storage_dir).expanduser().resolve()
     app.state.session_factory = make_session_factory(engine)
@@ -1175,10 +1184,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 row["department_id"] = str(department_obj.id)
             try:
                 values = validate_data(row, user, db)
+                if values["status"]=="active":
+                    raise ValidationError("Imported active status has no verifiable approval; import as draft")
+                tax_values(user,None,values)
             except ValidationError as exc:
                 errors.append(f"Zeile {row_number}: {exc}")
                 continue
             validated.append((row_number, values, is_archived))
+        lock_actor(db,user)
+        check_write(user)
         existing_keys = {
             (item.designation.casefold(), item.contract_type.casefold(), item.contract_partner.casefold(),
              item.relevant_date, item.department_id)
@@ -1200,13 +1214,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 if values["tax_review_status"] == "completed":
                     values["tax_reviewed_by_id"] = user.id
                     values["tax_reviewed_at"] = now_utc()
-                contract = Contract(**values, created_by_id=user.id, updated_by_id=user.id,
-                                    archived_at=now_utc() if is_archived else None)
+                contract = Contract(**values, material_actor_id=user.id, created_by_id=user.id, updated_by_id=user.id,
+                                    archived_at=None)
                 db.add(contract)
                 db.flush()
                 if contract.tax_review_status == "completed":
                     contract.tax_reviewed_by = user
                 contract.contract_number = f"VR-{contract.created_at.year}-{contract.id:04d}"
+                if is_archived:
+                    contract.archived_at=now_utc()
                 db.add(Revision(contract_id=contract.id, actor_id=user.id, action="created",
                                 before=None, after={**snapshot(contract), "source": "excel_import"}))
                 created.append(contract)
@@ -1336,16 +1352,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         check_write(user)
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        lock_actor(db,user)
+        check_write(user)
         uploads = [item for item in form.getlist("documents")
                    if isinstance(item, UploadFile) and item.filename]
         departments = db.scalars(select(Department).where(Department.is_active.is_(True)).order_by(Department.name)).all()
         try:
             values = validate_data(form, user, db)
+            if values["status"]=="active":
+                raise ValidationError("New contracts must start as draft pending independent approval")
+            tax_values(user,None,values)
         except ValidationError as exc:
             for upload in uploads:
                 await upload.close()
             return html(request, "form.html", {**base_context(request, user, csrf), "mode": "new",
                         "values": form_values(form), "departments": departments, "error": str(exc)}, 422)
+        except HTTPException:
+            for upload in uploads:
+                await upload.close()
+            raise
         stored_documents = []
         try:
             for upload in uploads:
@@ -1353,7 +1378,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if values["tax_review_status"] == "completed":
                 values["tax_reviewed_by_id"] = user.id
                 values["tax_reviewed_at"] = now_utc()
-            contract = Contract(**values, created_by_id=user.id, updated_by_id=user.id)
+            contract = Contract(**values, material_actor_id=user.id, created_by_id=user.id, updated_by_id=user.id)
             db.add(contract)
             db.flush()
             if contract.tax_review_status == "completed":
@@ -1412,9 +1437,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         documents = db.scalars(select(ContractDocument).where(ContractDocument.contract_id == contract_id)
                                .order_by(ContractDocument.uploaded_at.desc(), ContractDocument.id.desc())).all()
         return html(request, "detail.html", {**base_context(request, user, csrf),
-                    "contract": contract, "history": history,
+                    "contract": contract, "history": history, "request_id":str(uuid4()),
                     "documents": documents, "tasks": tasks, "task_assignees": task_assignees,
                     "contract_reviews": contract_reviews,
+                    "decision_history":db.scalars(select(ReviewDecision).where(ReviewDecision.contract_id==contract.id).order_by(ReviewDecision.id.desc())).all(),
                     "assignment_teams": db.scalars(select(RecipientTeam).where(RecipientTeam.is_active.is_(True))).all() if user.role == 'admin' else [],
                     "assignment_accounts": [account for account in db.scalars(select(User).where(User.can_approve.is_(True), User.is_active.is_(True))).all() if can_read(account, contract)] if user.role == 'admin' else [],
                     "task_kinds": TASK_KINDS, "task_statuses": TASK_STATUSES,
@@ -1433,14 +1459,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/tasks")
     async def create_contract_task(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         user, _csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
-        form = await request.form(max_fields=8)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        submission(db,user,contract,form)
         try:
             values = validate_task_fields(form, db, contract, creating=True)
         except ValueError as exc:
@@ -1457,8 +1484,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/tasks/{task_id}")
     async def update_contract_task(request: Request, contract_id: int, task_id: int,
                                    db: Session = Depends(get_db)):
+        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         user, _csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
@@ -1466,13 +1494,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         _parent, task = load_child(db, user, contract_id, ContractTask, task_id)
         if not task or task.contract_id != contract.id:
             raise HTTPException(status_code=404, detail="Aufgabe nicht gefunden")
-        form = await request.form(max_fields=10)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
             values = validate_task_fields(form, db, contract)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        expected_version(task, form)
         before = task_snapshot(task)
+        task.version += 1
         for key, value in values.items():
             setattr(task, key, value)
         task.updated_at = now_utc()
@@ -1484,14 +1513,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/reviews")
     async def create_contract_review(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         user, _csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
-        form = await request.form(max_fields=6)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        submission(db,user,contract,form)
         recipient = str(form.get("recipient", "")).strip()
         recipient_detail = str(form.get("recipient_detail", "")).strip()
         subject = str(form.get("subject", "")).strip()
@@ -1507,7 +1537,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=400, detail="Bitte eine gültige Prüffrist angeben") from exc
         review = ContractReview(contract_id=contract.id, recipient=recipient,
                                 recipient_detail=recipient_detail, subject=subject,
-                                request_text=request_text, status="open", due_date=due_date,
+                                request_text=request_text, status="open", due_date=due_date, content_revision=contract.content_revision,
                                 created_by_id=user.id, updated_at=now_utc())
         db.add(review)
         db.flush()
@@ -1519,18 +1549,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/reviews/{review_id}")
     async def update_contract_review(request: Request, contract_id: int, review_id: int,
                                      db: Session = Depends(get_db)):
+        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         # Consume bounded form input before taking shared identity/parent locks.
-        form = await request.form(max_files=0, max_fields=4)
         lock_identities(db)
         user, _csrf = user_csrf(request, db)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         # Serialize review changes with contract archival on PostgreSQL.
-        contract = load_contract(db, user, contract_id, lock=True)
+        contract = begin_mutation(db, user, contract_id, writer=False)
         if contract is None:
             raise HTTPException(status_code=404, detail="Vertrag nicht gefunden")
         check_read(user, contract)
-        if user.role not in ("admin", "reviewer"):
-            raise HTTPException(status_code=403, detail="Nur die Kämmerei oder Prüfer können Rückmeldungen erfassen")
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
         _parent, review = load_child(db, user, contract_id, ContractReview, review_id, lock=True)
@@ -1546,9 +1574,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=400, detail="Die Rückmeldung darf höchstens 5.000 Zeichen enthalten")
         if status in ("approved", "changes_requested", "rejected") and not result_text:
             raise HTTPException(status_code=400, detail="Für diese Entscheidung ist eine begründete Rückmeldung erforderlich")
+        expected_version(review,form)
         before = review_snapshot(review)
-        review.status = status
-        review.result_text = result_text
+        decide(db,user,contract,review,status,result_text)
         review.updated_by_id = user.id
         review.updated_at = now_utc()
         db.flush()
@@ -1561,18 +1589,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/documents")
     async def upload_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         user, _csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgesch?tzt")
-        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=2)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        submission(db,user,contract,form)
         uploads = [item for item in form.getlist("documents")
                    if isinstance(item, UploadFile) and item.filename]
         if not uploads:
             raise HTTPException(status_code=400, detail="Bitte mindestens eine Datei ausw?hlen")
+        material_change(db,contract,user)
         stored_documents = []
         try:
             for upload in uploads:
@@ -1602,18 +1632,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/documents/link")
     async def link_external_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
         user, _csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgesch?tzt")
-        form = await request.form(max_files=0, max_fields=3)
         require_csrf(request, db, str(form.get("csrf_token", "")))
+        submission(db,user,contract,form)
         label = str(form.get("document_name", "")).strip()
         if not label or len(label) > 200:
             raise HTTPException(status_code=400, detail="Bitte eine Bezeichnung mit h?chstens 200 Zeichen angeben")
         external_url = validate_external_document_url(str(form.get("external_url", "")))
+        material_change(db,contract,user)
         document = ContractDocument(contract_id=contract.id, uploaded_by_id=user.id,
                                     original_filename=label, storage_key=None,
                                     content_type="application/x-dms-link", external_url=external_url,
@@ -1659,11 +1691,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/edit")
     async def save_edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = await request.form(max_files=0, max_fields=32)
         user, csrf = user_csrf(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
-        form = await request.form(max_files=0, max_fields=32)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
@@ -1674,32 +1706,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return html(request, "form.html", {**base_context(request, user, csrf), "mode": "edit",
                         "contract": contract, "values": form_values(form),
                         "departments": departments, "error": str(exc)}, 422)
-        try:
-            version = int(form.get("version", ""))
-        except (TypeError, ValueError):
-            raise HTTPException(status_code=400, detail="Versionsangabe fehlt")
-        if version != contract.version:
-            raise HTTPException(status_code=409, detail="Datensatz wurde inzwischen geändert. Bitte neu laden.")
-        values["tax_reviewed_by_id"] = contract.tax_reviewed_by_id
-        values["tax_reviewed_at"] = contract.tax_reviewed_at
-        review_completed_now = values["tax_review_status"] == "completed" and (
-            contract.tax_review_status != "completed"
-            or contract.tax_review_result != values["tax_review_result"])
-        if review_completed_now:
-            values["tax_reviewed_by_id"] = user.id
-            values["tax_reviewed_at"] = now_utc()
+        expected_version(contract,form)
         before = snapshot(contract)
-        result = db.execute(update(Contract).where(Contract.id == contract_id,
-                                                  Contract.version == version,
-                                                  Contract.archived_at.is_(None))
-                            .values(**values, updated_by_id=user.id, updated_at=now_utc(),
-                                    version=Contract.version + 1))
-        if result.rowcount != 1:
-            db.rollback()
-            raise HTTPException(status_code=409, detail="Datensatz wurde zwischenzeitlich geändert")
-        db.refresh(contract)
-        if review_completed_now:
-            contract.tax_reviewed_by = user
+        changed=any(getattr(contract,k)!=values[k] for k in MATERIAL_FIELDS)
+        if changed:
+            material_change(db,contract,user,bump_version=False)
+            if values['status']=='active':
+                values['status']='in_progress'
+            # A material edit reopens a completed assessment; require a later
+            # explicit completion against the new saved content.
+            if values['tax_review_status']=='completed':
+                values['tax_review_status']='in_progress'
+        tax_values(user,contract,values)
+        for key,value in values.items():
+            setattr(contract,key,value)
+        if values['status']=='active' and not (before['status']=='active' and not changed and contract.approval_provenance=='legacy_unverified'):
+            activation(db,contract,request.app.state.config.mandatory_review_recipients)
+        contract.updated_by_id=user.id
+        contract.updated_at=now_utc()
+        contract.version+=1
+        db.flush()
+        db.expire(contract,['tax_reviewed_by'])
         db.add(Revision(contract_id=contract.id, actor_id=user.id, action="updated",
                         before=before, after=snapshot(contract)))
         db.commit()
@@ -1707,26 +1734,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/archive")
     async def archive(request: Request, contract_id: int, db: Session = Depends(get_db)):
+        form = await request.form(max_files=0,max_fields=3)
         user = require_user(request, db)
-        contract = load_contract(db, user, contract_id)
+        contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
-        form = await request.form()
         require_csrf(request, db, str(form.get("csrf_token", "")))
-        try:
-            version = int(form.get("version", ""))
-        except (TypeError, ValueError):
-            raise HTTPException(status_code=400, detail="Versionsangabe fehlt")
+        expected_version(contract,form)
         before = snapshot(contract)
-        result = db.execute(update(Contract).where(Contract.id == contract_id,
-                                                  Contract.version == version,
-                                                  Contract.archived_at.is_(None))
-                            .values(archived_at=now_utc(), updated_by_id=user.id,
-                                    updated_at=now_utc(), version=Contract.version + 1))
-        if result.rowcount != 1:
-            db.rollback()
-            raise HTTPException(status_code=409, detail="Datensatz wurde bereits geändert oder archiviert")
-        db.refresh(contract)
+        contract.archived_at=now_utc()
+        contract.updated_by_id=user.id
+        contract.updated_at=now_utc()
+        contract.version+=1
+        db.flush()
         db.add(Revision(contract_id=contract.id, actor_id=user.id, action="archived",
                         before=before, after=snapshot(contract)))
         db.commit()

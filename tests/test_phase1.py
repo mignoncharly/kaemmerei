@@ -1,3 +1,4 @@
+from tests.support import workflow_payload
 """Phase 1 verification. Runs under unittest or pytest, with real migrations."""
 from datetime import date, datetime, timedelta
 import os
@@ -129,7 +130,7 @@ class ResourceAndPermissionTests(unittest.TestCase):
             contract_id = create_contract(client)
             token = csrf_from(client.get(f"/contracts/{contract_id}").text)
             content = b"%PDF-1.4\nsynthetic verification document\n%%EOF"
-            response = client.post(f"/contracts/{contract_id}/documents", data={"csrf_token": token},
+            response = client.post(f"/contracts/{contract_id}/documents", data=workflow_payload(client,f"/contracts/{contract_id}/documents",{"csrf_token": token}),
                                    files={"documents": ("synthetic.pdf", content, "application/pdf")}, follow_redirects=False)
             self.assertEqual(response.status_code, 303, response.text)
             from app.models import ContractDocument
@@ -163,20 +164,20 @@ class ResourceAndPermissionTests(unittest.TestCase):
             first = create_contract(client, "1", "First")
             second = create_contract(client, "2", "Second")
             token = csrf_from(client.get("/").text)
-            response = client.post(f"/contracts/{second}/tasks", data={"csrf_token": token, "title": "Synthetic task", "kind": "review"}, follow_redirects=False)
+            response = client.post(f"/contracts/{second}/tasks", data=workflow_payload(client,f"/contracts/{second}/tasks",{"csrf_token": token, "title": "Synthetic task", "kind": "review"}), follow_redirects=False)
             self.assertEqual(response.status_code, 303)
             from app.models import ContractTask
             with app.state.session_factory() as db:
                 task_id = db.scalar(select(ContractTask.id))
             # A child ID cannot be moved to a different parent, even by an admin.
-            response = client.post(f"/contracts/{first}/tasks/{task_id}", data={"csrf_token": token})
+            response = client.post(f"/contracts/{first}/tasks/{task_id}", data=workflow_payload(client,f"/contracts/{first}/tasks/{task_id}",{"csrf_token": token}))
             self.assertEqual(response.status_code, 404)
             client.post("/logout", data={"csrf_token": token})
             login(client, "kultur")
             token = csrf_from(client.get("/").text)
             for endpoint in (f"/contracts/{second}/tasks", f"/contracts/{second}/reviews",
                              f"/contracts/{second}/documents", f"/contracts/{second}/documents/link"):
-                self.assertEqual(client.post(endpoint, data={"csrf_token": token}).status_code, 404)
+                self.assertEqual(client.post(endpoint, data=workflow_payload(client,endpoint,{"csrf_token": token})).status_code, 404)
             client.post("/logout", data={"csrf_token": token})
             login(client, "pruefer")
             token = csrf_from(client.get("/").text)
@@ -229,8 +230,8 @@ class SecurityRegressionTests(unittest.TestCase):
         elif "R04" in self._testMethodName:
             record_id = create_contract(client)
             token = csrf_from(client.get("/").text)
-            created = client.post(f"/contracts/{record_id}/reviews", data={"csrf_token": token,
-                        "recipient": "Kämmerei", "subject": "Synthetic review"}, follow_redirects=False)
+            created = client.post(f"/contracts/{record_id}/reviews", data=workflow_payload(client,f"/contracts/{record_id}/reviews",{"csrf_token": token,
+                        "recipient": "Kämmerei", "subject": "Synthetic review"}), follow_redirects=False)
             self.assertEqual(created.status_code, 303)
             from app.models import ContractReview
             with app.state.session_factory() as db:
@@ -238,7 +239,7 @@ class SecurityRegressionTests(unittest.TestCase):
             archived = client.post(f"/contracts/{record_id}/archive", data={"csrf_token": token, "version": "1"}, follow_redirects=False)
             self.assertEqual(archived.status_code, 303)
             self.response = client.post(f"/contracts/{record_id}/reviews/{review_id}",
-                                   data={"csrf_token": token, "status": "approved", "result_text": "Synthetic"}, follow_redirects=False)
+                                   data=workflow_payload(client,f"/contracts/{record_id}/reviews/{review_id}",{"csrf_token": token, "status": "approved", "result_text": "Synthetic"}), follow_redirects=False)
         elif "R10" in self._testMethodName:
             client.post("/logout", data={"csrf_token": csrf_from(client.get("/").text)})
             self.assertEqual(login(client, "kultur").status_code, 303)

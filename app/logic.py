@@ -47,7 +47,7 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
     date_description = text("date_description", 80)
     contact_person = text("contact_person", 160, True)
     deputy_contact_person = text("deputy_contact_person", 160)
-    status = text("status", 20) or "active"
+    status = text("status", 20) or (existing.status if existing else "draft")
     if status not in {code for code, _label in CONTRACT_STATUSES}:
         raise ValidationError("Bitte einen gÃ¼ltigen Vertragsstatus auswÃ¤hlen")
     try:
@@ -170,4 +170,5 @@ def snapshot(contract: Contract) -> dict:
                 deputy_contact_person=contract.deputy_contact_person,
                 status=contract.status,
                 archived_at=contract.archived_at.isoformat() if contract.archived_at else None,
-                version=contract.version)
+                version=contract.version, content_revision=contract.content_revision,
+                approval_provenance=contract.approval_provenance, tax_provenance=contract.tax_provenance)

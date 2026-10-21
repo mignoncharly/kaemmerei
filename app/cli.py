@@ -27,6 +27,7 @@ def main():
     subs = parser.add_subparsers(dest="command", required=True)
     subs.add_parser("init-db", help="Datenbankschema auf aktuelle Migration bringen")
     subs.add_parser('schema-inventory', help='Read-only schema and legacy exception inventory')
+    subs.add_parser('workflow-inventory', help='IDs requiring legacy approval/tax reconciliation')
     d = subs.add_parser("add-department", help="Fachbereich anlegen")
     d.add_argument("name")
     subs.add_parser("list-departments")
@@ -62,6 +63,14 @@ def main():
             from app.schema_rules import inventory
             with engine.connect() as connection:
                 print(json.dumps({'schema': compare_schema(connection), 'legacy': inventory(connection)}))
+            return
+        if args.command == 'workflow-inventory':
+            with engine.connect() as connection:
+                result={key:connection.execute(text(sql)).scalars().all() for key,sql in {
+                    'legacy_active_contract_ids':"SELECT id FROM contracts WHERE status='active' AND approval_provenance='legacy_unverified' ORDER BY id",
+                    'legacy_tax_contract_ids':"SELECT id FROM contracts WHERE tax_review_status='completed' AND tax_provenance='legacy_unverified' ORDER BY id",
+                    'legacy_review_ids':"SELECT id FROM contract_reviews WHERE provenance='legacy_unverified' ORDER BY id"}.items()}
+                print(json.dumps(result))
             return
         if args.command == 'purge-sessions' and settings.enforce_database_security:
             from app.db_roles import validate_runtime_engine

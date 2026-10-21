@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 3 P03-T01–T08 technically verified locally and in all three hosted jobs. Restricted LOGIN-role RLS, schema integrity and protected audit delivered; see U011 and docs/PHASE3_DATABASE_SECURITY.md. DBA/security and production acceptance remain pending.\
+Current stage: Phase 4 P04-T01–T08 implemented; local workflow/archive/concurrency checks pass. Full-suite and hosted evidence tracked in U012 and docs/PHASE4_WORKFLOW.md. Municipal D04 and production acceptance remain pending.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -24,10 +24,10 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Documents reviewed | README and ARBEITSPLAN updated to distinguish prototype behavior, known defects, verification, and outstanding approvals |
 | Application | FastAPI, SQLAlchemy, Jinja templates, local static CSS/JS |
 | Database | SQLite development default; production configuration requires PostgreSQL/psycopg |
-| Latest migration observed | `0016_database_security`; 0015/0016 applied only to synthetic isolated verification databases |
+| Latest migration observed | `0017_bound_workflow`; applied only to synthetic isolated verification databases |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
-| Tests | Phase 3: 81 pytest items; local PostgreSQL full and explicit restricted-role results in U011; SQLite 69 passed + 12 PostgreSQL-only skips; 15 passing subtests in each full suite |
+| Tests | Phase 4: 99 collected; PostgreSQL 99 passed, SQLite 87 passed + 12 PostgreSQL-only skips; 15 passing subtests in each full suite. Actual restricted-role Phase 4 selection: 18 passed. Final repeats and hosted evidence in U012. |
 | PostgreSQL/migrations | Native Windows 18.3; clean/populated head 0016 and restricted runtime roles pass in isolated databases. Error 87 historical; independent launcher ACL limitation unchanged. Production roles not deployed. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
@@ -57,7 +57,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 1 — Baseline and verification | Verified / technically complete | P01-T01–T08 | Preserved; native Windows application/identity probes and hosted checks pass; independent agent launcher retry is ACL-limited | Engineering: Codex; no production acceptance | Preserve U009 evidence |
 | 2 — Authorization and identities | Verified technically; owner acceptance pending | P02-T01–T08 | 66 PostgreSQL passed; 65 SQLite passed + one PostgreSQL-only skip; hosted three jobs passed for 9fde6c0 | Engineering: Codex; municipal owners unassigned | Next technical phase: P03-T01; municipal D01/D02 acceptance required before production |
 | 3 — Schema, roles, RLS, audit | Verified technically; DBA/security acceptance pending | P03-T01–T08 | PostgreSQL 81 passed; SQLite 69 passed + 12 PG-only skips; explicit PostgreSQL 12 passed; all three hosted jobs passed | Engineering: Codex; DBA/security owner unassigned | Next technical phase P04-T01; review D03 before business deployment |
-| 4 — Workflow/archive/concurrency | Not started | None | Not run | Unassigned | Define material content revision and mutation protocol |
+| 4 — Workflow/archive/concurrency | Implemented and locally verified; final hosted gate pending | P04-T01–T08 | Bound approval, tax, replay, concurrent decisions/tasks and nine archive race paths; real restricted PostgreSQL logins | Engineering: Codex; municipal approval owners unassigned | Verify current hosted source, then P05-T01; D04 acceptance before business deployment |
 | 5 — Document lifecycle | Not started | None | Not run | Unassigned | Define storage states, quarantine, recovery, and retention |
 | 6 — Integration synchronization | Not started | None | Not run | Unassigned | Specify versioned cursor/feed/scope-removal contract |
 | 7 — Reports/dates/Excel | Not started | None | Not run | Unassigned | Agree finance/history/date/interchange semantics |
@@ -74,8 +74,8 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | Finding IDs | Baseline severity | State | Closure evidence / update |
 |---|---|---|---|
 | R01 — Metadata isolation | High | Corrected and verified | U009; scoped metadata plus indirect/API/document regressions |
-| R02 — Reviewer/recipient permissions | High | Application capability/assignment corrected; broader Phase 4 policy still pending | U010; normal reviewers cannot decide; explicit capability, active team membership, assignment and read scope required |
-| R03 — Approval version/activation integrity | High | Open | None |
+| R02 — Reviewer/recipient permissions | High | Explicit assignment plus independent approval implemented and locally verified | U010/U012; wrong recipient/self-approval denied |
+| R03 — Approval version/activation integrity | High | Implemented and locally verified; municipal D04 acceptance pending | U012; decisions bind content; stale approvals cannot activate new content |
 | R04 — Archive mutation | High | Corrected and verified | U009; locked parent, 409 and persisted review/history checks |
 | R05 — Incremental synchronization | High | Open | None |
 | R06 — Historical financial population | High | Open | None |
@@ -83,7 +83,7 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R08 — Test foundation/coverage | High | Phase 1 foundation verified; later coverage remains open | U003/U006: original harness and PostgreSQL/pytest/CI gates pass; later feature/RLS/concurrency coverage remains assigned to target phases |
 | R10 — Inactive department | Medium | Corrected and verified | U009; session/login/object permissions and scoped API tokens |
 | R09, R13, R14 — RLS, audit, schema | Medium | Phase 3 implemented and locally verified; production acceptance pending | U011; restricted-role SQL, audit protection and schema regressions |
-| R11, R12 — Concurrency and tax | Medium | Open | Phase 4 |
+| R11, R12 — Concurrency and tax | Medium | Implemented and locally verified | U012; expected child versions, concurrent/archive races, restricted tax completion and cleared reopen metadata |
 | R15–R16 — Document trust/recovery | Medium | Open | None |
 | R17–R20 — Financial/date correctness | Medium | Open | None |
 | R21–R22 — Capacity/operations | Medium | Open | None |
@@ -102,7 +102,7 @@ All D01–D13 decisions in the plan are initially **Proposed / unapproved**. No 
 |---|---|---|---|
 | D01–D02 — Roles, assignment, delegation | Kämmerei, identity/security | Proposed defaults | Implement read-only reviewers and explicit grants; confirm final policy |
 | D03 — RLS and database roles | DBA/security | Technical default implemented/tested; owner acceptance pending | Separate owner/web/integration/maintenance/audit identities; shared-role GUC threat boundary documented |
-| D04 — Approval/activation/material changes | Approval owners | Proposed default | Preserve legacy uncertainty; do not fabricate approval provenance |
+| D04 — Approval/activation/material changes | Approval owners | Pilot default implemented/tested; municipal acceptance pending | Configured current independent approvals; legacy unverified; no activation override |
 | D05–D06 — Documents, scanning, retention | Operations, security, privacy/records | Proposed defaults | Quarantine new content; no automatic destructive disposal |
 | D07 — API/token/event policy | Integration/security | Proposed default | Design scopes, rotation, removals, and resnapshot behavior |
 | D08–D10 — Finance, dates, Excel | Finance/domain/product | Proposed defaults | Preserve unknowns and define report/interchange contracts |
@@ -127,7 +127,7 @@ Append exact commands only after identifying the correct environment. Record dat
 | Populated baseline upgrade | Disposable SQLite / PostgreSQL | Original fixtures plus invalid legacy abort, reviewed synthetic correction and historical audit outcome preservation pass | U010/U011; MigrationTests, tests/test_phase2.py, tests/test_phase3_schema.py |
 | Direct pytest | Local Windows, SQLite / PostgreSQL | Full suites pass; explicit PostgreSQL selection 12 passed, zero skips; hosted result in U011 | U011; local JUnit hashes and Phase 3 CI evidence |
 | RLS/application-role isolation | Actual separate PostgreSQL LOGIN roles | 11 Phase 3 tests passed; explicit selection also includes application lifecycle | U011; tests/test_phase3.py |
-| Concurrent archive/review/task writes | PostgreSQL | Not run | None |
+| Concurrent archive/review/task writes | SQLite and actual restricted PostgreSQL logins | One winning decision/task update; nine paths race archive and reject every post-barrier mutation | U012; tests/test_phase4.py |
 | File scan/recovery fault cases | Isolated document storage | Not implemented / not run | None |
 | API synchronization replay/transfers | Synthetic integration consumer | Not implemented / not run | None |
 | Financial reconciliation/date fixtures | Synthetic domain fixtures | Not implemented / not run | None |
@@ -150,7 +150,7 @@ For future updates, record schema revisions, backfill counts, legacy exceptions,
 ## 9. Immediate next work
 
 1. Preserve U009/U010 evidence and match every hosted result to its implementation SHA.
-2. Next technical phase after Phase 3 verification: P04-T01 shared aggregate mutation protocol; preserve tested restricted-role behavior and migration inventory gates.
+2. Next technical phase after Phase 4 verification: P05-T01 private storage boundary, then document states/quarantine/recovery. Preserve tested mutation, RLS and provenance gates.
 3. Review D01/D02 with municipal identity/approval owners before production; labels and assignment never implicitly expand read scope. Phase 4 still owns content-bound decisions and broader workflow concurrency.
 4. Use the existing native cluster; do not reinitialize it. Branch protection, production backup/restore and deployment approval remain separate account/operations work. No business database has been migrated by this update.
 
@@ -290,6 +290,18 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Hosted:** Implementation 5986a7473e3772e0f9a4e390aadc979101a1f9a9 pushed successfully to authorized main. Actual [run 39600834032](https://github.com/mignoncharly/kaemmerei/actions/runs/39600834032) completed successfully: sqlite, PostgreSQL 18 and native-postgresql jobs all passed. Dependency install, full migrations/tests and explicit PostgreSQL/RLS selections passed. Run/job/step and three artifact metadata inspected; archives not downloaded. Evidence: docs/evidence/phase3-ci-39600834032.json. Native bootstrap uses the existing marked cluster/private passfile; CI service bootstrap credential is synthetic.
 - **Boundaries:** Shared-role GUC RLS protects omitted filters, not unrestricted application SQL/database credential compromise. Identity is a transaction snapshot and revalidated next transaction. Events cover committed changes; rolled-back denials need separate operational logging. SQLite has no RLS. DBA/security D03 acceptance, business migration, backup/restore rehearsal and production release remain open; Phase 4 owns content-bound approvals/aggregate races.
 - **State/next:** Phase 3 technically verified. Publish final evidence, then P04-T01 aggregate mutation protocol. DBA/security D03 acceptance, production legacy-data inventory and operational restore remain separate; no deployment approval is inferred.
+
+### U012 — 2026-10-21 — Phase 4 bound workflow and archive concurrency
+
+- **Scope:** User authorized the next phase of the existing plan. P04-T01–T08 implemented without replacing working application/infrastructure. Unrelated Start-TestDatabase.ps1 whitespace edit preserved and excluded from commits.
+- **Protocol:** Parsed input precedes identity guard and parent lock; session/capability revalidated under lock, including PostgreSQL GUC refresh and SQLite session validity. New/create/import writers also revalidate actor under the guard. Parent version/archive checks, child versions, mutation and revision/audit/events commit once. Guard serializes aggregate writers globally; throughput remains a Phase 9 measurement.
+- **Workflow:** Separate content revision/material editor, immutable request/content/team/assignee/actor/time decisions, independent assigned approval, configurable mandatory recipients, draft creation/import and no activation override. Material/document changes supersede old approvals and downgrade activation. Terminal decisions require administrator reopening. Conflicts retain inputs; UUIDs prevent duplicate child workflow creation. Tax assessment is administrator-only; reopen/material change clears current completion metadata and preserves history.
+- **Migration:** Additive 0017; legacy active/tax/review values remain explicitly unverified, unknown old review content/material actor stays unknown. New workflow-inventory returns sorted reconciliation IDs without private values. SQLite rebuild restores event triggers. Decision table has forced PostgreSQL RLS and separate NOLOGIN audit ownership. Grants/startup checks updated for head 0017/new table. No business database inspected or migrated. Recovery is forward repair or a compatible verified backup; never reactivate superseded approvals or disable RLS.
+- **Local:** Full PostgreSQL 99 passed; SQLite 87 passed + 12 PostgreSQL-only skips; both with 15 passing subtests. Phase 4 selection 18 passed on both backends, PostgreSQL using actual restricted logins. Simultaneous review/task updates produce exactly one winner; nine archive races cover task create/edit, request create/edit, assignment, file upload, DMS link, contract edit and tax edit. Final hashes/times and cleanup counts recorded in docs/PHASE4_WORKFLOW.md and local evidence after execution.
+- **Investigation:** Old archive regression now starts from in_review instead of assuming self-approval is allowed; it still checks rejection preserves all fields/history. Populated old-schema fixture now reflects its actual schema rather than injecting new ORM columns; labels and legacy markers asserted. PostgreSQL owner decision mutation originally affected zero rows under default-deny RLS; explicit trusted migration policy now exposes rows to the append-only trigger, which rejects modification. No xfail or warning suppression introduced.
+- **Hosted:** Pending current Phase 4 source run at entry creation. CI includes full suites, explicit PostgreSQL security selection and explicit Phase 4 workflow/race selection on both PostgreSQL jobs. Actual run/step/artifact conclusions will be recorded after publication; YAML is not evidence of a pass.
+- **Boundaries:** D04 pilot rules await municipal acceptance. No business reconciliation counts, production migration/grants, scanner/quarantine, durable blob recovery, reliable external change publication, or operational load/restore acceptance claimed. Existing native cluster, passfiles, binary identity and services preserved; no Docker dependency added. Unsuppressed Starlette/AnyIO and managed Windows pytest-cache warnings remain.
+- **Next:** Verify hosted source, publish evidence; then Phase 5. Business deployment remains separate.
 
 ### Update entry template — copy for the next update
 

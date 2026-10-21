@@ -54,7 +54,9 @@ def transaction_identity(session, transaction, connection):
 
 @event.listens_for(Session, 'before_flush')
 def audit_correlation(session, flush_context, instances):
-    from app.models import IdentityAudit
+    from app.models import IdentityAudit, Revision
     for item in session.new:
         if isinstance(item, IdentityAudit):
             item.correlation_id = session.info.get('request_context', {}).get('correlation_id') or str(uuid4())
+        if isinstance(item,Revision) and session.info.get('submission_id'):
+            item.after={**item.after,'request_id':session.info['submission_id']}

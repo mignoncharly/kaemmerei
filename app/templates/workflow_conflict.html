@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel"><h1>Änderungskonflikt</h1><p>Der Datensatz wurde inzwischen geändert oder diese Anfrage bereits verarbeitet. Aktuelle Version: {{ current_version }}. Ihre Angaben wurden nicht gespeichert.</p>
+<p><a href="{{ reload_url }}">Aktuellen Datensatz neu laden und Angaben abgleichen</a></p>
+<h2>Ihre eingereichten Angaben</h2>{% for name,value in submitted.items() %}<label>{{ name }}<textarea readonly>{{ value }}</textarea></label>{% endfor %}</section>
+{% endblock %}

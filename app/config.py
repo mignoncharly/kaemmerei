@@ -15,12 +15,18 @@ class Settings:
     migration_database_url: str | None = None
     maintenance_database_url: str | None = None
     enforce_database_security: bool = False
+    mandatory_review_recipients: tuple[str, ...] = ('Kämmerei',)
 
     @property
     def production(self) -> bool:
         return self.environment == "production"
 
     def validate(self) -> None:
+        from app.options import REVIEW_RECIPIENTS
+        if not self.mandatory_review_recipients or any(not x.strip() for x in self.mandatory_review_recipients):
+            raise ValueError('At least one mandatory approval recipient must be configured')
+        if any(x not in REVIEW_RECIPIENTS for x in self.mandatory_review_recipients):
+            raise ValueError('Mandatory approval recipients must use configured review catalog values')
         if self.environment not in ("development", "production"):
             raise ValueError("APP_ENV muss development oder production sein")
         if not self.allowed_hosts or any(x in ("*", "") for x in self.allowed_hosts):
@@ -45,6 +51,7 @@ def get_settings() -> Settings:
     storage = Path(os.getenv("DOCUMENT_STORAGE_DIR", str(Settings.document_storage_dir))).expanduser().resolve()
     settings = Settings(environment=environment, database_url=db_url, allowed_hosts=hosts,
                         document_storage_dir=storage,
+                        mandatory_review_recipients=tuple(x.strip() for x in os.getenv('MANDATORY_REVIEW_RECIPIENTS','Kämmerei').split(',') if x.strip()),
                         integration_database_url=os.getenv('INTEGRATION_DATABASE_URL') or None,
                         migration_database_url=os.getenv('MIGRATION_DATABASE_URL') or None,
                         maintenance_database_url=os.getenv('MAINTENANCE_DATABASE_URL') or None,

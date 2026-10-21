@@ -35,7 +35,7 @@
     {% for person in contact_persons %}<option value="{{ person }}" {% if values.get('deputy_contact_person', '') == person %}selected{% endif %}>{{ person }}</option>{% endfor %}
     {% set current_deputy = values.get('deputy_contact_person', '') %}{% if current_deputy and current_deputy not in contact_persons %}<option value="{{ current_deputy }}" selected>{{ current_deputy }}</option>{% endif %}
    </select></div>
-   <div><label for="status">Vertragsstatus *</label><select id="status" name="status" required>{% for code, label in contract_statuses %}<option value="{{ code }}" {% if values.get('status', 'active') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+   <div><label for="status">Vertragsstatus *</label><select id="status" name="status" required>{% for code, label in contract_statuses %}<option value="{{ code }}" {% if values.get('status', 'draft') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
    <div class="wide"><label for="department_id">Zuständiger Fachbereich *</label>
    {% if user.role == 'admin' %}
    <select id="department_id" name="department_id" required><option value="">Bitte auswählen</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if values.get('department_id', '')|string == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select>

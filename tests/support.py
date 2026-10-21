@@ -173,3 +173,21 @@ def create_contract(client, department_id="1", designation="Mietvertrag Sporthal
     response = client.post("/contracts/new", data=data, follow_redirects=False)
     assert response.status_code == 303, response.text
     return int(urlsplit(response.headers["location"]).path.rstrip("/").rsplit("/", 1)[-1])
+
+
+def workflow_payload(client,path,data):
+    """Legacy behavior tests submit the current rendered workflow form fields.
+
+    Phase 4 conflict/missing-field tests deliberately bypass this helper.
+    Explicit versions/IDs are preserved so stale submissions remain testable.
+    """
+    from uuid import uuid4
+    if not re.fullmatch(r'/contracts/\d+/(?:tasks|reviews|documents)(?:/.*)?',str(path)):
+        return data
+    result=dict(data)
+    result.setdefault('request_id',str(uuid4()))
+    if re.fullmatch(r'/contracts/\d+/(?:tasks|reviews)/\d+(?:/assignment)?',str(path)) and 'version' not in result:
+        page=client.get('/'.join(path.split('/')[:3]))
+        found=re.search(r'action="'+re.escape(path)+r'"[^>]*>.*?name="version" value="(\d+)"',page.text,re.S)
+        result['version']=found.group(1) if found else '1'
+    return result

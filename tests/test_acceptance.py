@@ -1,3 +1,4 @@
+from tests.support import workflow_payload
 """Application security acceptance, run on either explicitly selected backend."""
 from sqlalchemy import select
 
@@ -17,11 +18,11 @@ def test_metadata_and_indirect_references_remain_department_scoped(environment):
     own = create_contract(client, '1', 'VISIBLE_OWN')
     private = create_contract(client, '2', 'PRIVATE_DESIGNATION_B')
     token = csrf_from(client.get('/').text)
-    assert client.post(f'/contracts/{private}/documents', data={'csrf_token': token},
+    assert client.post(f'/contracts/{private}/documents', data=workflow_payload(client,f'/contracts/{private}/documents',{'csrf_token': token}),
                        files={'documents': ('PRIVATE_FILENAME_B.pdf', b'%PDF-1.4\nprivate', 'application/pdf')},
                        follow_redirects=False).status_code == 303
-    assert client.post(f'/contracts/{private}/reviews', data={'csrf_token': token,
-                       'recipient': 'Kämmerei', 'subject': 'PRIVATE_REVIEW_B'},
+    assert client.post(f'/contracts/{private}/reviews', data=workflow_payload(client,f'/contracts/{private}/reviews',{'csrf_token': token,
+                       'recipient': 'Kämmerei', 'subject': 'PRIVATE_REVIEW_B'}),
                        follow_redirects=False).status_code == 303
     raw = 'ohvr_' + 'M' * 32
     with app.state.session_factory() as db:
@@ -64,13 +65,13 @@ def test_archived_review_rejection_preserves_state_and_history(environment):
     login(client, 'admin')
     record = create_contract(client)
     csrf = csrf_from(client.get('/').text)
-    assert client.post(f'/contracts/{record}/reviews', data={'csrf_token': csrf,
-                       'recipient': 'Kämmerei', 'subject': 'Acceptance'}, follow_redirects=False).status_code == 303
+    assert client.post(f'/contracts/{record}/reviews', data=workflow_payload(client,f'/contracts/{record}/reviews',{'csrf_token': csrf,
+                       'recipient': 'Kämmerei', 'subject': 'Acceptance'}), follow_redirects=False).status_code == 303
     with app.state.session_factory() as db:
         review_id = db.scalar(select(ContractReview.id))
     path = f'/contracts/{record}/reviews/{review_id}'
-    decision = {'csrf_token': csrf, 'status': 'approved', 'result_text': 'Before archival'}
-    assert client.post(path, data=decision, follow_redirects=False).status_code == 303
+    decision = {'csrf_token': csrf, 'status': 'in_review', 'result_text': 'Before archival'}
+    assert client.post(path, data=workflow_payload(client,path,decision), follow_redirects=False).status_code == 303
     assert client.post(f'/contracts/{record}/archive', data={'csrf_token': csrf, 'version': 1},
                        follow_redirects=False).status_code == 303
     with app.state.session_factory() as db:
@@ -82,7 +83,7 @@ def test_archived_review_rejection_preserves_state_and_history(environment):
             logout(client)
             login(client, user)
         decision.update(csrf_token=csrf_from(client.get('/').text), result_text='Forbidden after archive')
-        assert client.post(path, data=decision, follow_redirects=False).status_code == 409
+        assert client.post(path, data=workflow_payload(client,path,decision), follow_redirects=False).status_code == 409
     with app.state.session_factory() as db:
         after = db.get(ContractReview, review_id)
         assert (after.status, after.result_text, after.updated_at, after.updated_by_id) == snapshot
@@ -112,7 +113,7 @@ def test_department_deactivation_revokes_sessions_login_and_scoped_tokens(enviro
     values.update(csrf_token=csrf, version='1')
     for path in (f'/contracts/{record}/edit', f'/contracts/{record}/archive',
                  f'/contracts/{record}/reviews', f'/contracts/{record}/documents'):
-        assert client.post(path, data=values, follow_redirects=False).status_code == 303
+        assert client.post(path, data=workflow_payload(client,path,values), follow_redirects=False).status_code == 303
     assert login(client, 'kultur').status_code == 401
     for path in ('/api/v1/contracts', '/api/v1/departments', f'/api/v1/contracts/{record}/documents/1'):
         assert client.get(path, headers=headers).status_code == 401

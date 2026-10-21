@@ -1,3 +1,4 @@
+from tests.support import workflow_payload
 """Schema and restricted-role RLS acceptance, never replaced by SQLite evidence."""
 import pytest
 from contextlib import contextmanager
@@ -34,9 +35,9 @@ def seeded_contracts(runtime):
     first,second=create_contract(client,'1','Synthetic A'),create_contract(client,'2','Synthetic B')
     csrf=csrf_from(client.get('/').text)
     for record in (first,second):
-        assert client.post(f'/contracts/{record}/reviews',data={'csrf_token':csrf,'recipient':'Kämmerei','subject':'Synthetic review'},follow_redirects=False).status_code==303
-        assert client.post(f'/contracts/{record}/tasks',data={'csrf_token':csrf,'kind':'review','title':'Synthetic task'},follow_redirects=False).status_code==303
-        assert client.post(f'/contracts/{record}/documents',data={'csrf_token':csrf},files={'documents':('synthetic.pdf',b'%PDF-1.4\nSynthetic','application/pdf')},follow_redirects=False).status_code==303
+        assert client.post(f'/contracts/{record}/reviews',data=workflow_payload(client,f'/contracts/{record}/reviews',{'csrf_token':csrf,'recipient':'Kämmerei','subject':'Synthetic review'}),follow_redirects=False).status_code==303
+        assert client.post(f'/contracts/{record}/tasks',data=workflow_payload(client,f'/contracts/{record}/tasks',{'csrf_token':csrf,'kind':'review','title':'Synthetic task'}),follow_redirects=False).status_code==303
+        assert client.post(f'/contracts/{record}/documents',data=workflow_payload(client,f'/contracts/{record}/documents',{'csrf_token':csrf}),files={'documents':('synthetic.pdf',b'%PDF-1.4\nSynthetic','application/pdf')},follow_redirects=False).status_code==303
     return first,second
 
 
@@ -61,12 +62,12 @@ def test_restricted_runtime_application_smoke(runtime):
     assert client.post(f'/contracts/{record}/edit',data=values,follow_redirects=False).status_code==303
     assert client.post(f'/contracts/{record}/edit',data=values).status_code==409
     csrf=csrf_from(client.get('/').text)
-    assert client.post(f'/contracts/{record}/reviews',data={'csrf_token':csrf,'recipient':'Kämmerei','subject':'Archive barrier'},follow_redirects=False).status_code==303
+    assert client.post(f'/contracts/{record}/reviews',data=workflow_payload(client,f'/contracts/{record}/reviews',{'csrf_token':csrf,'recipient':'Kämmerei','subject':'Archive barrier'}),follow_redirects=False).status_code==303
     with runtime.owner.state.session_factory() as db:
         review_id=db.scalar(select(ContractReview.id).where(ContractReview.contract_id==record))
     assert client.post(f'/contracts/{record}/archive',data={'csrf_token':csrf,'version':'2'},follow_redirects=False).status_code==303
     assert client.get(f'/contracts/{record}/edit').status_code==409
-    assert client.post(f'/contracts/{record}/reviews/{review_id}',data={'csrf_token':csrf,'status':'approved','result_text':'Denied'}).status_code==409
+    assert client.post(f'/contracts/{record}/reviews/{review_id}',data=workflow_payload(client,f'/contracts/{record}/reviews/{review_id}',{'csrf_token':csrf,'status':'approved','result_text':'Denied'})).status_code==409
     with runtime_session(runtime,cookie=client.cookies.get(COOKIE_NAME)) as db:
         assert db.execute(text("UPDATE contract_reviews SET status='approved' WHERE id=:id"),{'id':review_id}).rowcount==0
         assert db.scalars(text('SELECT action FROM revisions WHERE contract_id=:id ORDER BY id'),{'id':record}).all()==['created','updated','review_created','archived']
@@ -203,10 +204,10 @@ def test_password_rotation_admin_identity_changes_and_review_permissions_under_r
     with runtime.owner.state.session_factory() as db:
         review=db.scalar(select(ContractReview).where(ContractReview.contract_id==record))
         review_id=review.id
-    assert runtime.client.post(f'/contracts/{record}/reviews/{review_id}',data={'csrf_token':csrf_from(runtime.client.get('/').text),
-        'status':'approved','result_text':'Runtime decision'},follow_redirects=False).status_code==303
+    assert runtime.client.post(f'/contracts/{record}/reviews/{review_id}',data=workflow_payload(runtime.client,f'/contracts/{record}/reviews/{review_id}',{'csrf_token':csrf_from(runtime.client.get('/').text),
+        'status':'in_review','result_text':'Runtime decision'}),follow_redirects=False).status_code==303
     with runtime.owner.state.session_factory() as db:
-        assert db.get(ContractReview,review_id).status=='approved'
+        assert db.get(ContractReview,review_id).status=='in_review'
 
 
 @pytest.mark.postgresql
@@ -250,7 +251,7 @@ def test_assigned_approval_revocation_and_self_escalation_under_runtime_role(run
     switch(runtime.client,'pruefer')
     path=f'/contracts/{record}/reviews/{review_id}'
     data={'csrf_token':csrf_from(runtime.client.get('/').text),'status':'approved','result_text':'Authorized'}
-    assert runtime.client.post(path,data=data,follow_redirects=False).status_code==303
+    assert runtime.client.post(path,data=workflow_payload(runtime.client,path,data),follow_redirects=False).status_code==303
     with runtime_session(runtime,cookie=runtime.client.cookies.get(COOKIE_NAME)) as db:
         with pytest.raises(DBAPIError),db.begin_nested():
             db.execute(text("UPDATE users SET role='admin' WHERE id=:id"),{'id':user_id})
@@ -259,7 +260,7 @@ def test_assigned_approval_revocation_and_self_escalation_under_runtime_role(run
     with runtime.owner.state.session_factory() as db:
         db.delete(db.get(RecipientMembership,(team_id,user_id)))
         db.commit()
-    assert runtime.client.post(path,data=data).status_code==403
+    assert runtime.client.post(path,data=workflow_payload(runtime.client,path,data)).status_code==403
     with runtime_session(runtime,cookie=runtime.client.cookies.get(COOKIE_NAME)) as db:
         assert db.execute(text("UPDATE contract_reviews SET status='rejected' WHERE id=:id"),{'id':review_id}).rowcount==0
 
@@ -299,3 +300,6 @@ def test_operator_cli_uses_explicit_owner_and_maintenance_connections(runtime,mo
     monkeypatch.setattr('sys.argv',['ohvr','schema-inventory'])
     cli.main()
     assert '"schema": [], "legacy": []' in capsys.readouterr().out
+    monkeypatch.setattr('sys.argv',['ohvr','workflow-inventory'])
+    cli.main()
+    assert '"legacy_active_contract_ids": []' in capsys.readouterr().out

@@ -152,13 +152,16 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
 
     @app.post('/contracts/{contract_id}/reviews/{review_id}/assignment')
     async def assign_review(request: Request, contract_id: int, review_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0, max_fields=3)
+        from app.workflow import begin_mutation, expected_version
+        form = await request.form(max_files=0, max_fields=5)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
+        begin_mutation(db,actor,contract_id)
         contract, review = load_child(db, actor, contract_id, ContractReview, review_id, lock=True)
         if contract.archived_at is not None:
             raise HTTPException(409, 'Archivierter Vertrag ist schreibgeschützt')
         try:
+            expected_version(review,form)
             if not form.get('team_id') and not form.get('user_id'):
                 team_id = user_id = None
             else:
@@ -168,9 +171,17 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
                         not target.can_approve or not can_read(target, contract) or
                         db.get(RecipientMembership, (team_id, user_id)) is None):
                     raise ValueError('Explizite Berechtigung, Mitgliedschaft und Vertragszugriff erforderlich')
-            before = {'team_id': review.team_id, 'assigned_user_id': review.assigned_user_id}
+            before = {key:getattr(review,key) for key in ('team_id','assigned_user_id','status','result_text','content_revision','provenance','version')}
             review.team_id, review.assigned_user_id = team_id, user_id
-            after = {'team_id': team_id, 'assigned_user_id': user_id}
+            review.version+=1
+            review.status='open'
+            review.result_text=''
+            review.content_revision=contract.content_revision
+            review.provenance='current'
+            contract.approval_provenance='pending'
+            if contract.status=='active':
+                contract.status='in_progress'
+            after = {key:getattr(review,key) for key in before}
             db.add(Revision(contract_id=contract.id, actor_id=actor.id, action='review_assigned',
                             before=before, after=after))
             audit(db, actor.id, 'review_assigned', f'review:{review.id}', before=before, after=after)

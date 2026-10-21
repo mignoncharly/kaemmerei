@@ -2,7 +2,7 @@
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, Index
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 from app.schema_rules import RULES
@@ -100,13 +100,17 @@ class Contract(Base):
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id", ondelete="RESTRICT"), nullable=False)
     contact_person: Mapped[str] = mapped_column(String(160), nullable=False, default="")
     deputy_contact_person: Mapped[str] = mapped_column(String(160), nullable=False, default="")
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="active", server_default="active")
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="draft", server_default="draft")
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     updated_by_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    content_revision: Mapped[int] = mapped_column(Integer, default=1, server_default='1', nullable=False)
+    material_actor_id: Mapped[int | None] = mapped_column(ForeignKey('users.id', ondelete='RESTRICT'))
+    approval_provenance: Mapped[str] = mapped_column(String(24), default='pending', server_default='legacy_unverified', nullable=False)
+    tax_provenance: Mapped[str] = mapped_column(String(24), default='unverified', server_default='legacy_unverified', nullable=False)
     department: Mapped[Department] = relationship()
     created_by: Mapped[User] = relationship(foreign_keys=[created_by_id])
     updated_by: Mapped[User] = relationship(foreign_keys=[updated_by_id])
@@ -146,6 +150,7 @@ class ContractTask(Base):
         CheckConstraint("status IN ('open', 'in_progress', 'done')", name="valid_task_status"),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default='1', nullable=False)
     contract_id: Mapped[int] = mapped_column(ForeignKey("contracts.id", ondelete="RESTRICT"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(160), nullable=False)
     kind: Mapped[str] = mapped_column(String(16), nullable=False)
@@ -164,6 +169,9 @@ class ContractTask(Base):
 class ContractReview(Base):
     __tablename__ = "contract_reviews"
     id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default='1', nullable=False)
+    content_revision: Mapped[int | None] = mapped_column(Integer)
+    provenance: Mapped[str] = mapped_column(String(24), default='current', server_default='legacy_unverified', nullable=False)
     team_id: Mapped[int | None] = mapped_column(ForeignKey("recipient_teams.id", ondelete="RESTRICT"), nullable=True)
     assigned_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=True)
     contract_id: Mapped[int] = mapped_column(ForeignKey("contracts.id", ondelete="RESTRICT"), nullable=False, index=True)
@@ -181,6 +189,22 @@ class ContractReview(Base):
     contract: Mapped[Contract] = relationship()
     created_by: Mapped[User] = relationship(foreign_keys=[created_by_id])
     updated_by: Mapped[User | None] = relationship(foreign_keys=[updated_by_id])
+
+
+class ReviewDecision(Base):
+    __tablename__ = 'review_decisions'
+    __table_args__ = (UniqueConstraint('review_id','review_version',name='unique_review_decision'),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    contract_id: Mapped[int] = mapped_column(ForeignKey('contracts.id',ondelete='RESTRICT'),nullable=False)
+    review_id: Mapped[int] = mapped_column(ForeignKey('contract_reviews.id',ondelete='RESTRICT'),nullable=False)
+    review_version: Mapped[int] = mapped_column(Integer,nullable=False)
+    content_revision: Mapped[int] = mapped_column(Integer,nullable=False)
+    actor_id: Mapped[int] = mapped_column(ForeignKey('users.id',ondelete='RESTRICT'),nullable=False)
+    team_id: Mapped[int | None] = mapped_column(ForeignKey('recipient_teams.id',ondelete='RESTRICT'))
+    assigned_user_id: Mapped[int | None] = mapped_column(ForeignKey('users.id',ondelete='RESTRICT'))
+    status: Mapped[str] = mapped_column(String(24),nullable=False)
+    reason: Mapped[str] = mapped_column(Text,nullable=False)
+    decided_at: Mapped[datetime] = mapped_column(DateTime,nullable=False)
 
 
 class IdentityGuard(Base):

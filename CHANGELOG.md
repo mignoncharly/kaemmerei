@@ -1,5 +1,13 @@
 # Änderungen
 
+## 21. Oktober 2026 — Phase 4: Freigabe, Steuerprüfung und Archivbarriere
+
+- Neue Migration 0017: Inhaltsrevisionen, Task-/Prüfversionen, unveränderbare Entscheidungsnachweise und explizit ungeprüfte Altbestände; keine Produktivdaten migriert.
+- Gemeinsamer Mutationsablauf mit Rollen-/Sitzungsprüfung unter Schreibsperre, Elternsperre und einem Commit; Datenbank-Archivbarrieren auf SQLite/PostgreSQL.
+- Aktuelle unabhängige Freigaben vor Aktivierung erforderlich; Materialänderungen/Dokumente invalidieren frühere Freigaben. Steuerabschluss nur mit administrativer tax_assess-Berechtigung; Wiedereröffnung löscht aktuelle Abschlussmetadaten und erhält die Historie.
+- Konfliktseiten erhalten Eingaben; Versions- und UUID-Prüfungen verhindern stilles Überschreiben und wiederholte Workflowaktionen. Gleichzeitige Entscheidungen/Aufgaben und neun Archivrennen in tests/test_phase4.py.
+- Details und tatsächliche lokale/Hosted-Ergebnisse: docs/PHASE4_WORKFLOW.md und HANDOFF U012. Fachliche D04-Freigabe und Produktivbetrieb bleiben offen.
+
 ## 21. Oktober 2026 — Phase 3: Datenbankintegrität und RLS
 
 - P03-T01–T08: Vorab-Inventur, Constraints und fehlender Tax-Reviewer-Fremdschlüssel; keine stillen Datenkorrekturen.

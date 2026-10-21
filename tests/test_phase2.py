@@ -1,3 +1,4 @@
+from tests.support import workflow_payload
 """Phase 2 regressions, executed with migrated SQLite and real PostgreSQL."""
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier, Event
@@ -27,8 +28,8 @@ def csrf(client, path='/'):
 def review_fixture(client, app, department='1'):
     assert login(client, 'admin').status_code == 303
     record = create_contract(client, department)
-    assert client.post(f'/contracts/{record}/reviews', data={'csrf_token': csrf(client),
-        'recipient': 'Kämmerei', 'subject': 'Phase 2 explicit assignment'}, follow_redirects=False).status_code == 303
+    assert client.post(f'/contracts/{record}/reviews', data=workflow_payload(client,f'/contracts/{record}/reviews',{'csrf_token': csrf(client),
+        'recipient': 'Kämmerei', 'subject': 'Phase 2 explicit assignment'}), follow_redirects=False).status_code == 303
     with app.state.session_factory() as db:
         review_id = db.scalar(select(ContractReview.id))
     return record, review_id
@@ -46,7 +47,7 @@ def test_reviewer_requires_capability_membership_assignment_and_existing_read_ac
     assert client.get(f'/contracts/{record}').status_code == 200
     assert 'Prüfstatus / Rückmeldung bearbeiten' not in client.get(f'/contracts/{record}').text
     decision = {'csrf_token': csrf(client), 'status': 'approved', 'result_text': 'Explicitly reviewed'}
-    assert client.post(path, data=decision).status_code == 403
+    assert client.post(path, data=workflow_payload(client,path,decision)).status_code == 403
     with app.state.session_factory() as db:
         account = db.scalar(select(User).where(User.username == 'pruefer'))
         account.can_approve = True
@@ -56,22 +57,22 @@ def test_reviewer_requires_capability_membership_assignment_and_existing_read_ac
         team_id, user_id = team.id, account.id
         db.add(RecipientMembership(team_id=team_id, user_id=user_id))
         db.commit()
-    assert client.post(path, data=decision).status_code == 403  # Capability + membership are insufficient.
+    assert client.post(path, data=workflow_payload(client,path,decision)).status_code == 403  # Capability + membership are insufficient.
     assert 'Phase 2 explicit assignment' not in client.get('/reviews').text
     switch(client, 'admin')
     assignment = {'csrf_token': csrf(client), 'team_id': str(team_id), 'user_id': str(user_id)}
-    assert client.post(path + '/assignment', data=assignment, follow_redirects=False).status_code == 303
+    assert client.post(path + '/assignment', data=workflow_payload(client,path + '/assignment',assignment), follow_redirects=False).status_code == 303
     switch(client, 'pruefer')
     assert 'Phase 2 explicit assignment' in client.get('/reviews').text
     decision['csrf_token'] = csrf(client)
-    assert client.post(path, data=decision, follow_redirects=False).status_code == 303
+    assert client.post(path, data=workflow_payload(client,path,decision), follow_redirects=False).status_code == 303
     with app.state.session_factory() as db:
         assert db.get(ContractReview, review_id).status == 'approved'
         event = db.scalar(select(IdentityAudit).where(IdentityAudit.action == 'review_decided'))
         assert event.actor_id == user_id and event.details['team_id'] == team_id
         db.delete(db.get(RecipientMembership, (team_id, user_id)))
         db.commit()
-    assert client.post(path, data=decision).status_code == 403  # Revocation checked server-side.
+    assert client.post(path, data=workflow_payload(client,path,decision)).status_code == 403  # Revocation checked server-side.
 
 
 def test_assignment_never_grants_cross_department_access_and_admin_can_clear(environment):
@@ -87,8 +88,8 @@ def test_assignment_never_grants_cross_department_access_and_admin_can_clear(env
         team_id, user_id = team.id, account.id
         db.commit()
     path = f'/contracts/{record}/reviews/{review_id}'
-    assert client.post(path + '/assignment', data={'csrf_token': csrf(client), 'team_id': team_id,
-        'user_id': user_id}).status_code == 422
+    assert client.post(path + '/assignment', data=workflow_payload(client,path + '/assignment',{'csrf_token': csrf(client), 'team_id': team_id,
+        'user_id': user_id})).status_code == 422
     # Even a stale/manually imported assignment cannot bypass parent authorization.
     with app.state.session_factory() as db:
         review = db.get(ContractReview, review_id)
@@ -96,11 +97,11 @@ def test_assignment_never_grants_cross_department_access_and_admin_can_clear(env
         db.commit()
     switch(client, 'kultur')
     assert client.get(f'/contracts/{record}').status_code == 404
-    assert client.post(path, data={'csrf_token': csrf(client), 'status': 'approved', 'result_text': 'Denied'}).status_code == 404
+    assert client.post(path, data=workflow_payload(client,path,{'csrf_token': csrf(client), 'status': 'approved', 'result_text': 'Denied'})).status_code == 404
     assert 'Phase 2 explicit assignment' not in client.get('/reviews').text
     switch(client, 'admin')
-    assert client.post(path + '/assignment', data={'csrf_token': csrf(client), 'team_id': '',
-        'user_id': ''}, follow_redirects=False).status_code == 303
+    assert client.post(path + '/assignment', data=workflow_payload(client,path + '/assignment',{'csrf_token': csrf(client), 'team_id': '',
+        'user_id': ''}), follow_redirects=False).status_code == 303
     with app.state.session_factory() as db:
         assert db.get(ContractReview, review_id).assigned_user_id is None
 
@@ -122,7 +123,7 @@ def test_department_admin_suspension_revokes_sessions_and_reactivation_preserves
         headers = {'Authorization': 'Bearer ' + raw}
         assert client.get('/api/v1/contracts', headers=headers).status_code == 200
         path = '/admin/identities/departments/1'
-        assert client.post(path, data={'csrf_token': csrf(client), 'name': 'Kultur renamed'}, follow_redirects=False).status_code == 303
+        assert client.post(path, data=workflow_payload(client,path,{'csrf_token': csrf(client), 'name': 'Kultur renamed'}), follow_redirects=False).status_code == 303
         assert staff.get('/', follow_redirects=False).status_code == 303
         assert client.get('/api/v1/contracts', headers=headers).status_code == 401
         with app.state.session_factory() as db:
@@ -130,7 +131,7 @@ def test_department_admin_suspension_revokes_sessions_and_reactivation_preserves
             assert db.get(Contract, record).department_id == 1
             assert db.get(Department, 1).name == 'Kultur renamed'
             assert db.scalar(select(IdentityAudit).where(IdentityAudit.action == 'departments_updated')) is not None
-        assert client.post(path, data={'csrf_token': csrf(client), 'name': 'Kultur renamed', 'is_active': '1'},
+        assert client.post(path, data=workflow_payload(client,path,{'csrf_token': csrf(client), 'name': 'Kultur renamed', 'is_active': '1'}),
                            follow_redirects=False).status_code == 303
         assert staff.get('/', follow_redirects=False).status_code == 303  # Old sessions never resurrect.
         assert login(staff, 'kultur').status_code == 303
@@ -171,10 +172,10 @@ def test_admin_recovery_forces_change_and_immutable_username_and_shared_validati
     path = f'/admin/users/{target_id}/edit'
     values = user_values('forged_rename')
     values['csrf_token'] = csrf(client)
-    assert client.post(path, data=values).status_code == 422
+    assert client.post(path, data=workflow_payload(client,path,values)).status_code == 422
     values = user_values('pruefer')
     values.update(csrf_token=csrf(client), password='Recovery-Synthetic-Password-2026', can_approve='1')
-    assert client.post(path, data=values, follow_redirects=False).status_code == 303
+    assert client.post(path, data=workflow_payload(client,path,values), follow_redirects=False).status_code == 303
     switch(client, 'admin')
     client.post('/logout', data={'csrf_token': csrf(client)})
     assert login(client, 'pruefer', values['password']).status_code == 303
@@ -226,7 +227,7 @@ def test_identity_administration_requires_admin_and_csrf(environment, role):
     assert client.get('/admin/identities').status_code == 403
     for path in ('/admin/identities/departments/1', '/admin/identities/contacts/0',
                  '/admin/identities/teams/0', '/admin/recipient-memberships'):
-        assert client.post(path, data={'csrf_token': csrf(client), 'name': 'Forbidden'}).status_code == 403
+        assert client.post(path, data=workflow_payload(client,path,{'csrf_token': csrf(client), 'name': 'Forbidden'})).status_code == 403
     switch(client, 'admin')
     assert client.get('/admin/identities').status_code == 200
     assert client.post('/admin/identities/departments/1', data={'name': 'No CSRF'}).status_code == 403
@@ -328,8 +329,8 @@ def test_team_membership_admin_routes_revoke_sessions_and_suspend_decision(envir
         assert client.post('/admin/recipient-memberships', data=data, follow_redirects=False).status_code == 303
         assert reviewer.get('/', follow_redirects=False).status_code == 303
         path = f'/contracts/{record}/reviews/{review_id}'
-        assert client.post(path + '/assignment', data={'csrf_token': csrf(client), 'team_id': team_id,
-            'user_id': target_id}, follow_redirects=False).status_code == 303
+        assert client.post(path + '/assignment', data=workflow_payload(client,path + '/assignment',{'csrf_token': csrf(client), 'team_id': team_id,
+            'user_id': target_id}), follow_redirects=False).status_code == 303
         login(reviewer, 'pruefer')
         assert 'Phase 2 explicit assignment' in reviewer.get('/reviews').text
         assert client.post(f'/admin/identities/teams/{team_id}', data={'csrf_token': csrf(client),
@@ -337,8 +338,8 @@ def test_team_membership_admin_routes_revoke_sessions_and_suspend_decision(envir
         assert reviewer.get('/', follow_redirects=False).status_code == 303
         login(reviewer, 'pruefer')
         assert 'Phase 2 explicit assignment' not in reviewer.get('/reviews').text
-        assert reviewer.post(path, data={'csrf_token': csrf(reviewer), 'status': 'approved',
-            'result_text': 'Should be denied'}).status_code == 403
+        assert reviewer.post(path, data=workflow_payload(reviewer,path,{'csrf_token': csrf(reviewer), 'status': 'approved',
+            'result_text': 'Should be denied'})).status_code == 403
         data.pop('is_active')
         data['csrf_token'] = csrf(client)
         assert client.post('/admin/recipient-memberships', data=data, follow_redirects=False).status_code == 303
@@ -393,7 +394,8 @@ def test_populated_phase2_migration_preserves_private_labels_and_never_grants_ap
                     stamp = datetime(2026, 1, 1)
                     connection.execute(users.insert(), dict(id=1, username='legacy_reviewer', role='reviewer',
                         password_hash='synthetic-not-authenticatable', is_active=True, created_at=stamp))
-                    connection.execute(Contract.__table__.insert(), dict(id=1, contract_number='LEGACY-1',
+                    contracts=Table('contracts',MetaData(),autoload_with=connection)
+                    connection.execute(contracts.insert(), dict(id=1, contract_number='LEGACY-1',contract_partner='',version=1,date_description='',
                         designation='Preserved legacy', contract_type='Miete', relevant_date=date(2026,1,1),
                         department_id=2, contact_person='PRIVATE_LEGACY_B', deputy_contact_person='DEPUTY_LEGACY_B',
                         created_by_id=1, updated_by_id=1, created_at=stamp, updated_at=stamp))
@@ -409,6 +411,8 @@ def test_populated_phase2_migration_preserves_private_labels_and_never_grants_ap
                     names = connection.execute(text('SELECT display_name,department_id,scope_key FROM contact_identities ORDER BY display_name')).all()
                     assert {tuple(row) for row in names} == {('PRIVATE_LEGACY_B', 2, 2), ('DEPUTY_LEGACY_B', 2, 2)}
                     assert connection.scalar(text('SELECT contact_person FROM contracts WHERE id=1')) == 'PRIVATE_LEGACY_B'
+                    assert connection.execute(text('SELECT approval_provenance,tax_provenance FROM contracts WHERE id=1')).one()==('legacy_unverified','legacy_unverified')
+                    assert connection.execute(text('SELECT content_revision,provenance FROM contract_reviews WHERE id=1')).one()==(None,'legacy_unverified')
                     connection.commit()
                     upgrade_connection(connection)
             finally:

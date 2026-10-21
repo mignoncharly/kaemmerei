@@ -45,7 +45,7 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
         columns=','.join(quote(c) for c in cols)
         connection.exec_driver_sql(f'GRANT SELECT ({columns}) ON public.{quote(table)} TO {w}')
         connection.exec_driver_sql(f'GRANT INSERT ON public.{quote(table)} TO {w}')
-        if table not in ('revisions','identity_audit'):
+        if table not in ('revisions','identity_audit','review_decisions'):
             connection.exec_driver_sql(f'GRANT UPDATE ON public.{quote(table)} TO {w}')
         if table in ('login_sessions','login_attempts','recipient_memberships'):
             connection.exec_driver_sql(f'GRANT DELETE ON public.{quote(table)} TO {w}')
@@ -76,7 +76,7 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
     connection.exec_driver_sql(f'GRANT EXECUTE ON FUNCTION ohvr_security.purge_expired(),ohvr_security.role_kind() TO {m}')
     connection.exec_driver_sql(f'GRANT USAGE,CREATE ON SCHEMA public TO {a}')
     connection.exec_driver_sql(f'GRANT USAGE,CREATE ON SCHEMA ohvr_security TO {a}')
-    for table in ('revisions','identity_audit','security_events'):
+    for table in ('revisions','identity_audit','security_events','review_decisions'):
         connection.exec_driver_sql(f'ALTER TABLE public.{table} OWNER TO {a}')
     connection.exec_driver_sql(f'ALTER FUNCTION ohvr_security.capture_event() OWNER TO {a}')
     connection.exec_driver_sql(f'ALTER FUNCTION ohvr_security.audit_identity() OWNER TO {a}')
@@ -91,6 +91,6 @@ def validate_runtime_engine(engine, expected_kind):
             raise ValueError('Database runtime role registry mismatch')
         if connection.scalar(text("SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','ohvr_security') AND pg_has_role(current_user,c.relowner,'MEMBER')")):
             raise ValueError('Runtime role owns or inherits schema objects')
-        row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events')")).one()
-        if row[0]!=7 or not row[1]:
+        row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events','review_decisions')")).one()
+        if row[0]!=8 or not row[1]:
             raise ValueError('Required forced RLS policies are missing')
