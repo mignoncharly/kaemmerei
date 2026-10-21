@@ -28,8 +28,9 @@ def demand(token,capability='metadata'):
         raise HTTPException(403,'Adopt an accountable owner and finite expiry for v2')
 
 
-def fingerprint(token):
+def fingerprint(token,resource=None):
     values=[2,token.id,token.department_id,token.api_scopes,token.grant_version,token.owner_user_id,token.service_owner]
+    if resource is not None:values.append(resource)
     return sha256(json.dumps(values,separators=(',',':')).encode()).hexdigest()
 
 
@@ -52,20 +53,20 @@ def barrier(db):
     return {'boundary':state.next_seq,'floor':state.floor}
 
 
-def make_cursor(db,token,mode,position,boundary,*,snapshot=None,expires=None):
+def make_cursor(db,token,mode,position,boundary,*,snapshot=None,expires=None,resource=None):
     raw=secrets.token_urlsafe(32)
-    db.add(SyncCursor(key_hash=sha256(raw.encode()).hexdigest(),token_id=token.id,fingerprint=fingerprint(token),
+    db.add(SyncCursor(key_hash=sha256(raw.encode()).hexdigest(),token_id=token.id,fingerprint=fingerprint(token,resource),
         mode=mode,position=position,boundary=boundary,snapshot_id=snapshot,
         expires_at=expires or now_utc()+timedelta(hours=24)))
     return raw
 
 
-def get_cursor(db,token,raw,mode,floor):
+def get_cursor(db,token,raw,mode,floor,resource=None):
     if not raw or len(raw)>100:raise HTTPException(400,'Invalid cursor')
     cursor=db.get(SyncCursor,sha256(raw.encode()).hexdigest())
     if cursor is None or cursor.token_id!=token.id or cursor.mode!=mode:
         raise HTTPException(400,'Invalid cursor for this token/API')
-    if cursor.fingerprint!=fingerprint(token) or cursor.expires_at<=now_utc() or cursor.boundary<floor or (mode=='changes' and cursor.position<floor):
+    if cursor.fingerprint!=fingerprint(token,resource) or cursor.expires_at<=now_utc() or cursor.boundary<floor or (mode=='changes' and cursor.position<floor):
         raise HTTPException(410,'resnapshot_required')
     return cursor
 
@@ -178,13 +179,27 @@ def install_integration_routes(app,*,get_db,authenticate):
         return {'api_version':2,'data':payload(db,token,load_contract(db,token,contract_id),app.state.config)}
 
     @app.get('/api/v2/contracts/{contract_id}/history',openapi_extra=schema_response('HistoryPage'))
-    def history(request:Request,contract_id:int,after_id:int=0,limit:int=100,db=Depends(get_db)):
-        token=authenticate(request,db);demand(token,'history');load_contract(db,token,contract_id)
-        if after_id<0 or not 1<=limit<=500:raise HTTPException(400,'Invalid history pagination')
-        rows=db.scalars(select(Revision).where(Revision.contract_id==contract_id,Revision.id>after_id).order_by(Revision.id).limit(limit+1)).all()
+    def history(request:Request,contract_id:int,cursor:str='',limit:int=100,db=Depends(get_db)):
+        if not 1<=limit<=500 or 'after_id' in request.query_params:raise HTTPException(400,'Use opaque history cursors and limit 1..500')
+        token,state=prepared(request,db);demand(token,'history');load_contract(db,token,contract_id)
+        if not cursor:
+            source=db.scalars(select(Revision).where(Revision.contract_id==contract_id).order_by(Revision.id).limit(5001)).all()
+            if len(source)>5000:raise HTTPException(413,'History exceeds 5000-row pilot snapshot bound')
+            sid=str(uuid4());position=0;boundary=state['boundary'];expires=now_utc()+timedelta(hours=24)
+            for index,row in enumerate(source,1):
+                db.add(SyncSnapshotItem(snapshot_id=sid,position=index,token_id=token.id,contract_id=contract_id,
+                    payload={'id':row.id,'action':row.action,'actor_id':row.actor_id,'created_at':stamp(row.created_at),'before':row.before,'after':row.after}))
+            db.flush()
+        else:
+            old=get_cursor(db,token,cursor,'history',state['floor'],resource=contract_id)
+            sid,position,boundary,expires=old.snapshot_id,old.position,old.boundary,old.expires_at
+        rows=db.scalars(select(SyncSnapshotItem).where(SyncSnapshotItem.snapshot_id==sid,SyncSnapshotItem.token_id==token.id,
+            SyncSnapshotItem.contract_id==contract_id,SyncSnapshotItem.position>position).order_by(SyncSnapshotItem.position).limit(limit+1)).all()
         page=rows[:limit]
-        return {'data':[{'id':r.id,'action':r.action,'actor_id':r.actor_id,'created_at':stamp(r.created_at),'before':r.before,'after':r.after} for r in page],
-            'next_after_id':page[-1].id if len(rows)>limit else None}
+        next_cursor=make_cursor(db,token,'history',page[-1].position,boundary,snapshot=sid,expires=expires,resource=contract_id) if len(rows)>limit else None
+        result={'api_version':2,'data':[r.payload for r in page],'next_cursor':next_cursor,'snapshot_expires_at':stamp(expires)}
+        db.commit()
+        return result
 
     @app.get('/api/v2/contracts/{contract_id}/documents/{document_id}')
     def document(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):

@@ -558,16 +558,24 @@
             "additionalProperties": false
           }
         },
-        "next_after_id": {
+        "api_version": {
+          "const": 2
+        },
+        "next_cursor": {
           "type": [
-            "integer",
+            "string",
             "null"
           ]
+        },
+        "snapshot_expires_at": {
+          "type": "string"
         }
       },
       "required": [
         "data",
-        "next_after_id"
+        "api_version",
+        "next_cursor",
+        "snapshot_expires_at"
       ],
       "additionalProperties": false
     }

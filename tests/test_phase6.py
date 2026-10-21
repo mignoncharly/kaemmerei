@@ -285,6 +285,25 @@ def test_equal_timestamps_pagination_and_process_restart_do_not_omit_events(sync
         assert not second['has_more']
 
 
+def test_history_pagination_is_materialized_and_bound_to_contract(sync):
+    from app.models import Revision
+    client,_,owner=sync;cid=record(sync);other=record(sync,title='Other history')
+    def append(label):
+        with owner.state.session_factory() as db:
+            db.add(Revision(contract_id=cid,actor_id=1,action='updated',before=None,after={'designation':label}));db.commit()
+    append('Before history snapshot')
+    headers,_=token(sync,scopes='metadata,history')
+    path=f'/api/v2/contracts/{cid}/history'
+    first=client.get(path,headers=headers,params={'limit':1}).json()
+    assert first['next_cursor']
+    append('After history snapshot')
+    last=client.get(path,headers=headers,params={'limit':1,'cursor':first['next_cursor']}).json()
+    assert last['next_cursor'] is None
+    assert last['data'][0]['after']['designation']=='Before history snapshot'
+    assert client.get(f'/api/v2/contracts/{other}/history',headers=headers,params={'cursor':first['next_cursor']}).status_code==410
+    assert len(client.get(path,headers=headers).json()['data'])==3
+
+
 @pytest.mark.postgresql
 def test_late_committed_outbox_id_is_not_lost_and_raw_scope_columns_are_private(sync,request):
     if request.config.getoption('--database')!='postgresql':pytest.skip('Real PostgreSQL concurrent transactions required')

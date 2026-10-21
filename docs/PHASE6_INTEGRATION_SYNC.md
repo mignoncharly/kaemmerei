@@ -45,7 +45,7 @@ not NULL placeholders. The machine-readable response contract is
 | GET `/api/v2/snapshot?cursor=...&limit=100` | Same grant and token as initial request | Next fixed snapshot page; current authorization rechecked |
 | GET `/api/v2/changes?cursor=...&limit=100` | metadata | At-least-once upsert/remove notifications, next_cursor and has_more |
 | GET `/api/v2/contracts/{id}` | metadata | Current authorized aggregate with granted sections |
-| GET `/api/v2/contracts/{id}/history?after_id=0&limit=100` | history | Authorized revisions, seek pagination by revision ID |
+| GET `/api/v2/contracts/{id}/history?limit=100&cursor=...` | history | Materialized authorized revisions with opaque contract-bound pagination |
 | GET `/api/v2/contracts/{id}/documents/{document_id}` | document_content | Phase 5 verified, scoped attachment/range response |
 
 Limits are 1–500; invalid numeric limits return 400, malformed typed query values
@@ -67,7 +67,7 @@ return 413, never a successful truncated snapshot.
 | document_content | Verified byte downloads; requires documents when granting rights |
 | tax | Current tax status/result/reviewer/time/provenance |
 | tasks | Task ID/title/kind/status/due date/assignee/version |
-| history | Review state/assignment/result, immutable decision provenance and paginated revision before/after contents; explicitly sensitive historical finance/tax/personal content can be included |
+| history | Review state/assignment/result, immutable decision provenance and materialized paginated revision before/after contents; explicitly sensitive historical finance/tax/personal content can be included |
 
 `metadata` is mandatory for a v2 profile. Additional rights require explicit
 administrator selection. `legacy_v1` is a separate broad compatibility profile,
@@ -111,6 +111,8 @@ especially history and document contents, before distributing production tokens.
 ```json
 {"event_id":"EVENT","contract_id":42,"operation":"remove","reason":"no_longer_authorized"}
 ```
+
+History pages also capture a fixed boundary and use opaque cursors bound to the contract; revision IDs are not incremental commit watermarks. On a later aggregate change, restart that contract's history snapshot if the consumer needs refreshed history.
 
 Relative resource URLs use the same configured application origin. Never follow
 an event to an unrelated host. Event order is publication order; this is a state
@@ -195,7 +197,7 @@ advance the persisted replay floor monotonically, retire matching feed rows and
 respect snapshot boundaries/holds. Requests below that floor return 410; the
 regression tests simulate this with synthetic owner-authorized state only.
 
-Pilot bounds: 5000 contracts per snapshot; 1000 rows per expanded child collection.
+Pilot bounds: 5000 contracts per snapshot; 5000 revisions per history snapshot; 1000 rows per expanded child collection.
 Exceeding either fails with 413 rather than omitting records. Use department tokens
 or fewer expansions; large-scale paginated expansion is Phase 9 capacity work.
 Initial materialization/publication can hold the writer barrier while creating
