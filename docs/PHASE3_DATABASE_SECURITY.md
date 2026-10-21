@@ -249,6 +249,8 @@ describes SECURITY DEFINER ownership, fixed search paths and PUBLIC execution.
 SQLAlchemy's [session event documentation](https://docs.sqlalchemy.org/en/20/orm/session_events.html)
 supports using the supplied connection for transaction initialization.
 
-Phase 4 remains responsible for content-bound approval, activation/tax rules and
-full aggregate concurrency. Phases 5–10 and municipal/DBA production acceptance
-are not completed by this phase. No business database was migrated or inspected.
+At Phase 3 completion, content-bound approval, activation/tax rules and aggregate
+concurrency remained Phase 4 work. Their subsequent implementation and evidence are
+in the [Phase 4 report](PHASE4_WORKFLOW.md), including current head 0017 and updated
+grants. Phases 5–10 and municipal/DBA production acceptance remain open. No business
+database was migrated or inspected.

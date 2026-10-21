@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-21",
+  "platform": "Windows",
+  "python": "3.14.3",
+  "pytest": "9.1.1",
+  "postgresql": "18.3",
+  "migration_head": "0017_bound_workflow",
+  "implementation_commit": "f0d998f862941e04cbe5f120c2fa18de6c1986b7",
+  "cleanup": {
+    "harness_databases": 0,
+    "temporary_roles": 0
+  },
+  "business_databases_migrated": false,
+  "production_accepted": false,
+  "runs": [
+    {
+      "junit_file": "phase4-sqlite.xml",
+      "sha256": "539624a8befbe628c2571af9743cc52cc18e56704d8d9a55fd0c484a309f1413",
+      "selected": 99,
+      "passed": 87,
+      "passing_subtests": 15,
+      "skipped": 12,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 0,
+      "seconds": "65.804"
+    },
+    {
+      "junit_file": "phase4-postgresql.xml",
+      "sha256": "186cb6735e921db63875289b8b217dc68ebe7e7cae5ef2f1758b55382285a856",
+      "selected": 99,
+      "passed": 99,
+      "passing_subtests": 15,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 0,
+      "seconds": "202.787"
+    },
+    {
+      "junit_file": "phase4-sqlite-targeted.xml",
+      "sha256": "0f7d2573dc4918568a6392b725fcabaacfb12d72ceb83818180e2881511a4022",
+      "selected": 18,
+      "passed": 18,
+      "passing_subtests": 0,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 0,
+      "seconds": "21.796"
+    },
+    {
+      "junit_file": "phase4-postgresql-targeted.xml",
+      "sha256": "b91c85912acb46feb11569340c24f8fd3a0b8edcf75ad0bf3583bd101b0c2ff1",
+      "selected": 18,
+      "passed": 18,
+      "passing_subtests": 0,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 0,
+      "seconds": "58.798"
+    },
+    {
+      "junit_file": "phase4-postgresql-explicit.xml",
+      "sha256": "22639ec6b3c481aa3ca4dec7ef90321e430f8c61dfded4849893a5811091ede2",
+      "selected": 12,
+      "passed": 12,
+      "passing_subtests": 0,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "deselected": 87,
+      "seconds": "35.900"
+    }
+  ],
+  "warnings": [
+    "Starlette/AnyIO deprecated BlockingPortal alias",
+    "Managed Windows pytest cache ACL warning"
+  ],
+  "warnings_suppressed": false
+}

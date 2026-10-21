@@ -1,7 +1,7 @@
 # Arbeitsplan Vertragsregister
 
 **Stand: 21. Oktober 2026**\
-**Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1 und 2 technisch geprüft, einschließlich echter PostgreSQL-Anwendungstests und drei erfolgreicher CI-Jobs. Produktivfreigabe und fachliche Rollenfreigabe offen.**
+**Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1–4 technisch geprüft, einschließlich echter eingeschränkter PostgreSQL-Logins und drei erfolgreicher CI-Jobs. Produktivfreigabe und fachliche Rollen-/Workflowfreigabe offen.**
 
 ## Ziel
 
@@ -22,7 +22,7 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 | 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Lokal PostgreSQL: 44 bestanden, keine Fehler/Skips/Xfails; SQLite: 43 bestanden, ein PostgreSQL-spezifischer Skip. R01/R04/R10 behoben. Aktueller CI-Nachweis im Abnahmebericht. |
 | 2 | Anwendungsberechtigungen und Identitäten | P02-T01–T08 implementiert und lokal SQLite/PostgreSQL geprüft; technische Rollenmatrix und CI-Nachweis in PHASE2_AUTHORIZATION.md. Fachliche Freigabe bleibt offen. |
 | 3 | Datenbankrollen, Constraints, RLS und geschützte Auditablage | P03-T01–T08 technisch verifiziert: PostgreSQL 81 bestanden, SQLite 69 + 12 PG-Skips, drei CI-Jobs erfolgreich; DBA-/Produktivfreigabe offen. [Phase 3](PHASE3_DATABASE_SECURITY.md) |
-| 4 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit | P04-T01–T08 umgesetzt; lokale PostgreSQL-/SQLite-Prüfungen bestanden. Nachweise und D04-Grenzen: [Phase 4](PHASE4_WORKFLOW.md). Hosted-Stand im Bericht. |
+| 4 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit | P04-T01–T08 technisch verifiziert: PostgreSQL 99 bestanden, SQLite 87 + 12 PG-Skips, 18 Workflow-/Rennprüfungen und drei CI-Jobs erfolgreich. D04 fachlich offen. [Phase 4](PHASE4_WORKFLOW.md) |
 | 5 | Dokumentensicherheit und Speicherlebenszyklus | Nicht begonnen |
 | 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
 | 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |

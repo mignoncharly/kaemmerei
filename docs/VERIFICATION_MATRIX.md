@@ -12,7 +12,13 @@ skips. Hosted run 39600834032 passed all three jobs for 5986a74. No production a
 
 ## Permission regression matrix
 
-The desired rules below are implementation targets with current evidence identified individually. Future content-bound approval, delegation and retention capabilities remain open. `Expected failure` means the desired assertion currently fails and remains an OPEN finding. A setup/migration/transport failure is not an acceptable expected failure.
+Phase 4 U012: [workflow report](PHASE4_WORKFLOW.md), implementation f0d998f.
+PostgreSQL 99 passed; SQLite 87 passed + 12 PostgreSQL-only skips; 15 subtests each.
+Phase 4 actual restricted-login selection: 18 passed, including synchronized
+decision/task races and nine archive paths. CI 39606147120 passed all three jobs.
+Municipal D04 acceptance remains pending.
+
+The desired rules below identify current evidence individually. Delegation, retention and remaining later-phase capabilities stay open. `Expected failure` means the desired assertion currently fails and remains an OPEN finding. A setup/migration/transport failure is not an acceptable expected failure.
 
 | Case | Principal / resource | Desired result | Current evidence or pending phase |
 |---|---|---|---|
@@ -23,8 +29,8 @@ The desired rules below are implementation targets with current evidence identif
 | V05 | Admin -> all department contracts | Authorized read/write; explicit department selected | Original search/filter and CRUD tests |
 | V06 | Reviewer -> all contracts | Read permitted, normal contract/task/document writes forbidden | Original reviewer test and new child-permission test |
 | V07 | Reviewer -> review decision | Forbidden without explicit approval capability/assignment | Passing Phase 2: default reviewer denied; capability + membership alone denied; only explicitly assigned authorized user can decide |
-| V08 | Authorized approver -> assigned current-content review | Only allowed transitions/reasons/version; no unrelated decision | Phase 2 capability/membership/assignment/read-scope gate passes. Content version and full transition policy remain Phase 4. |
-| V09 | Wrong approver/self-approver -> decision | Denied under accepted separation-of-duty rules | Phase 4 after D01/D02/D04 |
+| V08 | Authorized approver -> assigned current-content review | Only allowed transitions/reasons/version; no unrelated decision | Phase 4 binding, transition/reopen, mandatory activation and material invalidation regressions pass |
+| V09 | Wrong approver/self-approver -> decision | Denied under accepted separation-of-duty rules | Phase 4 pilot independent assignment checks pass; D04 municipal adoption pending |
 | V10 | Inactive account -> login | 401; no authenticated session | New inactive-user test |
 | V11 | Active account in inactive department -> protected access | Access denied/session invalidated consistently | R10 passing: existing session, fresh login, reads/writes and scoped tokens rejected |
 | V12 | Any user -> forged child under different parent | 404 regardless of guessed child identifier | Shared parent/child loader; task/document/API mismatch regressions and assignment parent authorization pass |
@@ -34,8 +40,8 @@ The desired rules below are implementation targets with current evidence identif
 | V16 | Unscoped token -> contracts | Explicitly authorized global read | New unscoped-token test; narrower field capabilities Phase 6 |
 | V17 | Expired/revoked/invalid/missing token | 401 consistently | New token test |
 | V18 | Token -> wrong department or mismatched document parent | 404; no file bytes | Passing acceptance regression on SQLite/PostgreSQL; wider capability matrix remains Phase 6 |
-| V19 | Any authorized writer -> archived aggregate | No contract or child mutation | R04 passing: admin/reviewer updates rejected; persisted review/history unchanged. Broader concurrency remains Phase 4. |
-| V20 | Concurrent task/review/archive -> same aggregate | Consistent versioned outcome; no lost decision | Phase 4 PostgreSQL concurrency checks |
+| V19 | Any authorized writer -> archived aggregate | No contract or child mutation | Phase 4 shared parent locks and database archive barriers; all nine post-barrier mutations rejected |
+| V20 | Concurrent task/review/archive -> same aggregate | Consistent versioned outcome; no lost decision | Phase 4 SQLite and actual restricted PostgreSQL logins: one task/decision winner, archive revision last |
 | V21 | Missing CSRF -> authenticated HTML mutations | 403 and zero writes | Original login/create/edit/archive tests; extend child/admin paths in Phase 2/4 |
 | V22 | Low-privilege DB role -> deliberately unscoped SQL | RLS denies other departments and invalid context | Phase 3 actual LOGIN-role SQL/API/child/credential tests in tests/test_phase3.py |
 | V23 | Reused pooled connection -> different identity | No retained authorization context | Phase 3 same physical backend alternates principals; commit/rollback and revoked-session revalidation tested |

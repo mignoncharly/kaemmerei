@@ -69,6 +69,11 @@ Phase 4 missing/stale/replay regressions bypass that helper.
 | terminal state | any direct replacement decision | Rejected with 409; reopen first |
 | archived parent | any mutation | Rejected with 409 |
 
+This table describes manual transitions. Material supersession is a separate
+automatic transition: all existing requests, including withdrawn requests, reopen
+against the new content. This conservative re-review rule is part of the D04 pilot
+default and must be reviewed by the approval owners.
+
 Approval additionally requires an explicitly assigned account/team. The actor must
 be neither the contract creator nor the last material editor. Administrators cannot
 bypass independence or assignment to approve. Department accounts with explicit
@@ -152,9 +157,50 @@ replay IDs, terminal reopening, unauthorized/self approval, immutable decisions 
 tax history are also checked. CI explicitly runs the Phase 4 PostgreSQL selection
 in both service and native jobs, in addition to the full suites.
 
-Final local and actual hosted results will be recorded after execution. No result
-is inferred from CI YAML. Existing native cluster, private passfiles, binary identity
-checks and unrelated launcher edit are preserved. No Docker dependency is added.
+### Actual results
+
+Source `f0d998f862941e04cbe5f120c2fa18de6c1986b7`; Windows, Python 3.14.3,
+pytest 9.1.1, PostgreSQL 18.3. [Local evidence](evidence/phase4-local.json) contains
+JUnit hashes; ignored XML remains on this workstation.
+
+| Check | Selected | Passed | Skipped | Failed / xfailed | Seconds |
+|---|---:|---:|---:|---:|---:|
+| Full PostgreSQL | 99 | 99 | 0 | 0 / 0 | 202.79 |
+| Full SQLite | 99 | 87 | 12 PostgreSQL-only | 0 / 0 | 65.80 |
+| Final Phase 4 PostgreSQL selection | 18 | 18 | 0 | 0 / 0 | 58.80 |
+| Phase 4 SQLite selection | 18 | 18 | 0 | 0 / 0 | 21.80 |
+| Explicit PostgreSQL security/lifecycle selection | 12 | 12 | 0 | 0 / 0 | 35.90 |
+
+Both full suites additionally passed 15 subtests. The explicit PostgreSQL selection
+deselected 87 ordinary tests; the dedicated Phase 4 selection separately ran all 18
+workflow/race tests under actual restricted logins. No warnings were suppressed.
+Two remain: Starlette/AnyIO deprecated BlockingPortal alias and managed Windows
+pytest-cache ACL. Final read-only catalog check found zero harness databases and
+zero generated temporary roles. Existing native cluster, private passfiles, binary
+identity checks and unrelated launcher edit are preserved. No Docker dependency added.
+
+Hosted [run 39606147120](https://github.com/mignoncharly/kaemmerei/actions/runs/39606147120)
+completed successfully for the source SHA above. All three jobs passed: SQLite,
+PostgreSQL 18 service and native-postgresql. Dependency installation, migrated
+verification, full pytest, explicit PostgreSQL security selection and both explicit
+Phase 4 selections succeeded. Run/job/step conclusions and all three artifact
+metadata were inspected directly via GitHub API; archives were not downloaded.
+[Hosted evidence](evidence/phase4-ci-39606147120.json) records the exact results.
+
+**Phase 4 technical gate is verified locally and in hosted CI.**
+
+### Acceptance checklist
+
+- [x] Shared parent/identity lock and one-commit mutation protocol across existing writers.
+- [x] Content-bound immutable decisions and configured independent approval gate.
+- [x] Material/document changes supersede prior approval and reopen completed tax assessment.
+- [x] Terminal reopening, unauthorized tax/self-approval and stale versions rejected.
+- [x] Input-preserving conflict page and duplicate child-action protection.
+- [x] Concurrent decisions/tasks and nine archive races pass on both backends.
+- [x] Synthetic legacy values preserved as unverified; reconciliation command available.
+- [x] Full suites and actual hosted Phase 4 source pass without failures or xfails.
+- [ ] D04 municipal adoption and business legacy reconciliation/migration/grants.
+- [ ] Production recovery/load/operations and release acceptance.
 
 ## Remaining boundaries
 
