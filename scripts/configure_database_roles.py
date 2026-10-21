@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
-from app.config import Settings
+from app.config import Settings,validate_database_tls
 from app.db import make_engine
 from app.db_roles import configure_runtime_roles
 from app.migrations import migration_head
@@ -21,7 +21,14 @@ def main():
     raw=os.environ.get('MIGRATION_DATABASE_URL')
     if not raw:
         raise SystemExit('MIGRATION_DATABASE_URL is required; no default or credential output')
-    url=make_url(raw)
+    try:
+        environment=os.getenv('APP_ENV','development').strip().lower()
+        if environment not in ('development','production'):
+            raise ValueError('APP_ENV must be development or production')
+        url=make_url(raw)
+        if environment=='production':validate_database_tls(raw)
+    except Exception:
+        raise SystemExit('Invalid operator environment or database TLS configuration; production requires verify-full and an absolute local CA path') from None
     if url.drivername!='postgresql+psycopg' or url.database!=args.database or args.database in ('postgres','template0','template1'):
         raise SystemExit('Explicit application database identity required; no administrative/default DB')
     engine=make_engine(Settings(database_url=raw))

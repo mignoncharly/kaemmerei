@@ -1,5 +1,17 @@
 # Änderungen
 
+
+## 2026-10-21 - Phase 9 U021: operator TLS and source release integrity
+
+- Share production TLS validation with standalone DBA role configuration; preserve native development and existing identity/grant guards.
+- Lock exact runtime dependencies and reviewed wheel hashes; source-only deterministic Git-object bundle, manifest, checksum verification and isolated packaged runtime smoke.
+- Add Windows/Linux locked-release and cross-platform reproducibility CI gates. No deployment or Phase 9 exit; evidence in HANDOFF.
+
+## 2026-10-21 - Phase 9 U020: encrypted recovery checkpoint
+
+- Native encrypted/signed consistent PostgreSQL/document backup and verified new restore bundles.
+- Full native PG 260 passed/2 local skips; SQLite 236/26; 15 subtests each; all five exact-source hosted jobs passed at 92329b6. Production recovery/scheduling and RPO/RTO remain open.
+
 ## 2026-10-21 - Phase 9 U019: local TOTP and audited recovery
 
 - Additive 0023 private encrypted credentials/rollout policy and pending challenge sessions.

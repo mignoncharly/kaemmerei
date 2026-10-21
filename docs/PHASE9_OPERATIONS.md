@@ -754,3 +754,100 @@ are recorded separately; Sigsum proof was not verified. References:
 - Final read-only catalog: zero guarded disposable databases, zero generated roles; dedicated control privileges unchanged. No business data/schema/cluster/service modification or production deployment. pip check clean. Warnings: existing Starlette/httpx TestClient deprecation and Windows pytest-cache ACL/path warning; no warning suppressed.
 - Evidence: [local JSON](evidence/phase9-u020-local.json), [hosted JSON](evidence/phase9-ci-39660619585.json), [native tool provenance](evidence/phase9-age-provenance.json). JUnit hashes bind the recorded local results.
 - Phase 9 remains open. Remaining work includes monitoring/backup-age alerts, representative mixed workload/recovery, remaining scheduled jobs, native TLS/service/ACL/capacity acceptance and reproducible release checks. Production ownership and custody are provisional, not development blockers. A static follow-up is explicit production TLS validation in the standalone DBA role-configuration script, which currently constructs development Settings; the application/operator CLI backup path already revalidates production TLS. Do not deploy via that script before resolving the follow-up. No production rollout is authorized.
+
+### U021 — DBA TLS policy and reproducible release inputs
+
+Phase 10 has required Phase 9 entry gates. The user's request to continue is
+being applied to the remaining engineering work; no optional-scope waiver or
+production acceptance is inferred. Municipal organizational decisions do not
+block local development, login, testing or secure local operator recovery.
+
+The standalone DBA grants script now validates `APP_ENV`, sanitizes malformed
+URL failures and applies the shared production database TLS policy **before
+engine creation**. Production requires PostgreSQL/psycopg, `verify-full` and a
+single absolute local CA path. Application web/integration and CLI-selected
+operator connections use this same policy. Development can use the dedicated
+native loopback cluster without TLS. DBA tools do not require unrelated web/MFA
+startup settings. The existing exact database identity, migration-head check,
+transactional grants and credential redaction remain. This closes the U020
+static script gap; actual production CA/hostname/TLS handshake tests remain open.
+[PostgreSQL 18 certificate policy](https://www.postgresql.org/docs/18/libpq-ssl.html).
+
+`requirements.lock` pins the actual 30-package runtime closure, including
+transitive dependencies and Psycopg binary extras, with 706 SHA-256 wheel hashes
+from official version-specific PyPI metadata. Yanked artifacts and source builds
+are excluded. `.gitattributes` fixes lock line endings across checkouts. The
+version inventory is unchanged from U019's runtime advisory review; this is no
+new claim about OS, PostgreSQL/libpq, Python, age, ClamAV or proxy security.
+[Lock provenance](evidence/phase9-runtime-lock-provenance.json) records metadata
+URLs/digests and the lock digest. Dev/browser tooling remains separately scoped.
+Required installation flags follow [pip's hash policy](https://pip.pypa.io/en/stable/topics/secure-installs/).
+
+`scripts/build_release.py` reads committed Git blobs from HEAD and a fixed source
+allowlist. Working-tree changes, environments, caches, test clusters, real config,
+logs, private keys, data and documents are excluded. Unclassified tracked objects
+inside runtime trees, links/submodules, missing inputs, oversized inputs or an
+incomplete/branched migration graph fail the build. ZIP entries have fixed order,
+timestamp, permissions and no platform-dependent compression. The manifest binds
+source commit, migration head, dependency lock and every member's hash/size. It
+does not contain a timestamp or machine-specific path. Build destinations are
+new local files only; existing files are never overwritten or cleaned up.
+
+Verification requires an independently trusted expected artifact digest, checks
+all regular members against the exact manifest and parses the migration chain.
+A checksum is integrity evidence, not a signature or release authorization.
+`scripts/verify_release_runtime.py` explicitly executes a reviewed own artifact
+after verification: it extracts only verified members into a fresh ignored UUID
+bundle and starts an isolated child with no database/recovery credentials. The
+child imports the packaged application, applies its migrations to in-memory
+SQLite, confirms no implicit users and exercises application startup/shutdown.
+This checks packaging/runtime completeness, not production RLS, TLS or pilot use.
+
+Review/build commands from a committed checkout (no deployment):
+
+```powershell
+$Python='C:\kämmerei\.venv\Scripts\python.exe'
+# Select a NEW empty venv path; use the existing interpreter to manage it.
+& $Python -m venv --without-pip .verification\release-runtime
+& $Python -m pip --python .verification\release-runtime\Scripts\python.exe install `
+  --require-hashes --only-binary=:all: -r requirements.lock
+& $Python -m pip --python .verification\release-runtime\Scripts\python.exe check
+
+New-Item -ItemType Directory -Force .verification\releases | Out-Null
+$Archive=Join-Path $PWD '.verification\releases\NEW-RELEASE.zip'
+& $Python -m scripts.build_release --output $Archive
+# Use the reviewed build's digest, not a digest supplied by an untrusted sender.
+& $Python -m scripts.build_release --verify $Archive --sha256 REVIEWED_SHA256
+& .verification\release-runtime\Scripts\python.exe -m scripts.verify_release_runtime `
+  --archive $Archive --sha256 REVIEWED_SHA256
+```
+
+CI adds clean hash-verified installation and source-artifact smoke/regression
+checks on Windows and Ubuntu, then a dependent job compares both artifacts byte
+for byte. This adds three jobs to the five existing application/security jobs.
+Source packages are CI verification artifacts only; nothing is deployed or
+registered. Full/current-source hosted results must be recorded after completion.
+
+Actual preliminary verification: TLS/application SQLite selection 47 passed,
+2 explicit PG-only skips. Reviewed release/TLS selection 29 passed. A genuine
+fresh Windows venv installed all 30 locked packages offline from independently
+hash-checked official wheels; all versions and pip check passed. Shared `.venv`
+unchanged. Real artifact build/smoke and frozen-source full tests are pending.
+
+Investigation retained: the first metadata generator used the Windows default
+encoding and failed; explicit UTF-8 fixed it. Six initial fixture teardown errors
+were Git's read-only object attributes; a fixture-local attribute change fixes
+new test cleanup without changing ACLs or the real repository. Automatic approval
+review rejected the command to remove earlier failed synthetic fixture directories;
+they were retained in ignored verification storage, not deleted by another route.
+The first clean `pip --target` attempt failed on a private temporary-directory
+ACL. Supported `pip --python` into a new normal venv succeeded. Pip temporary
+cleanup warnings were retained; no external temp directory or ACL was changed.
+Two wheel downloads timed out; existing local wheel copies were accepted only
+after matching the same official SHA-256. No hash/policy was bypassed.
+
+Remaining Phase 9 engineering/acceptance: mixed workload/recovery measurements,
+remaining maintenance jobs, actionable monitoring and backup-age checks, native
+proxy/service/TLS/ACL/capacity acceptance, wider tool advisory/update operations
+and production custody/retention adoption. P09-T11 is partial until those wider
+update/inventory gates are resolved. Phase 10 release/owner gates remain open.

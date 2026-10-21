@@ -1,0 +1,2 @@
+# The reviewed lock digest is independent of Windows checkout defaults.
+requirements.lock text eol=lf

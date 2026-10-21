@@ -4,6 +4,26 @@ import os
 from pathlib import Path
 
 
+def validate_database_tls(raw: str) -> None:
+    """Shared production connection policy, including standalone DBA tools.
+
+    libpq performs certificate loading, chain/hostname verification at connect.
+    This check prevents an operator entry point selecting a weaker SSL mode.
+    Error messages intentionally contain no URL or configuration values.
+    """
+    from sqlalchemy.engine import make_url
+    try:
+        url=make_url(raw)
+        ca=url.query.get('sslrootcert')
+        if (url.drivername!='postgresql+psycopg' or url.query.get('sslmode')!='verify-full'
+                or not isinstance(ca,str) or not ca):
+            raise ValueError()
+    except Exception:
+        raise ValueError('Production database connections require sslmode=verify-full and sslrootcert') from None
+    if not Path(ca).is_absolute() or (os.name=='nt' and ca.startswith('\\\\')):
+        raise ValueError('Production database CA certificate must be an absolute local path')
+
+
 @dataclass(frozen=True)
 class Settings:
     environment: str = "development"
@@ -93,13 +113,8 @@ class Settings:
                 raise ValueError("Produktion erfordert ausdrücklich konfigurierte Hostnamen")
             if not self.enforce_database_security or not self.integration_database_url:
                 raise ValueError('Production requires restricted web/integration database connections and RLS validation')
-            from sqlalchemy.engine import make_url
             for raw in (self.database_url, self.integration_database_url):
-                url = make_url(raw)
-                if url.query.get('sslmode')!='verify-full' or not url.query.get('sslrootcert'):
-                    raise ValueError('Production database connections require sslmode=verify-full and sslrootcert')
-                if not Path(url.query['sslrootcert']).is_absolute():
-                    raise ValueError('Production database CA certificate must be an absolute path')
+                validate_database_tls(raw)
         if self.human_mfa and self.mfa_key_file is None:
             raise ValueError('Human MFA requires an explicitly provisioned private MFA_KEY_FILE')
         if self.mfa_key_file is not None:

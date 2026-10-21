@@ -6,6 +6,69 @@ concurrency:
   group: phase1-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  locked-release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Clean runtime installation with required wheel hashes
+        run: python -m pip install --require-hashes --only-binary=:all: -r requirements.lock
+      - run: python -m pip check
+      - name: Verify release and operator regressions
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pytest -q tests/test_release_bundle.py tests/test_operator_tls.py --junitxml=.verification/release-tests.xml
+      - name: Build twice and compare exact bytes
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+          from scripts.build_release import build,verify_bytes
+          from scripts.verify_release_runtime import verify
+          output=Path('.verification').resolve()
+          output.mkdir(exist_ok=True)
+          first=build(Path.cwd(),output/'release.zip')
+          second=build(Path.cwd(),output/'release-repeat.zip')
+          assert first==second
+          verify_bytes((output/'release.zip').read_bytes(),first['artifact_sha256'])
+          verify(output/'release.zip',first['artifact_sha256'])
+          (output/'release-summary.json').write_text(json.dumps(first,sort_keys=True)+'\n',encoding='utf-8')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runtime-release-${{ matrix.os }}
+          path: |
+            .verification/release.zip
+            .verification/release-summary.json
+            .verification/release-tests.xml
+  release-reproducibility:
+    needs: locked-release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: runtime-release-*
+          path: release-comparison
+      - name: Verify Windows and Linux source artifacts are identical
+        shell: python
+        run: |
+          from pathlib import Path
+          from hashlib import sha256
+          import json
+          roots=sorted(Path('release-comparison').iterdir())
+          assert len(roots)==2
+          summaries=[]
+          for root in roots:
+              summary=json.loads((root/'release-summary.json').read_text(encoding='utf-8'))
+              assert sha256((root/'release.zip').read_bytes()).hexdigest()==summary['artifact_sha256']
+              summaries.append(summary)
+          assert summaries[0]==summaries[1]
+          print('Windows/Linux committed-source artifacts match byte for byte')
   frontend-browser:
     runs-on: ubuntu-24.04
     steps:

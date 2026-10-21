@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-21",
+  "scope": "30 exact runtime versions; non-yanked official versioned PyPI wheel digests; no sdists; Windows/Linux install verification required",
+  "requirements_lock_sha256": "8bc5bc12b74b8f327d637e41107fa281579b8320a623cba3fb26162d79f80116",
+  "packages": [
+    {
+      "name": "alembic",
+      "version": "1.18.4",
+      "source": "https://pypi.org/pypi/alembic/1.18.4/json",
+      "metadata_sha256": "ac84dd6329d222377c60515b016d791a64f1f5c5f9b464b903dcf486a69ba42f",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "source": "https://pypi.org/pypi/annotated-doc/0.0.5/json",
+      "metadata_sha256": "1aab691a5f37dd292e6d93ab53f7da5d839f56ba605345f017022ec75eb643af",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "source": "https://pypi.org/pypi/annotated-types/0.8.0/json",
+      "metadata_sha256": "a6e8e5b10c8fd2f596bba53e015cd37f6279fb5cec26ce0c5e9968625be4fefa",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "source": "https://pypi.org/pypi/anyio/4.15.1/json",
+      "metadata_sha256": "e2ee22fad2fab3e66be503cba9b41945607d3076c9b7aa49b6e2f95ac323efab",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "argon2-cffi",
+      "version": "25.1.0",
+      "source": "https://pypi.org/pypi/argon2-cffi/25.1.0/json",
+      "metadata_sha256": "07da83c1ecb01e5aa0ec09c7023eb466393cea237207714278214dbdf6e868bb",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "argon2-cffi-bindings",
+      "version": "26.1.0",
+      "source": "https://pypi.org/pypi/argon2-cffi-bindings/26.1.0/json",
+      "metadata_sha256": "0c424e9901f35d1e032f90a8646c2627913a23eb1abbbb9557a7643fc2c92270",
+      "non_yanked_wheels": 40,
+      "unique_wheel_hashes": 40
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "source": "https://pypi.org/pypi/cffi/2.1.1/json",
+      "metadata_sha256": "2255e530e3f80593a354e3d84a29966924d0e10309d1e3a6d50f845ab7d8df66",
+      "non_yanked_wheels": 99,
+      "unique_wheel_hashes": 99
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "source": "https://pypi.org/pypi/click/8.5.0/json",
+      "metadata_sha256": "4e36adc9b46f837e10ce801b7a478f9146fefdfb287292b7668fc64b1474e41d",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "source": "https://pypi.org/pypi/cryptography/50.0.2/json",
+      "metadata_sha256": "7423990cc0948676ef47a71ea62a476ece4c76245e6bebd1c3a71f03c4ffc0f4",
+      "non_yanked_wheels": 58,
+      "unique_wheel_hashes": 58
+    },
+    {
+      "name": "fastapi",
+      "version": "0.158.0",
+      "source": "https://pypi.org/pypi/fastapi/0.158.0/json",
+      "metadata_sha256": "1c0d39f88292462466c01bc3eb73cfff1847ce8b2c8640bb93d66a6c69f38a15",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "greenlet",
+      "version": "3.5.6",
+      "source": "https://pypi.org/pypi/greenlet/3.5.6/json",
+      "metadata_sha256": "c7dc3bdf600092ea1294ae9fac80198bb2b463943668f410f5174c16a4761d74",
+      "non_yanked_wheels": 78,
+      "unique_wheel_hashes": 78
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "source": "https://pypi.org/pypi/h11/0.16.0/json",
+      "metadata_sha256": "97f4efb9cc00826f0408076983adc1a1e48e8f2cabf403aaf250f724e081440d",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "source": "https://pypi.org/pypi/idna/3.20/json",
+      "metadata_sha256": "e7cbd26e23ce60f6cb3a151d2adf3b1b087bb8f10ac2d9d6db70fdccbf3bb041",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "source": "https://pypi.org/pypi/jinja2/3.1.6/json",
+      "metadata_sha256": "1bc757d7065f3e67d3a49e72ebc731d0774055575732592eede9820c136329cc",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "mako",
+      "version": "1.4.3",
+      "source": "https://pypi.org/pypi/mako/1.4.3/json",
+      "metadata_sha256": "d8150ed85799eea2ec6e01c2386e3331c6a01e0caed32b0d6ff0749dec100aa7",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "source": "https://pypi.org/pypi/markupsafe/3.0.4/json",
+      "metadata_sha256": "85cd5bce3f85e67ab0b921be9c9ba144a7cc01a2d02b85ad65b1f8dabeac4c57",
+      "non_yanked_wheels": 150,
+      "unique_wheel_hashes": 150
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.44.0",
+      "source": "https://pypi.org/pypi/opentelemetry-api/1.44.0/json",
+      "metadata_sha256": "ce32767cb7a10de5f98e34ce524848d4be9ea8ddedb907b781c86a41303ce4de",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "psycopg",
+      "version": "3.3.6",
+      "source": "https://pypi.org/pypi/psycopg/3.3.6/json",
+      "metadata_sha256": "67267f5b63adf658b4d04848e36f70fc4b32ffc31e3bc6ea9086117bce8cc96a",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "psycopg-binary",
+      "version": "3.3.6",
+      "source": "https://pypi.org/pypi/psycopg-binary/3.3.6/json",
+      "metadata_sha256": "73c5e31cb3c5d454391b3e218a5c7f2d1e693c2cd338e1b63a65cc667a83bfaf",
+      "non_yanked_wheels": 66,
+      "unique_wheel_hashes": 66
+    },
+    {
+      "name": "pycparser",
+      "version": "3.11",
+      "source": "https://pypi.org/pypi/pycparser/3.11/json",
+      "metadata_sha256": "ad74b2f9994f58a0dd123a9df91e06c9ed66045bf566c4608136873cbf464fc3",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "source": "https://pypi.org/pypi/pydantic/2.14.1/json",
+      "metadata_sha256": "7413703dd60983a01d25e54730f9153c4d7a83fc788c77955b5237269cf9f071",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.50.1",
+      "source": "https://pypi.org/pypi/pydantic-core/2.50.1/json",
+      "metadata_sha256": "e93d77eaf72dda287409887550bda890a4067311ea072bf9b274df9ce6d96804",
+      "non_yanked_wheels": 136,
+      "unique_wheel_hashes": 136
+    },
+    {
+      "name": "pyotp",
+      "version": "2.10.0",
+      "source": "https://pypi.org/pypi/pyotp/2.10.0/json",
+      "metadata_sha256": "dc5bb2fa36cbef28f76c7bf06cad1e9be172f35a7e468ca34f64c091ad56645d",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "source": "https://pypi.org/pypi/python-multipart/0.0.32/json",
+      "metadata_sha256": "f94ae178a5196b01730490f0b3b10b2ad32bf92aa2fba5c3f7ffd6b5235c9697",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "sqlalchemy",
+      "version": "2.0.50",
+      "source": "https://pypi.org/pypi/sqlalchemy/2.0.50/json",
+      "metadata_sha256": "05d63e53b7ffd285796e06815b0015ab80da5de17fabc3565e599fccdb7244dc",
+      "non_yanked_wheels": 57,
+      "unique_wheel_hashes": 57
+    },
+    {
+      "name": "starlette",
+      "version": "1.9.0",
+      "source": "https://pypi.org/pypi/starlette/1.9.0/json",
+      "metadata_sha256": "4b7a6ea8ec0da7dbb68545d685a3a74e923534ed09010d9a6028134634eafece",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "source": "https://pypi.org/pypi/typing-extensions/4.16.0/json",
+      "metadata_sha256": "2140da00d62dde967f52d0be0ae28444f1d6a3fe603f52c83c23988c32122d5a",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "source": "https://pypi.org/pypi/typing-inspection/0.4.4/json",
+      "metadata_sha256": "0605416f2f37f2df04e45360cf5ce4ca5eeca6d414bb6ddb1ec5a9893c62ac30",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.5",
+      "source": "https://pypi.org/pypi/tzdata/2026.5/json",
+      "metadata_sha256": "27547051b51333cb7ba03f91b91fc7c92179937ccb62bb81ce46dc943c69873b",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.48.0",
+      "source": "https://pypi.org/pypi/uvicorn/0.48.0/json",
+      "metadata_sha256": "e65a29b1c4e18698dc854126112f51f6847332a29ae89a51b207178774652afa",
+      "non_yanked_wheels": 1,
+      "unique_wheel_hashes": 1
+    }
+  ]
+}

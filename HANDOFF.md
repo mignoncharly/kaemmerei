@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 9 in progress (U020). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
+Current stage: Phase 9 in progress (U021). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -476,3 +476,14 @@ U019 final verification: ece779758db1660c2a3314331cea97f63974c2e6 committed/push
 - Final read-only catalog: zero guarded disposable databases, zero generated roles; dedicated control privileges unchanged. No business data/schema/cluster/service modification or production deployment. pip check clean. Warnings: existing Starlette/httpx TestClient deprecation and Windows pytest-cache ACL/path warning; no warning suppressed.
 - Evidence: [local JSON](docs/evidence/phase9-u020-local.json), [hosted JSON](docs/evidence/phase9-ci-39660619585.json), [native tool provenance](docs/evidence/phase9-age-provenance.json). JUnit hashes bind the recorded local results.
 - Phase 9 remains open. Remaining work includes monitoring/backup-age alerts, representative mixed workload/recovery, remaining scheduled jobs, native TLS/service/ACL/capacity acceptance and reproducible release checks. Production ownership and custody are provisional, not development blockers. A static follow-up is explicit production TLS validation in the standalone DBA role-configuration script, which currently constructs development Settings; the application/operator CLI backup path already revalidates production TLS. Do not deploy via that script before resolving the follow-up. No production rollout is authorized.
+
+
+### U021 - Production DBA TLS and reproducible source release (2026-10-21)
+
+- Phase 10 entry requires Phase 9 verification or explicit optional scope. Continuing required Phase 9 engineering; no production readiness or waiver inferred.
+- Shared production verify-full/absolute local CA policy now covers the standalone grants script before connecting, with environment validation and redacted malformed URLs. Existing identity/head/grant checks preserved; development needs no TLS or municipal approval. Actual production TLS handshake remains unverified.
+- Runtime lock: 30 unchanged versions, 706 official non-yanked wheel hashes, no sdists. Fresh native Windows venv installed all packages offline from hash-verified official wheels; version checks/pip check passed. Shared environment unchanged. Metadata/lock provenance retained.
+- Deterministic HEAD-blob release builder/manifest and independent-checksum verifier exclude private/runtime-data paths, links, unexpected runtime objects and uncommitted changes. Packaged-source smoke uses only isolated in-memory SQLite with credentials removed. No deployment, service/task registration or production key operation.
+- Hosted workflow now has eight jobs: existing five, Windows/Linux locked-release checks and cross-platform byte comparison. Current-source hosted/full results pending. Latest targeted release/TLS 29 passed; preceding SQLite availability/MFA/TLS 47 passed/2 explicit PG skips.
+- Investigation: explicit UTF-8 fixes metadata decoding; own synthetic Git object read-only attributes handled in fixture cleanup; pip --target private-temp ACL failure resolved using supported pip --python into a new venv. Earlier six failed synthetic fixture directories retained after automatic cleanup approval rejection; no alternate deletion attempted. Pip temp warnings retained. User launcher whitespace preserved.
+- Next: freeze source, build/smoke actual archive with fresh runtime, full SQLite/PG/explicit PG tests, exact-source hosted evidence and final DB/role cleanup check. Phase 9 remains open; PHASE9_OPERATIONS U021 has commands and remaining gates.

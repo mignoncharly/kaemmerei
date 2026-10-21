@@ -236,3 +236,11 @@ roles, control privileges unchanged. Encrypted restore technically verified on
 tiny synthetic data; no production schedule/escrow/deployment or RPO/RTO
 acceptance. Phase 9 remains open. Details and remaining follow-ups: HANDOFF U020,
 docs/PHASE9_OPERATIONS.md and docs/evidence/phase9-u020-local.json.
+
+
+U021: continuing Phase 9 entry work before Phase 10. Standalone DBA TLS gap
+fixed; hash-pinned 30-package runtime and deterministic committed-source release
+builder/manifest/verifier added. Fresh Windows installation/pip check and 29
+targeted release/TLS tests passed. Packaged runtime, full tests and eight-job
+current-source hosted evidence pending in HANDOFF. No production deployment or
+Phase 9 exit; local development has no municipal approval dependency.
