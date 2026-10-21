@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 6 P06-T01-T08 technically verified locally and in all four hosted jobs. See U014 and docs/PHASE6_INTEGRATION_SYNC.md. D07 and production acceptance remain pending.\
+Current stage: Phase 7 engineering implementation in verification. See U015 and docs/PHASE7_FINANCE_DATES_EXCEL.md. D08-D10 adoption and production acceptance remain pending.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -24,7 +24,7 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Documents reviewed | README and ARBEITSPLAN updated to distinguish prototype behavior, known defects, verification, and outstanding approvals |
 | Application | FastAPI, SQLAlchemy, Jinja templates, local static CSS/JS |
 | Database | SQLite development default; production configuration requires PostgreSQL/psycopg |
-| Latest migration observed | `0019_integration_sync`; synthetic isolated databases only |
+| Latest migration observed | `0020_financial_reports`; synthetic isolated databases only |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
 | Tests | Phase 6: 151 items; PostgreSQL 149 passed + 2 local skips; SQLite 134 passed + 17 explicit skips; 15 subtests each. Phase 6 actual PG selection 21 passed; explicit PostgreSQL selection 15 passed. All four hosted jobs passed. |
@@ -60,7 +60,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 4 — Workflow/archive/concurrency | Verified technically; D04 owner acceptance pending | P04-T01–T08 | PostgreSQL 99 passed; SQLite 87 passed + 12 PG skips; Phase 4 actual restricted-login selection 18 passed; all three CI jobs passed | Engineering: Codex; municipal approval owners unassigned | Next technical phase P05-T01; D04 adoption before business deployment |
 | 5 - Document lifecycle | Verified technically; D05/D06 owner acceptance pending | P05-T01-T08 | PostgreSQL 128 passed + 2 local skips; SQLite 116 + 14; real PG restore; successful hosted run including required real ClamAV | Engineering: Codex; security/records owners unassigned | Next technical phase P06-T01; production setup and owner decisions pending |
 | 6 - Integration synchronization | Verified technically; D07 owner acceptance pending | P06-T01-T08 | PG 149 + 2 local skips; SQLite 134 + 17; 21 actual PG integration regressions; all four CI jobs passed | Engineering: Codex; integration/security owners unassigned | Next P07-T01; D07 consumer profiles/transition and retention before production |
-| 7 — Reports/dates/Excel | Not started | None | Not run | Unassigned | Agree finance/history/date/interchange semantics |
+| 7 - Reports/dates/Excel | Implemented, verification in progress; D08-D10 unapproved | P07-T02-T09 technical defaults; T01 owner agreement pending | Phase 7 PG 18 passed; SQLite 17 passed + one PG-only skip; full suites running | Engineering: Codex; municipal owners unassigned | Finish exact-source full local/hosted evidence; D08-D10 before production |
 | 8 — Frontend and navigation | Not started | None | Not run | Unassigned | Repair CSP-compatible charts and form state |
 | 9 — Operations and availability | Not started | None | Not run | Unassigned | Define ingress limits, workload, and deployment targets |
 | 10 — Acceptance and release | Not started | None | Not run | Unassigned | Assign acceptance owners and release scope |
@@ -134,7 +134,7 @@ Append exact commands only after identifying the correct environment. Record dat
 | Concurrent archive/review/task writes | SQLite and actual restricted PostgreSQL logins | One winning decision/task update; nine paths race archive and reject every post-barrier mutation | U012; tests/test_phase4.py |
 | File scan/recovery fault cases | Isolated document storage | Not implemented / not run | None |
 | API synchronization replay/transfers | Synthetic integration consumer | Not implemented / not run | None |
-| Financial reconciliation/date fixtures | Synthetic domain fixtures | Not implemented / not run | None |
+| Financial reconciliation/date fixtures | SQLite / actual restricted PostgreSQL roles | Phase 7 targeted tests passed; full verification in progress | U015; tests/test_phase7.py |
 | Browser/CSP/accessibility | Local disposable app | Not run | None |
 | Load/resource limits | Agreed synthetic workload | Not run; targets unassigned | None |
 | Consistent backup restore | Isolated recovery environment | Not run; RPO/RTO unassigned | None |
@@ -334,6 +334,15 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Hosted:** [Run 39624468561](https://github.com/mignoncharly/kaemmerei/actions/runs/39624468561) completed success for exact final source 3d5e88a. All four actual job conclusions/steps confirmed: SQLite, PostgreSQL 18, native-postgresql, real ClamAV/current official definitions. Dependencies, migrations, full suites and explicit security/Phase 4/5/6 checks passed. Four artifact metadata inspected; archives not downloaded. Earlier implementation runs 39622830892/39623587187 also passed. Evidence: docs/evidence/phase6-ci-39624468561.json.
 - **Remaining boundaries:** Two unsuppressed local warnings remain Starlette/AnyIO and managed pytest cache ACL. Local scanner/symlink/production ACL limits and earlier Phase 5 filesystem residues unchanged. D07 profile/ownership/transition adoption, D06/D07 physical replay/snapshot retention and privacy, production capacity/quotas/alerts/RPO/RTO, business migration/grants and release remain pending. No deployment or new Docker dependency.
 - **State/next:** Phase 6 technically verified; publish final evidence, then P07-T01 when authorized. Financial/history/date/Excel corrections and owner decisions remain their planned next phase.
+
+### U015 - 2026-10-21 - Phase 7 financial history, dates and Excel
+
+- **Scope:** Next phase authorized under the existing ten-phase plan. Technical defaults P07-T02-T09 implemented; P07-T01 finance agreement and D08-D10 remain unapproved. No business migration, deployment or native cluster change. Unrelated Start-TestDatabase.ps1 whitespace preserved.
+- **Changes:** Additive 0020 unknown legacy value basis, scoped exact external identity, narrow PostgreSQL historical aggregate function with live session authorization. Recorded-at snapshot history independent of current population, historical department/direction/basis, missing-data/reconciliation tables. One bounded calendar service; explicit terminated/missed-notice/legal limits. Strict create-only XLSX, literal strings, date-system/overflow/formula/header/reference checks; guarded atomic duplicates, natural-description ambiguity and raw/hash/row audit provenance.
+- **Verification progress:** Phase 7 actual restricted PostgreSQL 18 passed; SQLite 17 passed + one PG-only skip. Broader security/schema selections 22 passed on each backend before subsequent added regressions. Full final suites and hosted evidence pending actual results. No xfail/warning suppression. Initial fixture keyword collision, missing new export fields and unknown-amount rendering failures corrected and rerun.
+- **Boundaries:** D08 finance inventory semantics, D09 legal calendar interpretation and D10 reference/import policy need named owner adoption. EUR metadata only, no payments/commitments/effective-at history inferred. Legacy pre-evidence gaps remain unknown. Phase 8 browser/CSP/text/accessibility and operational release gates remain open.
+- **Documentation/recovery:** docs/PHASE7_FINANCE_DATES_EXCEL.md, public response schema and existing project docs updated. Preserve amounts, unknown basis, optional references and import provenance; forward repair or coordinated backup recovery only. No destructive downgrade.
+- **Next:** Finish full SQLite/PostgreSQL suites, explicit PostgreSQL selection, hosted jobs and safe final catalog check; append exact-source evidence before declaring technical verification.
 
 ### Update entry template — copy for the next update
 

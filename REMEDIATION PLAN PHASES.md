@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phases 7-10 and owner/production acceptance remain pending.\
+Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phase 7 technical defaults implemented and in verification (U015); Phases 8-10 and owner/production acceptance remain pending.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -272,14 +272,14 @@ Small independent work can proceed once its listed interface is stable. Keep the
 ### Tasks
 
 - [ ] P07-T01: Agree report definitions with finance: inventory vs committed spending vs actual payments, qualifying statuses, relevant dates, department attribution, annualization, and unknown values. Existing annual amounts are contract metadata, not evidence of cash payments.
-- [ ] P07-T02: Add explicit financial value basis (`net`, `gross`, `unknown`), currency if required, and effective dates for financial changes where needed. Preserve legacy values as unknown. Do not infer tax basis or convert historical amounts without evidence.
-- [ ] P07-T03: Rebuild historical totals from event/snapshot populations including archived and transferred contracts. Use department and financial direction at the historical instant. Distinguish recorded-at history from effective-at business history and disclose which report is available. Do not fabricate years predating evidence.
-- [ ] P07-T04: Treat unknown direction/basis separately. Define inclusion/exclusion of drafts, terminated/ended, future-start, and archived records for each report. Expose missing-data counts and reconciliation differences instead of coercing unknowns to zero or expense.
-- [ ] P07-T05: Centralize renewal/notice computation for list, details, reports, and API. Specify month-end/leap-year rules, original-date anchoring, notice-to-end relationships, terminated behavior, and missed-notice treatment. Keep display dates distinct from a legal conclusion that cancellation remains possible.
-- [ ] P07-T06: Validate supported date ranges and arithmetic results before persisting. Catch Excel/date overflow, non-finite numeric dates, impossible renewal outcomes, and malformed cells as row-level errors. Verify supported workbook date systems or reject unsupported systems explicitly; never silently interpret 1904 dates as 1900 dates.
-- [ ] P07-T07: Define Excel as create-only or an explicit controlled update mode. For create-only, clearly identify generated numbers and preserve an optional external reference; do not silently ignore a user-supplied identity column. For update mode, require authorized record identity, expected version, preview/diff, and conflict handling.
-- [ ] P07-T08: Make duplicate detection scoped, deterministic, and concurrency-safe according to the accepted identity rule. Natural duplicates can be legitimate: flag ambiguity instead of making an overly broad uniqueness constraint. Preserve all-or-nothing import behavior and audit provenance.
-- [ ] P07-T09: Keep string-safe XLSX export, bounded parsing, and ZIP limits. Add representative workbook fixtures for shared strings, formulas/cached values, duplicate headers, dates, invalid references, Unicode, numeric boundaries, and export/import expectations. Explain that Excel is not a backup of documents/history.
+- [x] P07-T02: Add explicit financial value basis (`net`, `gross`, `unknown`), currency if required, and effective dates for financial changes where needed. Preserve legacy values as unknown. Do not infer tax basis or convert historical amounts without evidence.
+- [x] P07-T03: Rebuild historical totals from event/snapshot populations including archived and transferred contracts. Use department and financial direction at the historical instant. Distinguish recorded-at history from effective-at business history and disclose which report is available. Do not fabricate years predating evidence.
+- [x] P07-T04: Treat unknown direction/basis separately. Define inclusion/exclusion of drafts, terminated/ended, future-start, and archived records for each report. Expose missing-data counts and reconciliation differences instead of coercing unknowns to zero or expense.
+- [x] P07-T05: Centralize renewal/notice computation for list, details, reports, and API. Specify month-end/leap-year rules, original-date anchoring, notice-to-end relationships, terminated behavior, and missed-notice treatment. Keep display dates distinct from a legal conclusion that cancellation remains possible.
+- [x] P07-T06: Validate supported date ranges and arithmetic results before persisting. Catch Excel/date overflow, non-finite numeric dates, impossible renewal outcomes, and malformed cells as row-level errors. Verify supported workbook date systems or reject unsupported systems explicitly; never silently interpret 1904 dates as 1900 dates.
+- [x] P07-T07: Define Excel as create-only or an explicit controlled update mode. For create-only, clearly identify generated numbers and preserve an optional external reference; do not silently ignore a user-supplied identity column. For update mode, require authorized record identity, expected version, preview/diff, and conflict handling.
+- [x] P07-T08: Make duplicate detection scoped, deterministic, and concurrency-safe according to the accepted identity rule. Natural duplicates can be legitimate: flag ambiguity instead of making an overly broad uniqueness constraint. Preserve all-or-nothing import behavior and audit provenance.
+- [x] P07-T09: Keep string-safe XLSX export, bounded parsing, and ZIP limits. Add representative workbook fixtures for shared strings, formulas/cached values, duplicate headers, dates, invalid references, Unicode, numeric boundaries, and export/import expectations. Explain that Excel is not a backup of documents/history.
 
 ### Verification and exit criteria
 
@@ -290,6 +290,8 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 **Recovery:** Preserve existing financial values and raw import provenance; publish report-definition changes. Version revised report semantics where users depend on prior exports.\
 **Handoff:** Attach finance-approved definitions, known history gaps, reconciliation evidence, and Excel compatibility decisions.
+
+**Phase 7 implementation note (U015):** P07-T02-T09 use explicit proposed technical defaults in [Phase 7 report](docs/PHASE7_FINANCE_DATES_EXCEL.md). P07-T01 remains unchecked because finance agreement has not been obtained. Full verification and hosted results are tracked separately from owner acceptance.
 
 ## Phase 8 — Repair frontend behavior and navigation
 

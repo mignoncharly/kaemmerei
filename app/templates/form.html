@@ -9,6 +9,8 @@
   {% if mode == 'edit' %}<input type="hidden" name="version" value="{{ contract.version }}">{% endif %}
   <input type="hidden" name="date_description" value="{{ values.get('date_description', '') }}">
   <div class="form-grid">
+   <div><label for="external_reference">External reference (optional, unique within department)</label><input id="external_reference" name="external_reference" maxlength="120" value="{{ values.get('external_reference') or '' }}"></div>
+   <div><label for="value_basis">Financial value basis (EUR)</label><select id="value_basis" name="value_basis">{% for code in ('unknown','net','gross') %}<option value="{{ code }}" {% if values.get('value_basis', 'unknown') == code %}selected{% endif %}>{{ code }}</option>{% endfor %}</select></div>
    <div class="wide"><label for="designation">Bezeichnung *</label><input id="designation" name="designation" maxlength="200" required value="{{ values.get('designation', '') }}" placeholder="Eindeutige Bezeichnung des Vertrags"></div>
    <div><label for="contract_type">Vertragsart *</label><select id="contract_type" name="contract_type" required><option value="">Bitte auswählen</option>
     {% for kind in contract_types %}<option value="{{ kind }}" {% if values.get('contract_type', '') == kind %}selected{% endif %}>{{ kind }}</option>{% endfor %}

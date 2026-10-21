@@ -108,6 +108,8 @@ class MigrationTests(unittest.TestCase):
                             self.assertEqual(row["designation"], "Preserved synthetic record")
                             self.assertEqual(row["contract_number"], "VR-2025-0001")
                             self.assertEqual(row["version"], 3)
+                            self.assertEqual(row['value_basis'], 'unknown')
+                            self.assertIsNone(row['external_reference'])
                             self.assertEqual(connection.scalar(text("SELECT count(*) FROM revisions")), 1)
                             self.assertEqual(connection.scalar(text("SELECT original_filename FROM contract_documents")), "synthetic.pdf")
                             self.assertEqual(connection.scalar(text("SELECT content_type FROM contract_documents")), "application/pdf")

@@ -101,6 +101,13 @@
             },
             "budget_assignment": {
               "type": "string"
+            },
+            "value_basis": {
+              "enum": [
+                "net",
+                "gross",
+                "unknown"
+              ]
             }
           },
           "required": [
@@ -353,6 +360,43 @@
             "tax_provenance"
           ],
           "additionalProperties": false
+        },
+        "calendar_estimate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "next_end_date": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "notice_deadline": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "date_error": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "notice_missed": {
+              "type": "boolean"
+            },
+            "legal_cancellation_verified": {
+              "const": false
+            }
+          },
+          "required": [
+            "next_end_date",
+            "notice_deadline",
+            "date_error",
+            "notice_missed",
+            "legal_cancellation_verified"
+          ]
         }
       },
       "required": [

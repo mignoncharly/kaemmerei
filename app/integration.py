@@ -1,5 +1,6 @@
 """Version 2 state synchronization; opaque persisted cursors, never timestamp watermarks."""
 from datetime import timedelta
+from app.dates import contract_dates
 from hashlib import sha256
 import json
 import secrets
@@ -88,9 +89,10 @@ def payload(db,token,contract,settings):
     result.update(relevant_date=contract.relevant_date.isoformat(),end_date=contract.end_date.isoformat() if contract.end_date else None,
         notice_period_months=contract.notice_period_months,automatic_renewal=contract.automatic_renewal,
         renewal_period_months=contract.renewal_period_months,updated_at=stamp(contract.updated_at),archived_at=stamp(contract.archived_at))
+    result['calendar_estimate']={k:v.isoformat() if hasattr(v,'isoformat') else v for k,v in contract_dates(contract).items()}
     if 'finance' in caps:
         result['finance']={key:format(getattr(contract,key),'f') if getattr(contract,key) is not None else None for key in ('annual_value','contract_value')}
-        result['finance'].update({key:getattr(contract,key) for key in ('financial_direction','payment_interval','budget_assignment')})
+        result['finance'].update({key:getattr(contract,key) for key in ('financial_direction','value_basis','payment_interval','budget_assignment')})
     if 'tax' in caps:
         result['tax']={column.name:(stamp(getattr(contract,column.name)) if column.name.endswith('_at') else getattr(contract,column.name))
             for column in Contract.__table__.columns if column.name.startswith('tax_')}

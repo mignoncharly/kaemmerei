@@ -1,8 +1,8 @@
 """Server-rendered, department-scoped contract register (no external services)."""
 from contextlib import asynccontextmanager
-from calendar import monthrange
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
+from hashlib import sha256
 import os
 from pathlib import Path
 import secrets
@@ -32,6 +32,8 @@ from app.identity_service import audit, lock_identities, save_user, validate_use
 from app.db import make_engine, make_session_factory
 from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, read_xlsx
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
+from app.dates import add_months, calculate_notice_deadline, calculate_next_end_date, contract_dates
+from app.financial import aggregate, inventory_trend, amount as metadata_amount
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
 from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
@@ -100,9 +102,12 @@ def html(request: Request, template: str, context: dict, status_code: int = 200)
             names = catalog_db.scalars(statement).all()
         context = {**context, 'contact_persons': sorted(set(CONTACT_PERSONS) | set(names))}
     notice = SUCCESS_NOTICES.get(request.query_params.get("notice", ""))
+    ambiguity = request.query_params.get('ambiguous_rows','')
     if notice:
         if request.query_params.get("notice") == "imported" and request.query_params.get("imported_count", "").isdigit():
             notice += f" {request.query_params.get('imported_count')} Verträge wurden übernommen."
+            if ambiguity.isdigit() and 0 < int(ambiguity[:4]) <= MAX_IMPORT_ROWS:
+                context['import_warning'] = f'{int(ambiguity[:4])} rows match existing descriptions; review the new records. Descriptions are not unique identities.'
         context = {**context, "notice": notice}
     return TEMPLATES.TemplateResponse(request, template, context, status_code=status_code)
 
@@ -238,47 +243,15 @@ def review_snapshot(review: ContractReview) -> dict:
             "due_date": review.due_date.isoformat() if review.due_date else ""}
 
 
-def calculate_notice_deadline(end_date: date | None, months: int | None) -> date | None:
-    if end_date is None or months is None:
-        return None
-    month_index = end_date.year * 12 + end_date.month - 1 - months
-    year, month_zero = divmod(month_index, 12)
-    month = month_zero + 1
-    return date(year, month, min(end_date.day, monthrange(year, month)[1]))
-
-
-def add_months(value: date, months: int) -> date:
-    month_index = value.year * 12 + value.month - 1 + months
-    year, month_zero = divmod(month_index, 12)
-    month = month_zero + 1
-    return date(year, month, min(value.day, monthrange(year, month)[1]))
-
-
-def calculate_next_end_date(end_date: date | None, renewal_period_months: int | None,
-                            today: date | None = None) -> date | None:
-    if end_date is None or renewal_period_months is None:
-        return end_date
-    today = today or date.today()
-    elapsed_months = max(0, (today.year - end_date.year) * 12 + today.month - end_date.month)
-    periods = elapsed_months // renewal_period_months
-    next_end = add_months(end_date, periods * renewal_period_months)
-    if next_end < today:
-        next_end = add_months(end_date, (periods + 1) * renewal_period_months)
-    return next_end
-
-
 def contract_reminder(contract: Contract, today: date) -> dict | None:
     if contract.status in ("draft", "ended") or contract.end_date is None:
         return None
-    if contract.automatic_renewal and contract.status != "terminated":
-        effective_end = calculate_next_end_date(
-            contract.end_date, contract.renewal_period_months, today)
-    else:
-        effective_end = contract.end_date
+    dates = contract_dates(contract, today)
+    effective_end = dates['next_end_date']
     if effective_end is None:
         return None
     if contract.status != "terminated" and contract.notice_period_months is not None:
-        due_date = calculate_notice_deadline(effective_end, contract.notice_period_months)
+        due_date = dates['notice_deadline']
         label = "Kündigung spätestens"
     else:
         due_date = effective_end
@@ -726,9 +699,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "notice_period_months": contract.notice_period_months,
             "automatic_renewal": contract.automatic_renewal,
             "renewal_period_months": contract.renewal_period_months,
+            "calendar_estimate": {k:v.isoformat() if hasattr(v,'isoformat') else v for k,v in contract_dates(contract).items()},
             "annual_value": format(contract.annual_value, "f") if contract.annual_value is not None else None,
             "contract_value": format(contract.contract_value, "f") if contract.contract_value is not None else None,
             "financial_direction": contract.financial_direction,
+            "value_basis": contract.value_basis, "external_reference": contract.external_reference,
             "payment_interval": contract.payment_interval,
             "budget_assignment": contract.budget_assignment,
             "contact_person": contract.contact_person,
@@ -916,6 +891,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         for contract in contracts_to_export:
             values = {
                 "contract_number": contract.contract_number,
+                'external_reference': contract.external_reference, 'value_basis': contract.value_basis,
                 "designation": contract.designation,
                 "contract_type": contract.contract_type,
                 "contract_partner": contract.contract_partner,
@@ -968,16 +944,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         by_department = {department.id: {
             "department": department, "contract_count": 0,
             "annual_expenses": Decimal("0"), "annual_income": Decimal("0"),
+            "annual_unknown": Decimal("0"), "missing_annual": 0, "missing_contract_value": 0,
             "contract_value": Decimal("0"), "open_tasks": 0,
             "overdue_tasks": 0, "upcoming_tasks": 0, "open_reviews": 0,
             "overdue_deadlines": 0, "upcoming_deadlines": 0,
         } for department in departments}
 
         def amount(value):
-            try:
-                return Decimal(str(value or "0"))
-            except (InvalidOperation, ValueError):
-                return Decimal("0")
+            return metadata_amount(value) or Decimal('0')
 
         for contract in contracts:
             row = by_department.get(contract.department_id)
@@ -987,8 +961,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             annual = amount(contract.annual_value)
             if contract.financial_direction == "income":
                 row["annual_income"] += annual
-            else:
+            elif contract.financial_direction == "expense":
                 row["annual_expenses"] += annual
+            else:
+                row["annual_unknown"] += annual
+            row["missing_annual"] += metadata_amount(contract.annual_value) is None
+            row["missing_contract_value"] += metadata_amount(contract.contract_value) is None
             row["contract_value"] += amount(contract.contract_value)
 
         overdue_deadlines, upcoming_deadlines = split_deadline_reminders(contracts, today)
@@ -1028,45 +1006,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         open_task_count = sum(row["open_tasks"] for row in by_department.values())
         open_review_count = sum(row["open_reviews"] for row in by_department.values())
 
-        # Rebuild year-end annual expense/income totals from the recorded revisions.
-        revisions = (db.scalars(select(Revision).where(
-            Revision.contract_id.in_(contract_ids)
-        ).order_by(Revision.created_at, Revision.id)).all() if contract_ids else [])
-        events = []
-        for revision in revisions:
-            before, after = revision.before or {}, revision.after or {}
-            if revision.action == "created":
-                if not after.get("archived_at"):
-                    events.append((revision.created_at, after.get("financial_direction") or "expense",
-                                   amount(after.get("annual_value"))))
-            elif revision.action == "archived":
-                if not before.get("archived_at"):
-                    events.append((revision.created_at, before.get("financial_direction") or "expense",
-                                   -amount(before.get("annual_value"))))
-            elif revision.action == "updated":
-                before_active, after_active = not before.get("archived_at"), not after.get("archived_at")
-                if before_active:
-                    events.append((revision.created_at, before.get("financial_direction") or "expense",
-                                   -amount(before.get("annual_value"))))
-                if after_active:
-                    events.append((revision.created_at, after.get("financial_direction") or "expense",
-                                   amount(after.get("annual_value"))))
-        events.sort(key=lambda event: event[0])
-        trend = []
-        running = {"expense": Decimal("0"), "income": Decimal("0")}
-        event_index = 0
-        for year in range(today.year - 4, today.year + 1):
-            year_end = datetime(year, 12, 31, 23, 59, 59, 999999)
-            while event_index < len(events) and events[event_index][0] <= year_end:
-                _at, direction, delta = events[event_index]
-                running["income" if direction == "income" else "expense"] += delta
-                event_index += 1
-            trend.append({"year": year, "expenses": max(running["expense"], Decimal("0")),
-                          "income": max(running["income"], Decimal("0"))})
-        trend_peak = max((max(item["expenses"], item["income"]) for item in trend), default=Decimal("0"))
-        for item in trend:
-            item["expense_width"] = int(item["expenses"] / trend_peak * 100) if trend_peak else 0
-            item["income_width"] = int(item["income"] / trend_peak * 100) if trend_peak else 0
+        trend, trend_peak = inventory_trend(db, user, today)
+        financial_groups = aggregate([snapshot(c) for c in contracts])
 
         overdue_deadlines = [{**item, "kind": "Vertragsfrist", "title": item["contract"].designation}
                              for item in overdue_deadlines]
@@ -1086,7 +1027,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "annual_income": annual_income, "total_contract_value": total_contract_value,
                     "open_task_count": open_task_count, "open_review_count": open_review_count,
                     "overdue_items": overdue_items, "upcoming_items": upcoming_items,
-                    "trend": trend, "trend_peak": trend_peak,
+                    "trend": trend, "trend_peak": trend_peak, "financial_groups": financial_groups,
+                    "unknown_direction_count": sum(g["record_count"] for g in financial_groups if g["direction"]=="unknown"),
+                    "unknown_basis_count": sum(g["record_count"] for g in financial_groups if g["basis"]=="unknown"),
+                    "missing_annual_count": sum(g["record_count"]-g["known_count"] for g in financial_groups),
                     "reminder_window_days": REMINDER_WINDOW_DAYS})
 
     @app.post("/contracts/import", response_class=HTMLResponse)
@@ -1108,6 +1052,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return html(request, "import_result.html", {**base_context(request, user, csrf),
                         "imported": 0, "errors": [str(exc) if isinstance(exc, ValueError) else "Die Excel-Datei ist beschädigt oder ungültig."],
                         "error_count": 1}, 422)
+        # Refresh authority under the identity guard before mapping ownership,
+        # tax capabilities or external identities from uploaded rows.
+        lock_actor(db,user)
+        check_write(user)
         departments = {item.name.casefold(): item for item in db.scalars(
             select(Department).where(Department.is_active.is_(True))).all()}
         tax_labels = {label.casefold(): code for code, label in TAX_REVIEW_STATUSES}
@@ -1117,14 +1065,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         validated = []
         errors = []
         for row_number, row in rows:
+            raw_row = dict(row)
             row = dict(row)
-            row["relevant_date"] = excel_date(row.get("relevant_date", ""))
-            row["end_date"] = excel_date(row.get("end_date", ""))
+            try:
+                row["relevant_date"] = excel_date(row.get("relevant_date", ""))
+                row["end_date"] = excel_date(row.get("end_date", ""))
+            except (ValueError, OverflowError) as exc:
+                errors.append(f'Row {row_number}: {exc}')
+                continue
+            if row.get('contract_number'):
+                errors.append(f'Row {row_number}: create-only import generates contract numbers. Remove Vertragsnummer; use external_reference for source identity.')
+                continue
             for key in ("notice_period_months", "renewal_period_months"):
                 raw = row.get(key, "")
                 try:
                     number = Decimal(raw)
-                    row[key] = str(int(number)) if number.is_finite() and number == number.to_integral_value() else raw
+                    row[key] = str(int(number)) if number.is_finite() and 0 <= number <= 120 and number == number.to_integral_value() else raw
                 except (InvalidOperation, ValueError):
                     pass
             yes_no = row.get("automatic_renewal", "").strip().casefold()
@@ -1163,27 +1119,34 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             except ValidationError as exc:
                 errors.append(f"Zeile {row_number}: {exc}")
                 continue
-            validated.append((row_number, values, is_archived))
-        lock_actor(db,user)
-        check_write(user)
-        existing_keys = {
-            (item.designation.casefold(), item.contract_type.casefold(), item.contract_partner.casefold(),
-             item.relevant_date, item.department_id)
-            for item in db.scalars(contract_query(user)).all()
-        }
+            validated.append((row_number, values, is_archived, raw_row))
+        existing_contracts = db.scalars(contract_query(user)).all()
+        existing_keys = {(item.department_id, item.external_reference)
+                         for item in existing_contracts if item.external_reference}
+        def natural_key(values):
+            return (values['department_id'], values['designation'].casefold(),
+                    values['contract_type'].casefold(), values['contract_partner'].casefold(),values['relevant_date'])
+        natural_keys = {natural_key({k:getattr(c,k) for k in ('department_id','designation','contract_type','contract_partner','relevant_date')})
+                        for c in existing_contracts}
+        ambiguous_rows = set()
         imported_keys = set()
-        for row_number, values, _is_archived in validated:
-            key = (values["designation"].casefold(), values["contract_type"].casefold(),
-                   values["contract_partner"].casefold(), values["relevant_date"], values["department_id"])
-            if key in existing_keys or key in imported_keys:
-                errors.append(f"Zeile {row_number}: Dieser Vertrag scheint bereits vorhanden zu sein oder kommt mehrfach in der Datei vor.")
-            imported_keys.add(key)
+        for row_number, values, _is_archived, _raw_row in validated:
+            natural = natural_key(values)
+            if natural in natural_keys:
+                ambiguous_rows.add(row_number)
+            natural_keys.add(natural)
+            reference = values.get('external_reference')
+            if reference:
+                key = (values['department_id'], reference)
+                if key in existing_keys or key in imported_keys:
+                    errors.append(f'Row {row_number}: external reference already exists in this department or workbook.')
+                imported_keys.add(key)
         if errors:
             return html(request, "import_result.html", {**base_context(request, user, csrf),
                         "imported": 0, "errors": errors[:50], "error_count": len(errors)}, 422)
         created = []
         try:
-            for _row_number, values, is_archived in validated:
+            for _row_number, values, is_archived, raw_row in validated:
                 if values["tax_review_status"] == "completed":
                     values["tax_reviewed_by_id"] = user.id
                     values["tax_reviewed_at"] = now_utc()
@@ -1197,13 +1160,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 if is_archived:
                     contract.archived_at=now_utc()
                 db.add(Revision(contract_id=contract.id, actor_id=user.id, action="created",
-                                before=None, after={**snapshot(contract), "source": "excel_import"}))
+                                before=None, after={**snapshot(contract), "source": "excel_import", "import_row": _row_number,
+                                    "import_sha256": sha256(data).hexdigest(), "import_raw": raw_row,
+                                    "ambiguous_description": _row_number in ambiguous_rows}))
                 created.append(contract)
             db.commit()
         except Exception:
             db.rollback()
             raise
-        return redirect(f"/?notice=imported&imported_count={len(created)}")
+        return redirect(f"/?notice=imported&imported_count={len(created)}&ambiguous_rows={len(ambiguous_rows)}")
 
     @app.get("/", response_class=HTMLResponse)
     def contracts(request: Request, q: str = "", department: str = "",
@@ -1422,13 +1387,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "task_kind_labels": TASK_KIND_LABELS, "task_status_labels": TASK_STATUS_LABELS,
                     "today": date.today(),
                     "status_label": dict(CONTRACT_STATUSES).get(contract.status, contract.status),
-                    "next_end_date": calculate_next_end_date(
-                        contract.end_date,
-                        contract.renewal_period_months if contract.automatic_renewal else None),
-                    "notice_deadline": calculate_notice_deadline(
-                        calculate_next_end_date(contract.end_date, contract.renewal_period_months)
-                        if contract.automatic_renewal else contract.end_date,
-                        contract.notice_period_months),
+                    **contract_dates(contract),
                     "can_edit": can_write(user, contract) and contract.archived_at is None,
                     "review_decisions": {review.id: can_decide_review(db, user, contract, review) for review in contract_reviews}})
 

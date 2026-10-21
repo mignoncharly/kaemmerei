@@ -129,6 +129,8 @@ class Contract(Base):
     __table_args__ = (
         Index("ix_contracts_department_archived", "department_id", "archived_at"),
         Index("ux_contracts_contract_number", "contract_number", unique=True),
+        Index('ux_contracts_department_external', 'department_id', 'external_reference', unique=True),
+        CheckConstraint("value_basis IN ('net','gross','unknown')", name='contract_value_basis'),
         CheckConstraint(
             "status IN ('draft', 'in_progress', 'active', 'terminated', 'ended')",
             name="valid_contract_status",
@@ -147,6 +149,8 @@ class Contract(Base):
     contract_value: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     annual_value: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     financial_direction: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    value_basis: Mapped[str] = mapped_column(String(12), nullable=False, default='unknown', server_default='unknown')
+    external_reference: Mapped[str | None] = mapped_column(String(120))
     payment_interval: Mapped[str | None] = mapped_column(String(16), nullable=True)
     budget_assignment: Mapped[str] = mapped_column(String(120), nullable=False, default="", server_default="")
     tax_review_status: Mapped[str] = mapped_column(String(20), nullable=False, default="not_checked", server_default="not_checked")

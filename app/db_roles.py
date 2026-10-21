@@ -62,6 +62,7 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
     connection.exec_driver_sql(f'GRANT INSERT ON public.sync_cursors,public.sync_snapshot_items TO {i}')
     connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.sync_barrier() FROM {w},{a}')
     connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.sync_events_page(integer,integer) FROM {w},{a}')
+    connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.financial_history(timestamp) FROM {i},{a}')
     connection.exec_driver_sql("""CREATE OR REPLACE FUNCTION ohvr_security.purge_expired() RETURNS void LANGUAGE plpgsql SECURITY DEFINER
      SET search_path=pg_catalog,pg_temp AS $$
       DECLARE sessions_count integer; attempts_count integer;

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models import ContactIdentity, Contract, Department, User
 from app.options import CONTRACT_STATUSES, FINANCIAL_DIRECTIONS, PAYMENT_INTERVALS, TAX_REVIEW_STATUSES
+from app.dates import add_months, calculate_notice_deadline
 
 
 class ValidationError(Exception):
@@ -48,6 +49,11 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
     contact_person = text("contact_person", 160, True)
     deputy_contact_person = text("deputy_contact_person", 160)
     status = text("status", 20) or (existing.status if existing else "draft")
+    value_basis = text('value_basis', 12) or (existing.value_basis if existing else 'unknown')
+    if value_basis not in ('net', 'gross', 'unknown'):
+        raise ValidationError('Value basis must be net, gross or unknown')
+    external_reference = (text('external_reference', 120) if 'external_reference' in form
+                          else existing.external_reference if existing else None) or None
     if status not in {code for code, _label in CONTRACT_STATUSES}:
         raise ValidationError("Bitte einen gÃ¼ltigen Vertragsstatus auswÃ¤hlen")
     try:
@@ -82,6 +88,12 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
         raise ValidationError("Bitte den Zeitraum der automatischen Verlängerung angeben")
     if not automatic_renewal:
         renewal_period_months = None
+    try:
+        calculate_notice_deadline(end_date, notice_period_months)
+        if automatic_renewal:
+            add_months(end_date, renewal_period_months)
+    except ValueError as exc:
+        raise ValidationError('Notice or renewal calculation is outside years 0001–9999') from exc
     annual_value_text = text("annual_value", 24).replace(",", ".")
     try:
         annual_value = Decimal(annual_value_text).quantize(Decimal("0.01")) if annual_value_text else None
@@ -132,7 +144,14 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
         if identities and not any(identity.is_active for identity in identities):
             if existing is None or existing.department_id != department_id or getattr(existing, field) != value:
                 raise ValidationError('Deaktivierte Kontakte dürfen nicht neu zugeordnet werden')
+    if external_reference:
+        duplicate = db.scalar(select(Contract.id).where(Contract.department_id == department_id,
+            Contract.external_reference == external_reference,
+            Contract.id != (existing.id if existing else -1)))
+        if duplicate is not None:
+            raise ValidationError('External reference already exists in this department')
     return dict(designation=designation, contract_type=contract_type,
+                value_basis=value_basis, external_reference=external_reference,
                 contract_partner=contract_partner, relevant_date=relevant_date,
                 end_date=end_date, notice_period_months=notice_period_months,
                 automatic_renewal=automatic_renewal, renewal_period_months=renewal_period_months,
@@ -149,6 +168,7 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
 
 def snapshot(contract: Contract) -> dict:
     return dict(contract_number=contract.contract_number,
+                value_basis=contract.value_basis, external_reference=contract.external_reference,
                 designation=contract.designation, contract_type=contract.contract_type,
                 contract_partner=contract.contract_partner,
                 relevant_date=contract.relevant_date.isoformat(),

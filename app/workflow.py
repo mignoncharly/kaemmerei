@@ -27,7 +27,7 @@ def submission(db,user,contract,form):
 
 MATERIAL_FIELDS = frozenset(('designation','contract_type','contract_partner','relevant_date',
     'end_date','notice_period_months','automatic_renewal','renewal_period_months',
-    'contract_value','annual_value','financial_direction','payment_interval','budget_assignment',
+    'contract_value','annual_value','financial_direction','value_basis','external_reference','payment_interval','budget_assignment',
     'date_description','department_id','contact_person','deputy_contact_person'))
 TERMINAL = frozenset(('approved','changes_requested','rejected','withdrawn'))
 

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Übersicht{% endblock %}
 {% block content %}
+{% if import_warning %}<p role="alert">{{ import_warning }}</p>{% endif %}
 <div class="page-head">
  <div><div class="eyebrow">VERTRAGSVERWALTUNG</div><h1>Vertragsübersicht</h1><p>Verträge strukturiert erfassen, finden und nachvollziehen.</p></div>
  {% if can_create %}<a class="button primary" href="/contracts/new">+ Vertrag erfassen</a>{% endif %}
@@ -41,7 +42,7 @@
   <button class="button secondary" type="submit" formaction="/contracts/export.xlsx">Gefilterte Liste als Excel exportieren</button>
  </form>
 </section>
-{% if can_create %}<section class="panel excel-import-panel"><div><h2>Vertragsliste importieren</h2><p class="history-subtitle">Excel-Vorlage laden, ausfüllen und bis zu 500 Verträge auf einmal übernehmen.</p><small class="hint">Pflicht: Bezeichnung, Vertragsart, Vertragsbeginn, zuständige Person; Admins zusätzlich Fachbereich. Datum als JJJJ-MM-TT. Nur .xlsx bis 10 MB; bei Fehlern wird nichts importiert.</small></div><div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a><form method="post" action="/contracts/import" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="visually-hidden" for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required><button class="button primary" type="submit">Import starten</button></form></div></section>{% endif %}
+{% if can_create %}<section class="panel excel-import-panel"><p>Create-only import: leave generated Vertragsnummer blank. Optional external_reference is an exact, case-sensitive identity unique within a department, including archived records. Natural descriptions may repeat; without an external reference reimports create new records. Formulas and 1904 workbooks are rejected. Excel is not a document/history backup.</p><div><h2>Vertragsliste importieren</h2><p class="history-subtitle">Excel-Vorlage laden, ausfüllen und bis zu 500 Verträge auf einmal übernehmen.</p><small class="hint">Pflicht: Bezeichnung, Vertragsart, Vertragsbeginn, zuständige Person; Admins zusätzlich Fachbereich. Datum als JJJJ-MM-TT. Nur .xlsx bis 10 MB; bei Fehlern wird nichts importiert.</small></div><div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a><form method="post" action="/contracts/import" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="visually-hidden" for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required><button class="button primary" type="submit">Import starten</button></form></div></section>{% endif %}
 <section class="panel table-panel">
  <div class="panel-heading"><h2>{% if focus_label %}{{ focus_label }}{% elif selected_status == 'archived' %}Archivierte Verträge{% else %}Nicht archivierte Verträge{% endif %}</h2><span class="count">{{ contracts|length }} Einträge{% if truncated %} (Anzeige begrenzt){% endif %}{% if focus %} · <a href="/">Fokus zurücksetzen</a>{% endif %}</span></div>
  {% if contracts %}

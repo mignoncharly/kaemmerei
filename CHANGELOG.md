@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2026-10-21 - Phase 7: recorded financial history, dates and Excel
+
+- Additive 0020: unknown financial value basis and scoped external references; minimal authorized PostgreSQL historical aggregates independent of current contract population.
+- Inventory-v2 basis/direction/missing-value reconciliation; no inferred payment/effective history.
+- Shared anchored calendar estimates with bounded arithmetic, terminated handling and explicit legal limitations.
+- Explicit atomic create-only import, exact scoped identities, ambiguity flags, raw/row/hash provenance and strict bounded XLSX/date/formula/header checks.
+- Evidence and remaining D08-D10 decisions: HANDOFF U015 and docs/PHASE7_FINANCE_DATES_EXCEL.md. No deployment.
+
 ## 21. Oktober 2026 — Phase 6: API-v2-Synchronisierung und Token-Verantwortung
 
 - P06-T01–T08: transaktionale Outbox, serialisierte Veröffentlichung, gespeicherter

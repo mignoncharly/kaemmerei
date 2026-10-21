@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import posixpath
+import re
 from xml.etree import ElementTree as ET
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
@@ -16,6 +17,8 @@ MAX_IMPORT_ROWS = 500
 
 EXPORT_COLUMNS = (
     ("contract_number", "Vertragsnummer"),
+    ('external_reference', 'External reference'),
+    ('value_basis', 'Value basis (net/gross/unknown)'),
     ("designation", "Bezeichnung"),
     ("contract_type", "Vertragsart"),
     ("contract_partner", "Vertragspartner"),
@@ -39,6 +42,8 @@ EXPORT_COLUMNS = (
 )
 
 HEADER_ALIASES = {
+    'external reference': 'external_reference', 'external_reference': 'external_reference',
+    'value basis (net/gross/unknown)': 'value_basis', 'value_basis': 'value_basis',
     "bezeichnung": "designation", "designation": "designation",
     "vertragsnummer": "contract_number", "contract_number": "contract_number",
     "vertragsart": "contract_type", "contract_type": "contract_type",
@@ -137,14 +142,21 @@ def make_xlsx(headers: list[str], rows: list[list[object]]) -> bytes:
 
 
 def _read_cell(cell, shared_strings: list[str]):
+    if cell.find(f"{{{NS_MAIN}}}f") is not None:
+        raise ValueError('Formula cells are not supported; paste literal values first.')
     kind = cell.get("t")
+    if kind == 'e':
+        raise ValueError('Excel error cell; replace with a literal value.')
     if kind == "inlineStr":
         return "".join(node.text or "" for node in cell.findall(f".//{{{NS_MAIN}}}t"))
     value_node = cell.find(f"{{{NS_MAIN}}}v")
     value = value_node.text if value_node is not None and value_node.text else ""
     if kind == "s" and value:
         try:
-            return shared_strings[int(value)]
+            index = int(value)
+            if index < 0:
+                raise ValueError('Negative shared string index')
+            return shared_strings[index]
         except (ValueError, IndexError):
             raise ValueError("Die Excel-Datei enthält einen ungültigen Textverweis.")
     return value
@@ -156,6 +168,8 @@ def read_xlsx(data: bytes) -> list[tuple[int, dict[str, str]]]:
     except BadZipFile as exc:
         raise ValueError("Die Datei ist keine gültige .xlsx-Arbeitsmappe.") from exc
     with archive:
+        if len(archive.infolist()) > 1000 or len(set(archive.namelist())) != len(archive.namelist()):
+            raise ValueError('Too many ZIP members or duplicate ZIP paths.')
         if sum(item.file_size for item in archive.infolist()) > MAX_XLSX_UNCOMPRESSED:
             raise ValueError("Die entpackte Excel-Datei ist zu groß.")
         try:
@@ -163,6 +177,9 @@ def read_xlsx(data: bytes) -> list[tuple[int, dict[str, str]]]:
             rels = ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
         except (KeyError, ET.ParseError) as exc:
             raise ValueError("Die Excel-Datei enthält keine gültige Arbeitsmappe.") from exc
+        properties = workbook.find(f'{{{NS_MAIN}}}workbookPr')
+        if properties is not None and properties.get('date1904', '0').lower() not in ('0', 'false'):
+            raise ValueError('1904 workbook date system is not supported; use ISO date strings in a 1900 workbook.')
         sheet = workbook.find(f".//{{{NS_MAIN}}}sheet")
         if sheet is None:
             raise ValueError("Die Arbeitsmappe enthält kein Tabellenblatt.")
@@ -173,6 +190,8 @@ def read_xlsx(data: bytes) -> list[tuple[int, dict[str, str]]]:
             raise ValueError("Das Tabellenblatt konnte nicht geöffnet werden.")
         target = relation.get("Target", "")
         sheet_path = target.lstrip("/") if target.startswith("/") else posixpath.normpath(posixpath.join("xl", target))
+        if not sheet_path.startswith('xl/worksheets/') or not sheet_path.endswith('.xml'):
+            raise ValueError('Invalid worksheet relationship target.')
         try:
             sheet_root = ET.fromstring(archive.read(sheet_path))
         except (KeyError, ET.ParseError) as exc:
@@ -189,17 +208,32 @@ def read_xlsx(data: bytes) -> list[tuple[int, dict[str, str]]]:
     if sheet_data is None:
         raise ValueError("Das erste Tabellenblatt enthält keine Daten.")
     parsed_rows = []
+    previous_row = 0
     for row in sheet_data.findall(f"{{{NS_MAIN}}}row"):
+        try:
+            row_number = int(row.get('r', str(previous_row + 1)))
+        except ValueError as exc:
+            raise ValueError('Invalid worksheet row number.') from exc
+        if not previous_row < row_number <= 1048576:
+            raise ValueError('Invalid or repeated worksheet row number.')
+        previous_row = row_number
         cells = {}
         for cell in row.findall(f"{{{NS_MAIN}}}c"):
             address = cell.get("r", "")
-            letters = "".join(char for char in address if char.isalpha())
+            match = re.fullmatch(r'([A-Z]{1,3})([1-9][0-9]{0,6})', address)
+            if not match or int(match[2]) != row_number:
+                raise ValueError(f'Row {row_number}: invalid cell reference {address[:20]}.')
+            letters = match[1]
             col = 0
             for char in letters.upper():
                 col = col * 26 + ord(char) - 64
-            if col:
+            if col > 16384 or col in cells:
+                raise ValueError(f'Row {row_number}: duplicate or out-of-range column.')
+            try:
                 cells[col] = _read_cell(cell, shared_strings)
-        parsed_rows.append((int(row.get("r", len(parsed_rows) + 1)), cells))
+            except ValueError as exc:
+                raise ValueError(f'Row {row_number}, {address}: {exc}') from exc
+        parsed_rows.append((row_number, cells))
         if len(parsed_rows) > MAX_IMPORT_ROWS + 1:
             raise ValueError(f"Der Import ist auf {MAX_IMPORT_ROWS} Vertragszeilen begrenzt.")
     if not parsed_rows:
@@ -213,7 +247,11 @@ def read_xlsx(data: bytes) -> list[tuple[int, dict[str, str]]]:
     for col, title in header_cells.items():
         normalized = str(title).strip().casefold()
         field = HEADER_ALIASES.get(normalized)
+        if normalized and field is None:
+            raise ValueError(f'Unsupported column: {str(title)[:120]}. Remove it explicitly before importing.')
         if field:
+            if field in columns:
+                raise ValueError(f'Duplicate column: {field}')
             columns[field] = col
     required = {"designation", "contract_type", "relevant_date", "contact_person"}
     missing = sorted(required - set(columns))
@@ -237,11 +275,13 @@ def excel_date(value: str) -> str:
     if not value:
         return ""
     try:
-        number = float(value)
-        if number > 0:
-            return (datetime(1899, 12, 30) + timedelta(days=int(number))).date().isoformat()
-    except ValueError:
-        pass
+        number = Decimal(value)
+    except InvalidOperation:
+        number = None
+    if number is not None:
+        if not number.is_finite() or number != number.to_integral_value() or not 1 <= number <= 2958465 or number == 60:
+            raise ValueError('Invalid Excel date: use a whole supported day serial or ISO date; serial 60 is fictitious.')
+        return (date(1899, 12, 31) + timedelta(days=int(number) - (1 if number > 60 else 0))).isoformat()
     for fmt in ("%d.%m.%Y", "%d/%m/%Y"):
         try:
             return datetime.strptime(value, fmt).date().isoformat()
