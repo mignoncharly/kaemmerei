@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-21",
+  "platform": "Windows",
+  "python": "3.14.3",
+  "pytest": "9.1.1",
+  "postgresql": "18.3",
+  "migration_head": "0014_identity_authorization",
+  "implementation_commit": "9fde6c09546f93df75195b9096a19a4173900eee",
+  "remaining_harness_databases": 0,
+  "restricted_role_attributes_unchanged": true,
+  "business_databases_migrated": false,
+  "production_accepted": false,
+  "runs": [
+    {
+      "junit_file": "phase2-sqlite-full.xml",
+      "sha256": "ee7c0f39efd15d793cdc9626abdc1c740d9778533f95c02b032298bf5f2ff1a5",
+      "collected": 66,
+      "passed": 65,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": "62.692"
+    },
+    {
+      "junit_file": "phase2-postgresql-full.xml",
+      "sha256": "5814898d8ba5bcb58c621ef3faca2312bf75f8323b98f5c03dc067f1c9b096c0",
+      "collected": 66,
+      "passed": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": "125.969"
+    },
+    {
+      "junit_file": "phase2-postgresql-targeted.xml",
+      "sha256": "31e9f51decf83ff55787ec3b7d6919e80a29ff2f1b24e89b2c8e804e9854a411",
+      "collected": 21,
+      "passed": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": "60.710"
+    },
+    {
+      "junit_file": "phase2-postgresql-explicit.xml",
+      "sha256": "01d0ec2b7afa5b9bc13e7fe16d427b28c85ab2f4ddcd88d41e20ee00287b3e3c",
+      "collected": 1,
+      "passed": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": "2.639"
+    }
+  ]
+}

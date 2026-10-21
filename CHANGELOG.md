@@ -1,5 +1,14 @@
 # Änderungen
 
+## 21. Oktober 2026 — Phase 2: Berechtigungen und Identitäten
+
+- P02-T01–T08 umgesetzt: zentrale Zugriffsabfragen, explizite Freigabefähigkeit, Empfängerteams/Mitgliedschaften und konkrete Prüfzuweisung ohne automatische Leserechtsausweitung.
+- Fachbereiche und Kontakte administrierbar; Deaktivierung, Sitzungswiderruf, scoped Token-Sperre und historische Anzeigenamen abgesichert.
+- Passwortwechsel mit bisherigem Passwort, CSRF, Ratenbegrenzung und Sitzungsrotation; administrative/CLI-Wiederherstellung erzwingt Passwortwechsel. Gemeinsame Validierung und nebenläufigkeitssicherer Schutz des letzten Administrators.
+- Additive Migration 0014 nur in isolierten Testdatenbanken geprüft; keine Geschäftsdatenbank migriert. Kontakt-Backfill bleibt fachbereichsbezogen; keine automatischen Freigaberechte oder Prüfzuweisungen.
+- Lokal PostgreSQL: 66 Tests bestanden; SQLite: 65 bestanden und ein PostgreSQL-spezifischer Skip; jeweils 15 Unterprüfungen bestanden. Alle drei CI-Jobs für 9fde6c0 in Lauf 39594698525 erfolgreich. Details: docs/PHASE2_AUTHORIZATION.md und HANDOFF U010.
+- CLI-Enginefreigabe bei Fehlern korrigiert; Testdatenbankbereinigung verwendet geprüfte normale DROP-Operationen ohne Sitzungsbeendigung oder erweiterte Rollenrechte. Keine Produktivfreigabe.
+
 ## 21. Oktober 2026 — Native PostgreSQL-Testinstanz
 
 - Lokale Einrichtung standardmäßig auf native PostgreSQL-Binärdateien umgestellt; Docker bleibt optional.

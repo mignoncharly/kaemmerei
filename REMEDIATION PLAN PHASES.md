@@ -43,7 +43,7 @@ IDs stabilize the review findings for implementation tracking. Related findings 
 | ID | Severity | Finding / gap | Primary phase |
 |---|---|---|---|
 | R01 | High | Cross-department contract metadata in filter dropdowns — corrected/verified U009 | 2 |
-| R02 | High | Reviewer role contradicts read-only claims; recipient authorization absent | 2, 4 |
+| R02 | High | Application capability/recipient assignment corrected U010; broader decision policy remains Phase 4 | 2, 4 |
 | R03 | High | Decisions not bound to content/version; no enforced activation gate | 4 |
 | R04 | High | Reviews remain editable after archival — corrected/verified U009 | 4 |
 | R05 | High | Incremental API misses document changes, scope removals, and stable pagination | 6 |
@@ -72,10 +72,10 @@ IDs stabilize the review findings for implementation tracking. Related findings 
 | R28 | Medium | Corrupted German validation messages | 8 |
 | R29 | Scope gap | No H&H, LDAP/SSO, or product-specific DMS adapter | 10 |
 | R30 | Scope gap | No scheduled delivery/escalation of reminders | 9, 10 |
-| R31 | Scope gap | Hardcoded contacts; deputy has no identity/access semantics | 2 |
-| R32 | Scope gap | Department lifecycle administration incomplete | 2 |
+| R31 | Scope gap | Maintained scoped contact catalog delivered U010; labels never grant access or delegation | 2 |
+| R32 | Scope gap | Audited department lifecycle delivered U010 | 2 |
 | R33 | Scope gap | Retention, legal hold, deletion/anonymization, document disposal absent | 5, 10 |
-| R34 | Scope gap | No account recovery, self-service password change, or MFA | 2, 9 |
+| R34 | Scope gap | Password change/recovery delivered U010; MFA/SSO remains Phase 9 | 2, 9 |
 | R35 | Scope gap | Excel creates records only; numbers ignored; no update/round-trip contract | 7 |
 | R36 | Scope gap | API omits tax, tasks, decisions, and revision history | 6, 10 |
 | R37 | Nice | Duplicated query/permission code and oversized main module | 1, 2 |
@@ -138,16 +138,18 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 **Priority:** High. **Findings:** R01, R02, R10, R31, R32, R34, R37. **Entry:** Phase 1 baseline.
 
+**Implementation update (U010, 2026-10-21):** P02-T01-T08 implemented. Local PostgreSQL: 66 passed, no failures/skips/xfails; SQLite: 65 passed and one PostgreSQL-only skip; both have 15 passing subtests. Final targeted Phase 2 PostgreSQL: 21 passed. Forward migration `0014_identity_authorization` preserves existing display values and grants no automatic approval. Adopted matrix, migration mappings, hosted evidence and policy boundaries: [Phase 2 report](docs/PHASE2_AUTHORIZATION.md). Technical defaults D01/D02 still require municipal acceptance; no business deployment or production approval.
+
 ### Tasks
 
-- [ ] P02-T01: Define a capability matrix. Keep existing `reviewer` read-only by default; introduce explicit approval capability and recipient membership rather than granting approval to all reviewers. Do not migrate existing reviewers into approvers automatically. Preserve administrators' documented powers while auditing decisions.
-- [ ] P02-T02: Centralize authorized contract queries and parent/child loading. Apply them to list, export, report, search suggestions, metadata dropdowns, documents, history, tasks, review inboxes, and APIs. Resolve both parent authorization and child ownership before returning data.
-- [ ] P02-T03: Fix unrestricted `stored_types` and `stored_people` queries. Distinguish deliberately shared reference catalogs from metadata derived from private contracts. Scope the latter to visible records, including an explicit archival policy.
-- [ ] P02-T04: Define department deactivation: deny department-user login and protected access when their department is inactive; revoke their sessions. Suspend department-scoped tokens consistently. Provide audited admin rename/deactivate/reactivate operations; prevent orphaning users or records.
-- [ ] P02-T05: Add maintained contact identities/catalogs with active state and optional user relationship. Preserve existing display names during backfill. A responsible/deputy label must not implicitly grant access. Specify approved, time-bounded delegation separately if required.
-- [ ] P02-T06: Implement recipient teams/membership and explicit review assignment. A user can see/act on an assigned review only under documented access rules. Cross-department assignments require a deliberate read grant or a globally authorized approver; a label alone must not reveal the contract.
-- [ ] P02-T07: Add authenticated self-service password change requiring the existing password, CSRF, password policy, session rotation/revocation, and an audit event. Add audited admin recovery/reset with forced change on first use; do not send passwords in application logs.
-- [ ] P02-T08: Reuse validation between CLI and web administration. Enforce department-role consistency, immutable/stable identity IDs, last-admin protection under concurrent changes, and session revocation on relevant permission changes.
+- [x] P02-T01: Define a capability matrix. Keep existing `reviewer` read-only by default; introduce explicit approval capability and recipient membership rather than granting approval to all reviewers. Do not migrate existing reviewers into approvers automatically. Preserve administrators' documented powers while auditing decisions.
+- [x] P02-T02: Centralize authorized contract queries and parent/child loading. Apply them to list, export, report, search suggestions, metadata dropdowns, documents, history, tasks, review inboxes, and APIs. Resolve both parent authorization and child ownership before returning data.
+- [x] P02-T03: Fix unrestricted `stored_types` and `stored_people` queries. Distinguish deliberately shared reference catalogs from metadata derived from private contracts. Scope the latter to visible records, including an explicit archival policy.
+- [x] P02-T04: Define department deactivation: deny department-user login and protected access when their department is inactive; revoke their sessions. Suspend department-scoped tokens consistently. Provide audited admin rename/deactivate/reactivate operations; prevent orphaning users or records.
+- [x] P02-T05: Add maintained contact identities/catalogs with active state and optional user relationship. Preserve existing display names during backfill. A responsible/deputy label must not implicitly grant access. Specify approved, time-bounded delegation separately if required.
+- [x] P02-T06: Implement recipient teams/membership and explicit review assignment. A user can see/act on an assigned review only under documented access rules. Cross-department assignments require a deliberate read grant or a globally authorized approver; a label alone must not reveal the contract.
+- [x] P02-T07: Add authenticated self-service password change requiring the existing password, CSRF, password policy, session rotation/revocation, and an audit event. Add audited admin recovery/reset with forced change on first use; do not send passwords in application logs.
+- [x] P02-T08: Reuse validation between CLI and web administration. Enforce department-role consistency, immutable/stable identity IDs, last-admin protection under concurrent changes, and session revocation on relevant permission changes.
 
 ### Verification and exit criteria
 

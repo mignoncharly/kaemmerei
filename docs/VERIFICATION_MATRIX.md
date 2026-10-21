@@ -2,6 +2,10 @@
 
 Stand: 2026-10-21. Phase 1 engineering baseline; no business acceptance implied.
 
+Phase 2 update U010: [adopted capability matrix and migration/verification report](PHASE2_AUTHORIZATION.md).
+Full local PostgreSQL: 66 passed; SQLite: 65 passed + one PostgreSQL-only skip; 15 subtests passed on both.
+All three hosted jobs passed for implementation 9fde6c0. Database RLS/content-bound approvals remain later-phase gates.
+
 ## Permission regression matrix
 
 The desired rules below are implementation targets. They do not claim that future approval, delegation, RLS, or retention capabilities already exist. `Expected failure` means the desired assertion currently fails and remains an OPEN finding. A setup/migration/transport failure is not an acceptable expected failure.
@@ -14,12 +18,12 @@ The desired rules below are implementation targets. They do not claim that futur
 | V04 | Department writer -> other department metadata | No private names/types from dropdown queries | R01 passing on SQLite/PostgreSQL; acceptance test also covers searches, reports, export, API and documents |
 | V05 | Admin -> all department contracts | Authorized read/write; explicit department selected | Original search/filter and CRUD tests |
 | V06 | Reviewer -> all contracts | Read permitted, normal contract/task/document writes forbidden | Original reviewer test and new child-permission test |
-| V07 | Reviewer -> review decision | Forbidden without explicit approval capability/assignment | Known R02; targeted decision test to add in Phase 2/4. Current reviewer can decide. |
-| V08 | Authorized approver -> assigned current-content review | Only allowed transitions/reasons/version; no unrelated decision | Capability/assignment model not implemented; Phase 2/4 |
+| V07 | Reviewer -> review decision | Forbidden without explicit approval capability/assignment | Passing Phase 2: default reviewer denied; capability + membership alone denied; only explicitly assigned authorized user can decide |
+| V08 | Authorized approver -> assigned current-content review | Only allowed transitions/reasons/version; no unrelated decision | Phase 2 capability/membership/assignment/read-scope gate passes. Content version and full transition policy remain Phase 4. |
 | V09 | Wrong approver/self-approver -> decision | Denied under accepted separation-of-duty rules | Phase 4 after D01/D02/D04 |
 | V10 | Inactive account -> login | 401; no authenticated session | New inactive-user test |
 | V11 | Active account in inactive department -> protected access | Access denied/session invalidated consistently | R10 passing: existing session, fresh login, reads/writes and scoped tokens rejected |
-| V12 | Any user -> forged child under different parent | 404 regardless of guessed child identifier | New parent/child task ownership test; extend to reviews/documents in Phase 2 |
+| V12 | Any user -> forged child under different parent | 404 regardless of guessed child identifier | Shared parent/child loader; task/document/API mismatch regressions and assignment parent authorization pass |
 | V13 | Other-department writer -> tasks/reviews/uploads/DMS link | No child creation or information exposure | New child-permission test |
 | V14 | Admin -> upload/preview/download/API document | Only its application instance's private storage used | New end-to-end storage test, including a second isolated app |
 | V15 | Scoped token -> contracts | Only token's department | New scoped-token test |

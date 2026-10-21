@@ -1,0 +1,229 @@
+{
+  "id": 39593686567,
+  "head_sha": "3b2c2e6a2402beeb3c4fc4cf310d2d7ae5492977",
+  "status": "completed",
+  "conclusion": "success",
+  "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39593686567",
+  "updated_at": "2026-10-21T11:41:32Z",
+  "jobs": [
+    {
+      "id": 119200655368,
+      "name": "sqlite",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39593686567/job/119200655368",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database sqlite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database sqlite --junitxml=.verification/sqlite-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119200655564,
+      "name": "postgresql",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39593686567/job/119200655564",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create restricted disposable-database test role",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q -m postgresql --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119200655576,
+      "name": "native-postgresql",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39593686567/job/119200655576",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native manager unit safety checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Provision and verify native PostgreSQL without Docker",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12343615227,
+      "name": "postgresql-verification",
+      "size_in_bytes": 2403,
+      "expired": false
+    },
+    {
+      "id": 12343170393,
+      "name": "sqlite-verification",
+      "size_in_bytes": 2499,
+      "expired": false
+    },
+    {
+      "id": 12342946185,
+      "name": "native-postgresql-verification",
+      "size_in_bytes": 2415,
+      "expired": false
+    }
+  ],
+  "artifact_contents_downloaded": false,
+  "production_accepted": false
+}

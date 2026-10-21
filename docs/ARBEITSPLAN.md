@@ -1,7 +1,7 @@
 # Arbeitsplan Vertragsregister
 
 **Stand: 21. Oktober 2026**\
-**Projektstatus: F1–F15 als Prototyp vorhanden; zehnphasige Nachbesserung begonnen. Phase 1 technisch verifiziert durch erfolgreichen Linux-CI-Lauf; Produktivfreigabe offen.**
+**Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1 und 2 technisch geprüft, einschließlich echter PostgreSQL-Anwendungstests und drei erfolgreicher CI-Jobs. Produktivfreigabe und fachliche Rollenfreigabe offen.**
 
 ## Ziel
 
@@ -20,7 +20,8 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 | Phase | Inhalt | Stand |
 |---|---|---|
 | 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Lokal PostgreSQL: 44 bestanden, keine Fehler/Skips/Xfails; SQLite: 43 bestanden, ein PostgreSQL-spezifischer Skip. R01/R04/R10 behoben. Aktueller CI-Nachweis im Abnahmebericht. |
-| 2–3 | Anwendungsberechtigungen, Identitäten, Datenbankregeln und RLS | Nicht begonnen |
+| 2 | Anwendungsberechtigungen und Identitäten | P02-T01–T08 implementiert und lokal SQLite/PostgreSQL geprüft; technische Rollenmatrix und CI-Nachweis in PHASE2_AUTHORIZATION.md. Fachliche Freigabe bleibt offen. |
+| 3 | Datenbankrollen, Constraints, RLS und geschützte Auditablage | Nächste technische Phase; noch nicht begonnen |
 | 4–5 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit, Dokumentensicherheit | Nicht begonnen |
 | 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
 | 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |

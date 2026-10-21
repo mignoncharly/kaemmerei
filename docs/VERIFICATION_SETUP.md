@@ -75,4 +75,8 @@ After the first successful CI run, require the `sqlite` and `postgresql` checks 
 
 ## Current evidence and next gate
 
+Phase 2 source 9fde6c0 passed all three jobs in [run 39594698525](https://github.com/mignoncharly/kaemmerei/actions/runs/39594698525). Full local PostgreSQL: 66 passed; SQLite: 65 passed + one PostgreSQL-only skip, with 15 passing subtests each. See [Phase 2 report](PHASE2_AUTHORIZATION.md) and HANDOFF U010. Existing native startup infrastructure is preserved. Migration 0014 has been verified only in disposable test databases; business deployment remains separate. Next technical work is Phase 3 schema/roles/RLS, not cluster reinitialization.
+
+### Preserved Phase 1 native setup evidence
+
 See HANDOFF U009 and the current [acceptance report](PHASE1_BASELINE.md) for exact results and reproducible commands. Native PostgreSQL 18 is initialized and running on Windows; the operator confirmed startup returns control to PowerShell. The managed agent's launcher repeat stops at the ACL check; do not reinitialize or weaken permissions. The full application suite actually passed locally against PostgreSQL: 44 tests, no skips or expected failures, plus 15 passing subtests. Thirteen native-manager safety checks pass. Historical successful [run 39575414353](https://github.com/mignoncharly/kaemmerei/actions/runs/39575414353) and its [evidence](evidence/native-postgresql-ci-39575414353.json) are retained; U009 records the run for the new fixes. Production acceptance is not implied.
