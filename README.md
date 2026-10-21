@@ -22,6 +22,8 @@ Phase-5-Prüfstand: PostgreSQL 128 bestanden und 2 lokale Skips, SQLite 116 best
 
 Phase 6 ergänzt eine getrennte v2-Synchronisierung mit festem Anfangsbestand, dauerhaftem Änderungsfeed, fachbereichssicheren Entfernungsmeldungen, tokengebundenen Cursorn und ausdrücklich vergebenen Leserechten. v1 bleibt verfügbar; bestehende Tokens erhalten keine zusätzlichen v2-Rechte. Migration `0019_integration_sync`, Betreiber-/Verbraucherregeln und Nachweise: [Phase 6](docs/PHASE6_INTEGRATION_SYNC.md). D07 und Produktivfreigabe bleiben offen.
 
+Phase-6-Prüfstand: PostgreSQL 149 bestanden und 2 lokale Skips, SQLite 134 bestanden und 17 Skips; jeweils 15 Unterprüfungen bestanden. Alle 21 PostgreSQL-Synchronisationsprüfungen und alle vier Jobs von [CI 39624468561](https://github.com/mignoncharly/kaemmerei/actions/runs/39624468561) erfolgreich. Keine Geschäftsdatenmigration oder Bereitstellung.
+
 Offen bleiben unter anderem historische Finanzsummen und die fachlichen Datums-/Excel-Regeln der Phase 7. R01/R04/R10 bleiben durch reguläre Tests abgesichert. Eine fachliche oder betriebliche Produktivfreigabe ist damit nicht verbunden.
 
 Aktueller Zustand und jede Arbeitsänderung stehen in [HANDOFF.md](HANDOFF.md). [Prüfmatrix](docs/VERIFICATION_MATRIX.md) und [Phase-1-Nachweis](docs/PHASE1_BASELINE.md) trennen bestandene Prüfungen, bekannte Fehler und noch nicht ausgeführte Prüfungen. H&H-/LDAP-/produktspezifische DMS-Anbindungen und externe Erinnerungen bleiben ausdrücklich außerhalb des bisher gelieferten Umfangs.

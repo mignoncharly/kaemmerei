@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-21",
+  "implementation_source": "3d5e88a7fbd5f198437b883cf233187482434d5e",
+  "environment": {
+    "platform": "Windows",
+    "python": "3.14.3",
+    "pytest": "9.1.1",
+    "postgresql": "18.3 native on 127.0.0.1:55432"
+  },
+  "runs": {
+    "phase6-sqlite-accepted.xml": {
+      "collected_items": 151,
+      "passed_items": 134,
+      "skipped_items": 17,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 147.678,
+      "junit_testcase_count": 166,
+      "sha256": "6baafec9389be9e050fe320e3507a1d8ee2fc2a31e82576f87c79ae0c7dbbcb4"
+    },
+    "phase6-postgresql-accepted.xml": {
+      "collected_items": 151,
+      "passed_items": 149,
+      "skipped_items": 2,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 421.573,
+      "junit_testcase_count": 166,
+      "sha256": "c8bc59d0a3acdbf990c989a5bcbb1d57070ba10d300049f398a1055503c1001d"
+    },
+    "phase6-sqlite-targeted.xml": {
+      "collected_items": 21,
+      "passed_items": 18,
+      "skipped_items": 3,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 22.711,
+      "junit_testcase_count": 21,
+      "sha256": "d29a6518b74270451a7d6a5eda4e04b783bdcd8c569b73226c398379f0ec8fa1"
+    },
+    "phase6-postgresql-targeted.xml": {
+      "collected_items": 21,
+      "passed_items": 21,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 109.958,
+      "junit_testcase_count": 21,
+      "sha256": "93c1560cb11e0939f1f86e251213d99a49b63903e1a3d7f4e2df6cb25af52200"
+    },
+    "phase6-postgresql-security.xml": {
+      "collected_items": 15,
+      "passed_items": 15,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 107.966,
+      "junit_testcase_count": 15,
+      "sha256": "38125e04cffbbc1881dd473c3b12b2508db1e1047e7baa9b02ba9f330db165fe"
+    }
+  },
+  "cleanup": {
+    "harness_databases": 0,
+    "generated_roles": 0
+  },
+  "control_role_attributes": [
+    false,
+    true,
+    false,
+    false,
+    false
+  ],
+  "legacy_migration_probe": [
+    {
+      "backend": "sqlite",
+      "from": "0013_integration_tokens",
+      "to": "0019_integration_sync",
+      "legacy_v1_only": true,
+      "unknown_ownership_preserved": true,
+      "creator_expiry_and_credential_preserved": true
+    },
+    {
+      "backend": "postgresql",
+      "from": "0013_integration_tokens",
+      "to": "0019_integration_sync",
+      "legacy_v1_only": true,
+      "unknown_ownership_preserved": true,
+      "creator_expiry_and_credential_preserved": true
+    }
+  ],
+  "operator_status_probe": {
+    "backends": [
+      "sqlite",
+      "postgresql"
+    ],
+    "command": "python -m app.cli integration-status",
+    "outcome": "passed on synthetic isolated empty instances; all state/count values zero"
+  },
+  "migration_evidence": "Clean, populated and repeated migrations through 0019 passed in both full suites; separate 0013 legacy-token migration probe preserved unknown owner, legacy_v1-only profile, original creator/expiry and credential on both backends.",
+  "warnings": [
+    "Starlette/AnyIO deprecated BlockingPortal alias",
+    "Managed Windows pytest cache ACL; unsuppressed"
+  ],
+  "local_unverified": [
+    "Real ClamAV not installed locally; required hosted job passed",
+    "Windows actual symlink creation not permitted for managed identity",
+    "Production private Windows ACL provisioning",
+    "Production business migration/load/operations/RPO/RTO and municipal D07/D06 acceptance"
+  ],
+  "preserved_user_change": "scripts/Start-TestDatabase.ps1 whitespace-only edit, excluded from commits"
+}

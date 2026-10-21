@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-5 technically verified; Phase 6 P06-T01-T08 implemented with final verification pending. D07 and production acceptance remain open.\
+Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phases 7-10 and owner/production acceptance remain pending.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence

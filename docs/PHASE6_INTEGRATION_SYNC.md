@@ -50,7 +50,7 @@ not NULL placeholders. The machine-readable response contract is
 
 Limits are 1–500; invalid numeric limits return 400, malformed typed query values
 or missing required query parameters use FastAPI 422. Invalid/tampered/wrong-token
-or wrong-endpoint cursors return 400. Expired cursors, changed grant fingerprints
+or wrong-mode cursors return 400. Expired cursors, changed grant/resource fingerprints
 or retired replay positions return **410 `resnapshot_required`**. Missing/expired/
 revoked/suspended credentials return 401; missing capabilities or unadopted v2
 ownership return 403; unauthorized or missing contracts/parent-child references
@@ -138,7 +138,7 @@ publishers serialize, preserving unique event IDs and idempotent publication.
 
 Under this barrier the initial snapshot captures authorized payloads and the
 published boundary, then commits stored rows and initial cursor together. Writers
-resume after that short transaction. Pagination uses immutable stored rows rather
+resume after that transaction. Pagination uses immutable stored rows rather
 than offset reads of changing contracts. Permissions are refreshed after waiting
 for the barrier; grant/owner/department writers also meet the barrier so a changed
 GUC scope cannot create a successful incomplete snapshot. Ordinary v2 detail reads
@@ -236,7 +236,83 @@ Set-Location 'C:\kämmerei\OPEN_HERZ_Vertragsregister_Phase'
 The read-only status command reports counts, current boundary/floor and unknown
 legacy-owner count, never credentials or business values. Native cluster/passfiles/
 identity guards remain untouched; Docker is not introduced as a local dependency.
-Final actual verification and CI evidence will be appended after execution.
+### Final executed verification
+
+Final implementation source: `3d5e88a7fbd5f198437b883cf233187482434d5e`.
+Environment: Windows, Python 3.14.3, pytest 9.1.1, native PostgreSQL 18.3.
+
+| Selection | Collected items | Passed | Skipped | Failed/errors/xfails | Seconds |
+|---|---:|---:|---:|---:|---:|
+| Full PostgreSQL | 151 | 149 | 2 | 0 / 0 / 0 | 421.57 |
+| Full SQLite | 151 | 134 | 17 | 0 / 0 / 0 | 147.68 |
+| Phase 6 PostgreSQL | 21 | 21 | 0 | 0 / 0 / 0 | 109.96 |
+| Phase 6 SQLite | 21 | 18 | 3 | 0 / 0 / 0 | 22.71 |
+| Explicit PostgreSQL security/lifecycle | 15 | 15 | 0 | 0 / 0 / 0 | 107.97 |
+
+Both full suites also passed 15 subtests. Explicit PostgreSQL selection deselected
+136 other items. The Phase 6 PostgreSQL selection uses actual restricted runtime
+logins except its explicitly named development-owner compatibility case.
+SQLite skips 15 PostgreSQL-only items plus actual Windows symlink creation and
+local real ClamAV installation; the PostgreSQL full suite skips only the latter
+two. No skipped check counts as a successful security/database/scanner proof.
+
+Final read-only catalog check found **zero harness databases and zero generated
+temporary roles**. Dedicated test-role attributes remain restricted as before.
+Clean/populated/repeated migration and actual DB/blob restore regressions pass.
+Additional synthetic 0013 -> 0019 legacy-token probes on each backend confirm
+legacy_v1-only rights, unknown owner/service ownership retained, and original
+creator/expiry/credential unchanged. The read-only integration-status command was
+also executed on empty synthetic SQLite and PostgreSQL instances and returned
+zero state/counts. Exact JUnit counts/hashes, timings and probe outcomes:
+[local evidence](evidence/phase6-local.json).
+
+Hosted [run 39624468561](https://github.com/mignoncharly/kaemmerei/actions/runs/39624468561)
+completed successfully for the exact source above. All **four job conclusions**
+were confirmed success: SQLite, PostgreSQL 18 service, native-postgresql and
+document-scanner. Dependency installation, migrated full suites, explicit
+PostgreSQL security, Phase 4/5 and new explicit Phase 6 selections succeeded.
+The required real ClamAV job used current official definitions and passed clean/
+EICAR checks. Run/job/step metadata and four artifact metadata were inspected;
+archives were not downloaded, so unseen contents/exact hosted test counts are not
+claimed. [Hosted evidence](evidence/phase6-ci-39624468561.json) preserves actual
+observations and earlier successful implementation runs 39622830892/39623587187.
+
+### Requirement-to-test evidence
+
+| Requirement | Executed regression |
+|---|---|
+| Document-only changes visible | Uploaded/available document changes advance feed and v1 timestamp; verified scoped byte download |
+| Scope transfer privacy | A receives only minimal removal keys; B receives authorized upsert; A detail returns 404 |
+| Commit order and rollback | Genuine lower-ID late commit is published later; rollback emits nothing; two publishers return the same stable event IDs |
+| Stable boundary and pagination | Snapshot waits for in-flight writer and includes committed result; pages remain fixed while data changes |
+| Timestamp/restart safety | Equal timestamps do not control ordering; a fresh application instance resumes the saved opaque cursor |
+| History paging | Materialized revision pages do not shift after another revision commits; cursors cannot cross contracts |
+| Authorization changes | Expired/revoked/inactive owner/department deny; owner reactivation invalidates old cursors; rescope/revoke between authentication and barrier is revalidated |
+| Capability compatibility | Metadata profile excludes sensitive sections and cannot bypass through v1; legacy profile cannot access v2 |
+| Token lifecycle | Actual admin form creation, finite v2 expiry, overlapping rotation, audited rescope/revoke and nonadmin denials |
+| Telemetry/context | Business SELECT precedes independent last-used UPDATE; repeat requests are throttled |
+| Unsupported DB configuration | Explicit development owner works; non-READ-COMMITTED synchronization fails closed with 503 |
+
+### Acceptance checklist
+
+- [x] P06-T01–T08 implemented; v1 preserved and v2 contract/schema documented.
+- [x] Transactional scope-bearing changes and post-commit serialized publication.
+- [x] Stable snapshot/history pages, opaque scoped cursors, replay and late commits.
+- [x] Minimal removals, current authorization and explicit resnapshot errors.
+- [x] Explicit field/endpoint capabilities without expanding existing tokens.
+- [x] Accountable ownership, expiry, rotation, revocation/audit and deferred usage.
+- [x] Final local full/targeted suites and all four actual hosted jobs pass.
+- [x] Existing native infrastructure/user edit preserved; synthetic DB/role cleanup verified.
+- [ ] D07 municipal integration/security adoption and each consumer's approved profile.
+- [ ] D06/D07 physical feed/snapshot retention, cache obligations and v1 transition approvals.
+- [ ] Business migration/grants, production load/quotas/monitoring/restore and release approval.
+
+Two local warnings remain unsuppressed: Starlette/AnyIO BlockingPortal deprecation
+and managed Windows pytest-cache ACL. Phase 5's local ClamAV/symlink/production ACL
+limits and earlier retained synthetic filesystem residues are unchanged. No new
+cluster initialization, service stop, Docker dependency or business deployment.
+**Phase 6 is technically verified; production acceptance is not established.**
+Next technical phase: P07-T01 finance/history/date/Excel definitions and corrections.
 
 ### Primary design references
 

@@ -121,3 +121,14 @@ changes, deferred usage, audited overlapping rotation, rescope/revoke races,
 equal timestamps/application restart and genuine PostgreSQL late commits and
 writer/snapshot lock waits. Initial checks pass; final evidence is appended after
 execution. D07 and production operations remain separate acceptance gates.
+
+Final Phase 6 source 3d5e88a: 151 collected; full PostgreSQL 149 passed + 2 local
+skips, SQLite 134 + 17; 15 subtests each. Dedicated Phase 6 PG 21 passed, SQLite
+18 + 3 PostgreSQL-only skips. Explicit PostgreSQL 15 passed, 136 deselected.
+Materialized history paging and unsupported-isolation/development-owner cases are
+included. Hosted 39624468561 passed all four jobs, including real ClamAV and
+explicit Phase 6 on service/native PostgreSQL. Final synthetic DB/role counts zero;
+legacy-token preservation and read-only status probes passed on both backends.
+[Local evidence](evidence/phase6-local.json),
+[hosted evidence](evidence/phase6-ci-39624468561.json). D07 and production adoption
+remain separate; legacy v1 consumers still need the announced v2 transition.
