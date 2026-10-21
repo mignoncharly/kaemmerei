@@ -146,6 +146,40 @@ def test_paths_and_public_storage_fail_closed(private_tmp):
     with pytest.raises(ValueError):Settings(document_storage_dir=Path(__file__).resolve().parents[1]/'nonexistent'/'..'/'app'/'static'/'documents').validate()
 
 
+def test_interrupted_staging_removes_only_its_own_partial_file(private_tmp):
+    import asyncio
+    from app.documents import ensure_storage,stage_upload
+    root=ensure_storage(Settings(document_storage_dir=private_tmp/'private'))
+    preserved=storage_path(root,'staging',uuid4().hex+'.pdf')
+    preserved.write_bytes(b'pre-existing reconciliation candidate')
+    class BrokenUpload:
+        filename='interrupted.pdf'
+        calls=0
+        closed=False
+        async def read(self,size):
+            self.calls+=1
+            if self.calls==1:return b'%PDF-1.4\nPartial'
+            raise OSError('Synthetic interrupted stream')
+        async def close(self):self.closed=True
+    source=BrokenUpload()
+    with pytest.raises(OSError,match='Synthetic interrupted'):
+        asyncio.run(stage_upload(source,root))
+    assert source.closed
+    assert list((root/'staging').iterdir())==[preserved]
+
+
+def test_pending_document_blocks_actual_review_approval(documents):
+    from tests.test_phase4 import setup_review,switch,post
+    client,app,owner=documents
+    record,review=setup_review(documents)
+    app.state.document_scanner=ResultScanner('unavailable')
+    path=f'/contracts/{record}/documents'
+    data=workflow_payload(client,path,{'csrf_token':csrf_from(client.get('/').text)})
+    assert client.post(path,data=data,files={'documents':('pending.pdf',b'%PDF-1.4\nPending','application/pdf')},follow_redirects=False).status_code==303
+    switch(client,'pruefer')
+    assert post(client,f'/contracts/{record}/reviews/{review}',status='approved',result_text='Not yet acceptable').status_code==409
+
+
 def test_actual_linked_storage_is_rejected(private_tmp):
     target=private_tmp/'target';target.mkdir()
     link=private_tmp/'linked'

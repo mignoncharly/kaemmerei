@@ -87,7 +87,7 @@ jobs:
             .verification/phase1-sqlite.json
             .verification/sqlite-pytest.xml
   postgresql:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:18
@@ -110,6 +110,12 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install -r requirements-dev.txt
+      - name: Install matching PostgreSQL 18 backup and restore client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-18
+          /usr/lib/postgresql/18/bin/pg_dump --version
+          /usr/lib/postgresql/18/bin/pg_restore --version
       - name: Create restricted disposable-database test role
         run: |
           python - <<'PY'
@@ -124,6 +130,27 @@ jobs:
         run: python -m pytest -q tests/test_phase4.py --database postgresql
       - name: Phase 5 document lifecycle and recovery under restricted PostgreSQL logins
         run: python -m pytest -q tests/test_phase5.py --database postgresql
+      - name: Publish safe failed-test classifications
+        if: failure()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          path=Path('.verification/postgresql-pytest.xml')
+          if path.exists():
+              for case in ET.parse(path).iter('testcase'):
+                  for issue in list(case.findall('failure'))+list(case.findall('error')):
+                      body=issue.text or ''
+                      reason='application assertion or fixture failure; inspect private job log'
+                      for needle,label in (
+                          ('Matching PostgreSQL dump/restore client required','matching client missing'),
+                          ('Install the PostgreSQL client matching','client major mismatch'),
+                          ('pg_dump','PostgreSQL dump command failed'),
+                          ('pg_restore','PostgreSQL restore command failed')):
+                          if needle in body:reason=label;break
+                      # Emit only repository test identifiers and fixed classifications.
+                      print('::error::'+case.get('classname','')+'.'+case.get('name','')+': '+reason)
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
