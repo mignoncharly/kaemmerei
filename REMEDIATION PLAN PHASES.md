@@ -42,16 +42,16 @@ IDs stabilize the review findings for implementation tracking. Related findings 
 
 | ID | Severity | Finding / gap | Primary phase |
 |---|---|---|---|
-| R01 | High | Cross-department contract metadata in filter dropdowns | 2 |
+| R01 | High | Cross-department contract metadata in filter dropdowns — corrected/verified U009 | 2 |
 | R02 | High | Reviewer role contradicts read-only claims; recipient authorization absent | 2, 4 |
 | R03 | High | Decisions not bound to content/version; no enforced activation gate | 4 |
-| R04 | High | Reviews remain editable after archival | 4 |
+| R04 | High | Reviews remain editable after archival — corrected/verified U009 | 4 |
 | R05 | High | Incremental API misses document changes, scope removals, and stable pagination | 6 |
 | R06 | High | Historical totals exclude currently archived/transferred populations | 7 |
 | R07 | High | Request limits, login limits, session growth, and blocking async work | 9 |
 | R08 | High | Broken test helper/assertions; major feature and production-database coverage gaps | 1, all phases |
 | R09 | Medium | No database RLS; authorization entirely application-enforced | 3 |
-| R10 | Medium | Inactive departments retain inconsistent access | 2 |
+| R10 | Medium | Inactive departments retain inconsistent access — corrected/verified U009 | 2 |
 | R11 | Medium | Child updates lack conflict checks and atomic archive protection | 4 |
 | R12 | Medium | Stale tax completion metadata and review validity | 4 |
 | R13 | Medium | Missing administrative/access audit events and append-only protection | 3, 9 |
@@ -109,7 +109,9 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 **Priority:** High. **Findings:** R08, R37. **Entry:** Existing source available.
 
-**Implementation update (2026-10-21):** P01-T01–T08 delivered and the technical exit gate verified. Local SQLite: 22 checks, 19 passed and 3 expected failures. Authoritative [Linux CI run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) succeeded for SQLite and PostgreSQL, including direct pytest and migration checks. Windows initdb error 87 remains a local-host limitation; Docker setup automation is supplied but local engine installation is pending. Evidence: [CI record](docs/evidence/phase1-ci-39571113046.json), [baseline](docs/PHASE1_BASELINE.md), [matrix](docs/VERIFICATION_MATRIX.md), and HANDOFF U006. R01/R04/R10 remain open; this is not production acceptance.
+**Current acceptance update (U009, 2026-10-21):** P01-T01–T08 verification now includes native Windows PostgreSQL 18: 44 pytest items passed, no failures/skips/xfails, 15 subtests passed; SQLite has 43 passed and one PostgreSQL-specific skip. R01/R04/R10 are corrected and covered by normal passing regressions. Clean/populated migrations, real application lifecycle and positive-identity cleanup pass. Operator confirmed nonblocking Windows startup; an agent repeat was stopped by owner-only ACL enforcement. Hosted evidence, commands and limitations: [acceptance report](docs/PHASE1_BASELINE.md), [matrix](docs/VERIFICATION_MATRIX.md), HANDOFF U009. Later-phase scope and production approval remain open.
+
+**Historical implementation update (U006):** P01-T01–T08 delivered with 22 stdlib checks (19 passed, 3 expected failures). [Linux CI run 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) passed SQLite/PostgreSQL and direct pytest. At that point Windows error 87 and R01/R04/R10 were still open; U009 supersedes those statuses. Earlier [CI record](docs/evidence/phase1-ci-39571113046.json) is retained.
 
 ### Tasks
 

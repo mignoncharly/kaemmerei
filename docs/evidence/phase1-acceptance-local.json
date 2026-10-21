@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-21",
+  "platform": "Windows",
+  "python": "3.14.3",
+  "pytest": "9.1.1",
+  "postgresql_major": 18,
+  "migration_head": "0013_integration_tokens",
+  "runs": [
+    {
+      "junit_file": "acceptance-sqlite.xml",
+      "sha256": "bd8d262d5f40827fad1db739e0b012d8da3923df18974088342c83512adc03a6",
+      "collected_items": 44,
+      "passed": 43,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": "19.053"
+    },
+    {
+      "junit_file": "acceptance-postgresql.xml",
+      "sha256": "ecf091f3df8735c4ed6db5382196f05600cc816a4d8e321ace27d174a1f6ca02",
+      "collected_items": 44,
+      "passed": 44,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": "40.291"
+    },
+    {
+      "junit_file": "acceptance-postgresql-explicit.xml",
+      "sha256": "a6d4fb45c16f77bed8a71b0cea05d3ac8f70ca359ae60a7cb15b0c5b4734b3e2",
+      "collected_items": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": "1.746"
+    }
+  ],
+  "native_startup": {
+    "operator_reported_success": true,
+    "agent_repeat": "stopped at owner-only ACL check; no initdb or restart"
+  },
+  "remaining_harness_databases_readonly_check": 0,
+  "production_accepted": false,
+  "stdlib_postgresql": {
+    "backend": "postgresql",
+    "tests_run": 22,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "known_open_checks": [],
+    "successful_verification_foundation": true,
+    "production_accepted": false
+  }
+}

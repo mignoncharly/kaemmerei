@@ -19,16 +19,16 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 
 | Phase | Inhalt | Stand |
 |---|---|---|
-| 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Technisch verifiziert: Linux-CI für SQLite/PostgreSQL einschließlich direktem pytest erfolgreich; drei bekannte erwartete Fehler bleiben offen |
+| 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Lokal PostgreSQL: 44 bestanden, keine Fehler/Skips/Xfails; SQLite: 43 bestanden, ein PostgreSQL-spezifischer Skip. R01/R04/R10 behoben. Aktueller CI-Nachweis im Abnahmebericht. |
 | 2–3 | Anwendungsberechtigungen, Identitäten, Datenbankregeln und RLS | Nicht begonnen |
 | 4–5 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit, Dokumentensicherheit | Nicht begonnen |
 | 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
 | 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |
 | 10 | Fachliche/technische Abnahme, Pilot und expliziter Integrationsumfang | Nicht begonnen |
 
-Die [Prüfmatrix](VERIFICATION_MATRIX.md) benennt Rollen, Direktzugriffe, Kindobjekte und noch fehlende Prüfungen. [PHASE1_BASELINE.md](PHASE1_BASELINE.md) hält Umgebung, Befehle, Ergebnisse und Einschränkungen fest. Erwartete Fehler bleiben offen: fachbereichsfremde Filterwerte (R01), veränderbare archivierte Prüfvorgänge (R04) und Zugriff bei deaktiviertem Fachbereich (R10). Weitere Befunde werden in den jeweiligen Phasen behoben und geprüft.
+Die [Prüfmatrix](VERIFICATION_MATRIX.md) benennt Rollen, Direktzugriffe, Kindobjekte und noch fehlende Prüfungen. [PHASE1_BASELINE.md](PHASE1_BASELINE.md) hält Umgebung, Befehle, Ergebnisse und Einschränkungen fest. Fachbereichsfremde Filterwerte (R01), veränderbare archivierte Prüfvorgänge (R04) und Zugriff bei deaktiviertem Fachbereich (R10) sind korrigiert und auf SQLite sowie PostgreSQL geprüft. Weitere Befunde werden in den jeweiligen Phasen behoben und geprüft.
 
-Der erforderliche PostgreSQL-Prüflauf und beide pytest-Jobs wurden im [Linux-CI-Lauf 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) erfolgreich ausgeführt; [Nachweis](evidence/phase1-ci-39571113046.json). Die lokale Windows-Initialisierung scheitert weiterhin an Tokenfehler 87, ist aber keine Voraussetzung für den nachgewiesenen Linux-Prüfweg. Reguläre Vertragsdaten wurden hierfür nicht verwendet oder migriert. Lokaler Docker-Testdienst und Hauptbranch-Schutzregeln bleiben getrennte Host-/Kontoeinrichtung.
+Der ursprüngliche PostgreSQL-/pytest-CI-Nachweis bleibt im [Linux-CI-Lauf 39571113046](https://github.com/mignoncharly/kaemmerei/actions/runs/39571113046) erhalten. Der native Windows-Testcluster ist inzwischen initialisiert und erreichbar. In dieser Sitzung wurden echte Anwendungsoperationen und Migrationen in neu angelegten PostgreSQL-Testdatenbanken ausgeführt. Reguläre Vertragsdaten wurden weder verwendet noch migriert. Docker ist lokal nicht erforderlich; Hauptbranch-Schutzregeln bleiben getrennte Kontoeinrichtung. Aktueller CI-Stand und die verbleibende ACL-Grenze der Agentenumgebung stehen im Abnahmebericht.
 
 ## Noch zu klären
 

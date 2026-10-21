@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 1 technical verification complete. Local setup now defaults to native PostgreSQL without Docker; native-manager checks and a new native Linux CI job track the change. First Windows initialization remains a host-permission task.\
+Current stage: Phase 1 local application acceptance passed against native PostgreSQL 18. R01/R04/R10 corrected; Windows launcher repeat in the agent is ACL-blocked, while normal-shell startup was confirmed by the operator. See U009 for current hosted evidence.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -27,11 +27,11 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Latest migration observed | `0013_integration_tokens` |
 | Authorization | Application-level department checks; no database RLS policies observed |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
-| Tests | Actual source count: 10 original functions, all passing through stdlib adapter. Final suite: 22 checks, 19 passed, 3 expected failures; no errors/skips/unexpected successes |
-| PostgreSQL/migrations | Clean/populated upgrades and migrated application checks passed in Linux PostgreSQL CI. Windows initdb token error remains a local-host issue. Production grants/RLS unverified |
+| Tests | 44 pytest items: PostgreSQL 44 passed, 0 failures/skips/xfails; SQLite 43 passed, 1 PostgreSQL-specific skip. Both have 15 passing subtests. PostgreSQL stdlib runner 22 passed. |
+| PostgreSQL/migrations | Native Windows cluster running/authenticated; clean and populated migrations plus application lifecycle pass locally. Error 87 is historical. Agent launcher retry fails at ACL check; operator startup succeeded. Production grants/RLS unverified. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main published to https://github.com/mignoncharly/kaemmerei.git; native setup source b45b26d131e72df91d4e4f5b8a804541611ee2b1 passed all three jobs in run 39575414353; see U006/U008 |
+| Source commit/branch | main published to https://github.com/mignoncharly/kaemmerei.git; implementation 558c0451b346265675aaeb411cb6ce4971b31af5 passed all three jobs in run 39589726718; see U009 |
 | Completed deliverables | Plan/handoff; Phase 1 harness, isolated storage/configuration, migration fixtures, stdlib runner, CI definitions, baseline/matrix docs, corrected German project status |
 | Application remediation | Document storage now per app instance; migrations accept explicit test connections. Business authorization/workflow findings remain open |
 
@@ -73,15 +73,16 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 
 | Finding IDs | Baseline severity | State | Closure evidence / update |
 |---|---|---|---|
-| R01 — Metadata isolation | High | Open | None |
+| R01 — Metadata isolation | High | Corrected and verified | U009; scoped metadata plus indirect/API/document regressions |
 | R02 — Reviewer/recipient permissions | High | Open | None |
 | R03 — Approval version/activation integrity | High | Open | None |
-| R04 — Archive mutation | High | Open | None |
+| R04 — Archive mutation | High | Corrected and verified | U009; locked parent, 409 and persisted review/history checks |
 | R05 — Incremental synchronization | High | Open | None |
 | R06 — Historical financial population | High | Open | None |
 | R07 — Availability controls | High | Open | None |
 | R08 — Test foundation/coverage | High | Phase 1 foundation verified; later coverage remains open | U003/U006: original harness and PostgreSQL/pytest/CI gates pass; later feature/RLS/concurrency coverage remains assigned to target phases |
-| R09–R14 — RLS, inactivity, concurrency, tax, audit, schema | Medium | Open | None |
+| R10 — Inactive department | Medium | Corrected and verified | U009; session/login/object permissions and scoped API tokens |
+| R09, R11–R14 — RLS, concurrency, tax, audit, schema | Medium | Open | Original phase assignments retained |
 | R15–R16 — Document trust/recovery | Medium | Open | None |
 | R17–R20 — Financial/date correctness | Medium | Open | None |
 | R21–R22 — Capacity/operations | Medium | Open | None |
@@ -142,12 +143,12 @@ For future updates, record schema revisions, backfill counts, legacy exceptions,
 
 ## 9. Immediate next work
 
-1. Phase 1 technical verification is complete; preserve the successful run URL and source commit recorded in U006.
-2. Next application remediation: P02-T01–T03, capability matrix and centralized metadata/query scoping. Phase 2 is not started in this update.
-3. Local host setup: run scripts/Complete-Phase1Setup.ps1 from a normal authorized PowerShell. Native PostgreSQL is now the default; Docker installation is not required. This managed session cannot set owner-only ACLs on native storage.
-4. Repository owner/admin should require the successful sqlite/postgresql checks on main through branch protection/rulesets; this account setting is not yet applied. Remove no expected-failure markers without target-finding evidence.
+1. Preserve the U009 acceptance evidence and verify the latest hosted result against its source SHA.
+2. Continue the remaining Phase 2 capability/assignment/query-scope work. R01/R10 are closed ahead of that phase; Phase 2 overall is not complete. R04 is closed ahead of Phase 4.
+3. Use the existing native cluster and Start-TestDatabase.ps1 from the normal authorized PowerShell. Do not reinitialize it. The managed agent still cannot set owner-only native-storage ACLs.
+4. Repository owner/admin should require sqlite/postgresql/native-postgresql checks on main through branch protection/rulesets; this account setting remains unverified. Production/RLS/business acceptance remains separate.
 
-The user authorized Phase 1 implementation and repository/CI setup on 2026-10-21. Technical artifacts and Linux verification are delivered. Local engine installation, branch-rule administration, and production acceptance remain separately recorded.
+The user authorized Phase 1 implementation and repository/CI setup on 2026-10-21. Technical artifacts and local/hosted database verification are delivered. Agent launcher permissions, branch-rule administration and production acceptance remain separately recorded.
 
 ## 10. Update history
 
@@ -244,6 +245,18 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Evidence:** docs/evidence/native-postgresql-ci-39575414353.json records final run/job/step conclusions and verification artifact metadata. Native, SQLite, and PostgreSQL artifact uploads succeeded; archives were not downloaded/parsed locally.
 - **Local checks:** Ten native-manager safety checks and all five PowerShell launcher syntax checks passed. Actual Windows first startup is still blocked by managed-session ACL permissions before credentials are written; no existing Windows service changed.
 - **State:** Native implementation is verified end-to-end on Linux CI and is the default local setup. Docker is optional on the PC. Windows first startup is a host-specific outstanding action, not an unrun PostgreSQL/pytest foundation gate. R01/R04/R10 and later remediation findings remain open; no production acceptance.
+
+### U009 — 2026-10-21 — Phase 1 real PostgreSQL acceptance and security fixes
+
+- **Scope:** User explicitly requested acceptance completion and fixes for R01/R04/R10. Existing working infrastructure and historical entries retained. Original migration head remains `0013_integration_tokens`; no business database migration, schema replacement, cluster deletion, unrelated service stop or deployment.
+- **Initial state:** `main` at a434648; operator edits existed in native manager and a whitespace-only Start-TestDatabase change. Operator startup pipe/log and binary cluster identity fixes were preserved and included in implementation 558c045. The unrelated whitespace edit remains unstaged and untouched.
+- **R01:** Department-scoped stored filter choices; expanded tests exercise searches, report/export, details, private document metadata/bytes, API scope and mismatched parent references. **R04:** PostgreSQL parent lock, server-side archived guard/409 and hidden review controls; persisted review fields and audit IDs unchanged after rejected admin/reviewer decisions. **R10:** Shared active-membership guard for login/session/object access and inactive-department scoped token rejection. Explicit global roles retain their existing authority.
+- **Safety:** Fresh randomly named PostgreSQL database per fixture, dedicated restricted role, OID/owner/comment checks before migrations and deletion, clean-schema check, and fail-closed replacement/default-database safety tests. Native live lock/binary identity/no-PIPE regressions added. No weakening of permissions or locking. Launcher no longer labels all errors as token error 87.
+- **Local verification:** 44 pytest items collected. Default SQLite: 43 passed, one explicit PostgreSQL-only skip, zero failures/xfails; PostgreSQL: 44 passed, zero failures/skips/xfails. Both have 15 passing subtests. Explicit PostgreSQL lifecycle: one passed, no skips. PostgreSQL stdlib runner: 22 passed. Clean/populated/repeated migrations pass. Final read-only catalog check: zero harness databases remain.
+- **Windows evidence:** Existing cluster on 127.0.0.1:55432 authenticated as ohvr_verify without printing credentials. Operator previously confirmed nonblocking normal PowerShell startup. This agent's independent launcher repeat stopped at the owner-only ACL boundary before initdb or restart; error 87 was not reproduced. Startup is not independently reverified from this managed shell.
+- **Hosted verification:** Push to the already configured/authorized main branch triggered [run 39589726718](https://github.com/mignoncharly/kaemmerei/actions/runs/39589726718), source `558c0451b346265675aaeb411cb6ce4971b31af5`. All three jobs succeeded: sqlite, PostgreSQL 18 service and native-postgresql. Dependency installation, full pytest/migrations/security regressions, and explicit PostgreSQL-only lifecycle selection succeeded. API run/job/step and artifact metadata inspected directly; artifact contents were not downloaded.
+- **Evidence/report:** [Current acceptance report](docs/PHASE1_BASELINE.md), [local summary](docs/evidence/phase1-acceptance-local.json), [hosted summary](docs/evidence/phase1-acceptance-ci-39589726718.json); ignored local JUnit XML and stdlib JSON retained. README, ARBEITSPLAN, plan, matrix and setup documentation updated. Previous implementation history preserved.
+- **Warnings/boundaries:** Starlette/AnyIO deprecation and managed Windows pytest-cache ACL warning remain; no warning suppression. Broad concurrency, database RLS, approver assignment/content binding, production grants/backup/recovery and remaining phase findings are not accepted by these checks. Branch protection remains an account task. Local application/database and hosted technical gates pass; independent agent Windows launcher repeat remains ACL-limited. No production acceptance.
 - **Host command:** From normal authorized PowerShell in the project root, run `& .\scripts\Start-TestDatabase.ps1 -Python 'C:\kämmerei\.venv\Scripts\python.exe'` for the first native initialization. For full dependency/local-test setup, use Complete-Phase1Setup.ps1. No database password is requested or printed by either script.
 - **Next action:** Publish the evidence update; start Phase 2 only when authorized. Repository branch protection remains an owner/admin account setting.
 
