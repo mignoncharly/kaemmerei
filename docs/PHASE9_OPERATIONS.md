@@ -2,6 +2,20 @@
 
 ## U022 local maintenance and monitoring
 
+Latest candidate head: `0027_child_read_admission`. The `db65014` full workload
+removed the timeout and reached 2.926s report p95; every other operation and
+isolation passed, but the 2s target remained unmet. Evidence is retained below.
+`0027` computes readable contract IDs once per statement using the existing
+`read_departments` rule, then replaces only the legacy SELECT-policy predicate
+on child tables. Archive visibility, owner/admin exceptions, NULL behavior and
+all mutation policies remain unchanged. The foreign-key-backed ID set implements
+the same existing `read_contract` relation; there is no new caller-supplied scope.
+Actual PostgreSQL matrix/API/history selection: 39 passed, including global and
+department roles, archived parents, invalid contexts and suspended departments.
+Fresh role configuration is required after migration to grant the new helper;
+production roles are not inferred or created. Full-size latency and frozen-source
+results follow in HANDOFF; permission equivalence does not establish performance.
+
 Native review: [NATIVE_SECURITY_BASELINE](NATIVE_SECURITY_BASELINE.md) records
 official server/client advisories, observed local 18.3 and production-only patch
 floors. R43 remains open until patched host/client verification; local synthetic

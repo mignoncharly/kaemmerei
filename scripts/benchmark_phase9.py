@@ -36,6 +36,7 @@ def benchmark(*, contracts=10000, documents=50000, users=10, rounds=5, mixed=Fal
                      Path('alembic/versions/0022_read_admission.py'),Path('alembic/versions/0024_history_materialization.py'),
                      Path('alembic/sql/0025_history_series.sql'),
                      Path('alembic/sql/0026_history_projection.sql'),
+                     Path('alembic/versions/0027_child_read_admission.py'),
                      Path('scripts/synthetic_workload.py'),Path('scripts/benchmark_phase9.py'))},
                   scope='In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput',
                   targets=dict(page_p95_seconds=2,export_seconds=15), selections=[])
