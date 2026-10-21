@@ -19,7 +19,8 @@ def lock_identities(db):
 
 def audit(db, actor_id, action, target, **details):
     db.add(IdentityAudit(actor_id=actor_id, principal='user' if actor_id else 'operator',
-                         action=action, target=str(target), details=details))
+                         action=action, target=str(target), details=details,
+                         outcome='denied' if action.endswith('_denied') else 'success'))
 
 
 def validate_password(password):

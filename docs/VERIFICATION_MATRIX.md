@@ -4,7 +4,7 @@ Stand: 2026-10-21. Phase 1 engineering baseline; no business acceptance implied.
 
 Phase 2 update U010: [adopted capability matrix and migration/verification report](PHASE2_AUTHORIZATION.md).
 Full local PostgreSQL: 66 passed; SQLite: 65 passed + one PostgreSQL-only skip; 15 subtests passed on both.
-All three hosted jobs passed for implementation 9fde6c0. Database RLS/content-bound approvals remain later-phase gates.
+All three hosted jobs passed for Phase 2 implementation 9fde6c0. Current Phase 3 evidence: [database security report](PHASE3_DATABASE_SECURITY.md). Content-bound approvals remain Phase 4 work.
 
 ## Permission regression matrix
 
@@ -33,8 +33,8 @@ The desired rules below are implementation targets. They do not claim that futur
 | V19 | Any authorized writer -> archived aggregate | No contract or child mutation | R04 passing: admin/reviewer updates rejected; persisted review/history unchanged. Broader concurrency remains Phase 4. |
 | V20 | Concurrent task/review/archive -> same aggregate | Consistent versioned outcome; no lost decision | Phase 4 PostgreSQL concurrency checks |
 | V21 | Missing CSRF -> authenticated HTML mutations | 403 and zero writes | Original login/create/edit/archive tests; extend child/admin paths in Phase 2/4 |
-| V22 | Low-privilege DB role -> deliberately unscoped SQL | RLS denies other departments and invalid context | Phase 3; no RLS exists at Phase 1 |
-| V23 | Reused pooled connection -> different identity | No retained authorization context | Phase 3 |
+| V22 | Low-privilege DB role -> deliberately unscoped SQL | RLS denies other departments and invalid context | Phase 3 actual LOGIN-role SQL/API/child/credential tests in tests/test_phase3.py |
+| V23 | Reused pooled connection -> different identity | No retained authorization context | Phase 3 same physical backend alternates principals; commit/rollback and revoked-session revalidation tested |
 | V24 | Token -> scope transfer/incremental document changes | Removal and changed content reliably delivered | Phase 6; R05 remains open |
 
 ## Migration and environment matrix
@@ -49,7 +49,7 @@ The desired rules below are implementation targets. They do not claim that futur
 | Per-call document configuration | Passed | No connection required |
 | Original three expected failures | R01/R04/R10 are normal passing regressions | All pass against PostgreSQL; full suite 44 passed, no skips/xfails; see U009 acceptance report |
 
-Migration preservation fixture uses synthetic records and metadata, not a copied business database. It does not constitute a full legacy production-data migration rehearsal. Existing schema differences, including the missing migrated tax-reviewer foreign key, remain R14 for Phase 3.
+Migration preservation fixtures use synthetic records and metadata, not a copied business database. They do not constitute a production-data migration rehearsal. Phase 3 adds the missing tax-reviewer FK and schema equality checks on both backends; invalid legacy rows stop migration without repairs. Security schema/functions/policies/triggers are intentional database-only controls; Python versus server defaults are documented separately.
 
 ## Domain/service boundaries (P01-T07)
 

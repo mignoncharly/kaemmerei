@@ -145,8 +145,8 @@ before review form parsing; the final 9fde6c0 run above verifies those additiona
 
 ## Boundaries and next phase
 
-Phase 3 database RLS, constrained schemas, restricted production roles and database-protected audit
-remain unimplemented. Phase 4 still owns content/version-bound approvals, separation-of-duty policy,
+At Phase 2 completion, database RLS, constrained schemas, restricted production roles and database-protected audit
+were still unimplemented. The subsequent [Phase 3 report](PHASE3_DATABASE_SECURITY.md) records their implementation and evidence. Phase 4 still owns content/version-bound approvals, separation-of-duty policy,
 complete aggregate mutation/version semantics and tax workflow. This phase does not claim those guarantees.
 MFA/SSO and host recovery remain Phase 9. D01/D02 defaults are technical choices, pending municipal
 owner acceptance; no delegation policy is approved or implemented. Production approval remains open.

@@ -73,10 +73,22 @@ Actual workflow runs are at https://github.com/mignoncharly/kaemmerei/actions. A
 
 After the first successful CI run, require the `sqlite` and `postgresql` checks for main-branch pull requests through repository branch protection/rulesets if supported by the account plan. This account setting is separate from committing the workflow.
 
-## Current evidence and next gate
+## Preserved Phase 2 evidence
 
 Phase 2 source 9fde6c0 passed all three jobs in [run 39594698525](https://github.com/mignoncharly/kaemmerei/actions/runs/39594698525). Full local PostgreSQL: 66 passed; SQLite: 65 passed + one PostgreSQL-only skip, with 15 passing subtests each. See [Phase 2 report](PHASE2_AUTHORIZATION.md) and HANDOFF U010. Existing native startup infrastructure is preserved. Migration 0014 has been verified only in disposable test databases; business deployment remains separate. Next technical work is Phase 3 schema/roles/RLS, not cluster reinitialization.
 
 ### Preserved Phase 1 native setup evidence
 
 See HANDOFF U009 and the current [acceptance report](PHASE1_BASELINE.md) for exact results and reproducible commands. Native PostgreSQL 18 is initialized and running on Windows; the operator confirmed startup returns control to PowerShell. The managed agent's launcher repeat stops at the ACL check; do not reinitialize or weaken permissions. The full application suite actually passed locally against PostgreSQL: 44 tests, no skips or expected failures, plus 15 passing subtests. Thirteen native-manager safety checks pass. Historical successful [run 39575414353](https://github.com/mignoncharly/kaemmerei/actions/runs/39575414353) and its [evidence](evidence/native-postgresql-ci-39575414353.json) are retained; U009 records the run for the new fixes. Production acceptance is not implied.
+
+## Phase 3 restricted-role verification
+
+The full PostgreSQL suite now includes actual web/integration/maintenance LOGIN roles.
+The native marked cluster uses its existing private bootstrap passfile, validated by
+the binary cluster identity check, to create only temporary generated roles. An
+explicit external test endpoint additionally needs TEST_POSTGRES_BOOTSTRAP_URL on
+the same dedicated loopback test cluster. Never use business-cluster credentials.
+No secrets are printed or added to evidence. SQLite explicitly skips these tests.
+See [Phase 3](PHASE3_DATABASE_SECURITY.md) for role grants, isolated cleanup, recovery
+journals and reproduction commands. Operator/maintenance production URLs are not
+test control URLs and must not be installed in web workers.

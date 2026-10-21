@@ -1,6 +1,6 @@
 """Shared fail-closed contract queries and explicit review decision authority."""
 from fastapi import HTTPException
-from sqlalchemy import false, select, true
+from sqlalchemy import false, select, true, text
 from app.logic import active_access, can_read
 from app.models import Contract, IntegrationToken, RecipientMembership, RecipientTeam, User, now_utc
 
@@ -30,7 +30,11 @@ def contract_query(principal):
 def load_contract(db, principal, contract_id, *, lock=False):
     statement = contract_query(principal).where(Contract.id == contract_id)
     if lock:
-        statement = statement.with_for_update()
+        if db.info.get('enforce_rls'):
+            if not db.scalar(text('SELECT ohvr_security.lock_contract(:id)'), {'id': contract_id}):
+                raise HTTPException(404, 'Vertrag nicht gefunden')
+        else:
+            statement = statement.with_for_update()
     contract = db.scalar(statement.execution_options(populate_existing=True))
     if contract is None:
         raise HTTPException(404, 'Vertrag nicht gefunden')

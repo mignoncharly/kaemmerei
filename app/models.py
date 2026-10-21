@@ -1,9 +1,11 @@
 """Structured, intentionally small contract inventory."""
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from uuid import uuid4
 from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
+from app.schema_rules import RULES
 
 
 def now_utc() -> datetime:
@@ -23,7 +25,7 @@ class User(Base):
     __table_args__ = (CheckConstraint("role IN ('admin', 'department', 'reviewer')", name="valid_user_role"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
-    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False, deferred=True)
     role: Mapped[str] = mapped_column(String(16), nullable=False)
     department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id", ondelete="RESTRICT"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -47,7 +49,7 @@ class IntegrationToken(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     token_prefix: Mapped[str] = mapped_column(String(16), nullable=False, unique=True)
-    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, deferred=True)
     department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id", ondelete="RESTRICT"), nullable=True)
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -196,6 +198,23 @@ class IdentityAudit(Base):
     target: Mapped[str] = mapped_column(String(120), nullable=False)
     details: Mapped[dict] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
+    outcome: Mapped[str] = mapped_column(String(16), nullable=False, default='success', server_default='success')
+    correlation_id: Mapped[str | None] = mapped_column(String(64), nullable=True, default=lambda: str(uuid4()))
+
+
+class SecurityEvent(Base):
+    __tablename__ = 'security_events'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey('users.id', ondelete='RESTRICT'))
+    token_id: Mapped[int | None] = mapped_column(ForeignKey('integration_tokens.id', ondelete='RESTRICT'))
+    principal: Mapped[str] = mapped_column(String(16), nullable=False)
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    target: Mapped[str] = mapped_column(String(120), nullable=False)
+    contract_id: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    outcome: Mapped[str] = mapped_column(String(16), nullable=False)
+    correlation_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False)
 
 
 class ContactIdentity(Base):
@@ -220,3 +239,10 @@ class RecipientMembership(Base):
     __tablename__ = "recipient_memberships"
     team_id: Mapped[int] = mapped_column(ForeignKey("recipient_teams.id", ondelete="RESTRICT"), primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), primary_key=True)
+
+
+# Keep ORM constraint declarations identical to forward migration invariants.
+for _table, _rules in RULES.items():
+    for _name, _expression in _rules.items():
+        if not any(c.name == _name for c in Base.metadata.tables[_table].constraints):
+            Base.metadata.tables[_table].append_constraint(CheckConstraint(_expression, name=_name))

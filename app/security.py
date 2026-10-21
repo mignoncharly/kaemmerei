@@ -4,8 +4,8 @@ import secrets
 from datetime import timedelta
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError
-from sqlalchemy import delete, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy import delete, func, select, text
+from sqlalchemy.orm import Session, object_session
 from fastapi import HTTPException, Request
 from app.models import LoginAttempt, LoginSession, User, now_utc
 from app.logic import active_access
@@ -36,6 +36,8 @@ def get_user(request: Request, db: Session) -> User | None:
         return None
     if login_session.user is None or not active_access(login_session.user):
         return None
+    if db.bind.dialect.name == 'sqlite':
+        db.connection().info['actor_id'] = login_session.user.id
     return login_session.user
 
 
@@ -94,7 +96,12 @@ def clear_failures(db: Session, key: str) -> None:
 
 def verify_password(password: str, user: User | None) -> bool:
     try:
-        ph.verify(user.password_hash if user else DUMMY_HASH, password)
+        db = object_session(user) if user else None
+        if db is not None and db.info.get('enforce_rls'):
+            stored = db.scalar(text('SELECT ohvr_security.password_hash(:id)'), {'id':user.id})
+        else:
+            stored = user.password_hash if user else None
+        ph.verify(stored or DUMMY_HASH, password)
         return user is not None
     except (VerifyMismatchError, VerificationError):
         return False

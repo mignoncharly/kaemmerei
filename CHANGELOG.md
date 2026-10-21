@@ -1,5 +1,13 @@
 # Änderungen
 
+## 21. Oktober 2026 — Phase 3: Datenbankintegrität und RLS
+
+- P03-T01–T08: Vorab-Inventur, Constraints und fehlender Tax-Reviewer-Fremdschlüssel; keine stillen Datenkorrekturen.
+- Getrennte Betreiber-, Web-, Integrations-, Wartungs- und NOLOGIN-Auditrollen; FORCE RLS mit Elternbezug und transaktionslokaler, bei jedem neuen Transaktionsbeginn validierter Identität.
+- Eng begrenzte Passwortauflösung und Vertragssperre; keine allgemeinen Credential-Leserechte für Integrationen. Append-only Audit mit Akteur, Ziel, Ergebnis und Korrelations-ID.
+- Echte PostgreSQL-LOGIN-Tests prüfen ungefilterte SQL-Abfragen, Pool-Wiederverwendung, Widerruf, Freigabezuweisung, Wartungsrechte und Auditmanipulation. SQLite bleibt ausdrücklich ohne RLS.
+- Neue Migrationen 0015/0016 ausschließlich an synthetischen Datenbanken geprüft. Keine Produktivmigration oder Freigabe. Nachweise und Einrichtung: docs/PHASE3_DATABASE_SECURITY.md und HANDOFF U011.
+
 ## 21. Oktober 2026 — Phase 2: Berechtigungen und Identitäten
 
 - P02-T01–T08 umgesetzt: zentrale Zugriffsabfragen, explizite Freigabefähigkeit, Empfängerteams/Mitgliedschaften und konkrete Prüfzuweisung ohne automatische Leserechtsausweitung.

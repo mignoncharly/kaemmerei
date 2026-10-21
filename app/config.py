@@ -11,6 +11,10 @@ class Settings:
     allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "testserver")
     session_hours: int = 8
     document_storage_dir: Path = Path(__file__).resolve().parent.parent / "data" / "documents"
+    integration_database_url: str | None = None
+    migration_database_url: str | None = None
+    maintenance_database_url: str | None = None
+    enforce_database_security: bool = False
 
     @property
     def production(self) -> bool:
@@ -26,6 +30,11 @@ class Settings:
                 raise ValueError("Produktion erfordert PostgreSQL via psycopg")
             if "testserver" in self.allowed_hosts or "localhost" in self.allowed_hosts:
                 raise ValueError("Produktion erfordert ausdrücklich konfigurierte Hostnamen")
+            if not self.enforce_database_security or not self.integration_database_url:
+                raise ValueError('Production requires restricted web/integration database connections and RLS validation')
+        if self.enforce_database_security and (not self.database_url.startswith('postgresql+psycopg://') or
+                not self.integration_database_url or not self.integration_database_url.startswith('postgresql+psycopg://')):
+            raise ValueError('Database security requires PostgreSQL web and integration URLs')
 
 
 def get_settings() -> Settings:
@@ -35,6 +44,10 @@ def get_settings() -> Settings:
     hosts = tuple(x.strip() for x in os.getenv("ALLOWED_HOSTS", defaults).split(",") if x.strip())
     storage = Path(os.getenv("DOCUMENT_STORAGE_DIR", str(Settings.document_storage_dir))).expanduser().resolve()
     settings = Settings(environment=environment, database_url=db_url, allowed_hosts=hosts,
-                        document_storage_dir=storage)
+                        document_storage_dir=storage,
+                        integration_database_url=os.getenv('INTEGRATION_DATABASE_URL') or None,
+                        migration_database_url=os.getenv('MIGRATION_DATABASE_URL') or None,
+                        maintenance_database_url=os.getenv('MAINTENANCE_DATABASE_URL') or None,
+                        enforce_database_security=os.getenv('ENFORCE_DATABASE_SECURITY', '1' if environment=='production' else '0')=='1')
     settings.validate()
     return settings

@@ -15,7 +15,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select, update, text
+from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
@@ -90,7 +91,14 @@ CONTRACT_REVIEW_STATUS_LABELS = dict(CONTRACT_REVIEW_STATUSES)
 
 
 def get_db(request: Request):
-    with request.app.state.session_factory() as db:
+    factory = request.app.state.integration_session_factory if request.url.path.startswith('/api/') else request.app.state.session_factory
+    with factory() as db:
+        cookie = request.cookies.get(COOKIE_NAME,'')
+        scheme, _, credential = request.headers.get('authorization','').partition(' ')
+        db.info['enforce_rls'] = request.app.state.config.enforce_database_security
+        db.info['request_context'] = {'session_hash':hash_value(cookie) if cookie and len(cookie)<=150 else '',
+                                      'token_hash':hash_value(credential) if scheme.casefold()=='bearer' and credential.startswith('ohvr_') and len(credential)<=128 else '',
+                                      'correlation_id':str(uuid4())}
         yield db
 
 
@@ -139,8 +147,13 @@ def require_integration_token(request: Request, db: Session) -> IntegrationToken
     if scheme.casefold() != "bearer" or not credential.startswith("ohvr_") or len(credential) > 128:
         raise HTTPException(status_code=401, detail="Bearer-Token erforderlich",
                             headers={"WWW-Authenticate": "Bearer"})
-    token = db.scalar(select(IntegrationToken).where(
-        IntegrationToken.token_prefix == credential[:16]))
+    if db.info.get('enforce_rls'):
+        token_id = db.scalar(text('SELECT ohvr_security.resolve_token(:prefix,:hash)'), {'prefix':credential[:16],'hash':hash_value(credential)})
+        token = db.get(IntegrationToken, token_id) if token_id else None
+        if token:
+            set_committed_value(token, 'token_hash', hash_value(credential))
+    else:
+        token = db.scalar(select(IntegrationToken).where(IntegrationToken.token_prefix == credential[:16]))
     if (not token or not token.is_active or
             not secrets.compare_digest(token.token_hash, hash_value(credential))):
         raise HTTPException(status_code=401, detail="Ungültiger Integrationstoken",
@@ -521,8 +534,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Schema must be migrated separately; don't silently alter production data.
-        yield
-        engine.dispose()
+        try:
+            if settings.enforce_database_security:
+                from app.db_roles import validate_runtime_engine
+                validate_runtime_engine(engine, 'web')
+                validate_runtime_engine(app.state.integration_engine, 'integration')
+            yield
+        finally:
+            engine.dispose()
+            if app.state.integration_engine is not engine:
+                app.state.integration_engine.dispose()
 
     app = FastAPI(title="OPEN.HERZ Vertragsregister", docs_url=None, redoc_url=None,
                   openapi_url=None, lifespan=lifespan)
@@ -530,6 +551,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.document_storage_dir = Path(settings.document_storage_dir).expanduser().resolve()
     app.state.session_factory = make_session_factory(engine)
     app.state.engine = engine
+    app.state.integration_engine = make_engine(Settings(database_url=settings.integration_database_url)) if settings.integration_database_url else engine
+    app.state.integration_session_factory = make_session_factory(app.state.integration_engine)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
     app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 

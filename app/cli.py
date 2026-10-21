@@ -1,11 +1,10 @@
 """Safe operations: install schema, provision departments and individual users."""
 import argparse
+import json
+from dataclasses import replace
 from getpass import getpass
 from datetime import timedelta
-from pathlib import Path
-from alembic import command
-from alembic.config import Config
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, text
 from app.config import get_settings
 from app.db import make_engine, make_session_factory
 from app.models import Department, LoginAttempt, LoginSession, User, now_utc
@@ -27,6 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description="OPEN.HERZ Vertragsregister Verwaltung")
     subs = parser.add_subparsers(dest="command", required=True)
     subs.add_parser("init-db", help="Datenbankschema auf aktuelle Migration bringen")
+    subs.add_parser('schema-inventory', help='Read-only schema and legacy exception inventory')
     d = subs.add_parser("add-department", help="Fachbereich anlegen")
     d.add_argument("name")
     subs.add_parser("list-departments")
@@ -41,14 +41,35 @@ def main():
     x.add_argument("username")
     args = parser.parse_args()
     settings = get_settings()
-    if args.command == "init-db":
-        cfg = Config(str(Path(__file__).resolve().parent.parent / "alembic.ini"))
-        command.upgrade(cfg, "head")
-        print("Migrationen angewandt")
-        return
+    # Privileged operator credentials are never inherited by the web engine.
+    # Provisioning remains an explicit owner operation, not an RLS bypass grant.
+    if settings.enforce_database_security:
+        selected = settings.maintenance_database_url if args.command == 'purge-sessions' else settings.migration_database_url
+        if not selected or not selected.startswith('postgresql+psycopg://'):
+            raise SystemExit('Explicit MAINTENANCE_DATABASE_URL or MIGRATION_DATABASE_URL required for this operator command')
+        settings = replace(settings, database_url=selected)
     engine = make_engine(settings)
     SessionFactory = make_session_factory(engine)
     try:
+        if args.command == 'init-db':
+            from app.migrations import upgrade_connection
+            with engine.connect() as connection:
+                upgrade_connection(connection)
+            print('Migrationen angewandt')
+            return
+        if args.command == 'schema-inventory':
+            from app.schema_inventory import compare_schema
+            from app.schema_rules import inventory
+            with engine.connect() as connection:
+                print(json.dumps({'schema': compare_schema(connection), 'legacy': inventory(connection)}))
+            return
+        if args.command == 'purge-sessions' and settings.enforce_database_security:
+            from app.db_roles import validate_runtime_engine
+            validate_runtime_engine(engine, 'maintenance')
+            with engine.begin() as connection:
+                connection.execute(text('SELECT ohvr_security.purge_expired()'))
+            print('Expired authentication records purged with maintenance privileges')
+            return
         with SessionFactory() as db:
             if args.command == "add-department":
                 lock_identities(db)
