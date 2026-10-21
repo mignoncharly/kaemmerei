@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2026-10-21 - Phase 9 U019: local TOTP and audited recovery
+
+- Additive 0023 private encrypted credentials/rollout policy and pending challenge sessions.
+- Server/RLS MFA enforcement, operator-authorized CSRF enrollment, persisted replay prevention, shared throttling and verified session rotation.
+- User-bound authenticated seed encryption, protected external keyring, audited recovery and bounded key rotation; service tokens remain separate.
+- Targeted actual-role/crypto/recovery/restore checks passed; full/current-source CI acceptance recorded in HANDOFF U019. No production rollout or Phase 9 exit.
+
 ## 2026-10-21 - Phase 9 U018: native operations and measured read load
 
 - User approved native Windows/TLS platform, local TOTP/recovery scope and initial workload/RPO/RTO targets.

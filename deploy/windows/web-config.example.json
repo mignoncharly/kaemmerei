@@ -1,6 +1,8 @@
 {
   "APP_ENV": "production",
   "ENFORCE_DATABASE_SECURITY": "1",
+  "REQUIRE_MFA": "1",
+  "MFA_KEY_FILE": "C:\\ohvr-private\\keys\\mfa.json",
   "DATABASE_URL": "postgresql+psycopg://ohvr_web@db.example.invalid/ohvr?sslmode=verify-full&sslrootcert=C%3A%2Fohvr-private%2Fpostgres-ca.pem",
   "INTEGRATION_DATABASE_URL": "postgresql+psycopg://ohvr_integration@db.example.invalid/ohvr?sslmode=verify-full&sslrootcert=C%3A%2Fohvr-private%2Fpostgres-ca.pem",
   "ALLOWED_HOSTS": "contracts.example.invalid",

@@ -38,10 +38,30 @@ class User(Base):
 class LoginSession(Base):
     __tablename__ = "login_sessions"
     token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True,index=True)
+    pending_user_id: Mapped[int | None] = mapped_column(ForeignKey('users.id',ondelete='CASCADE'),nullable=True,index=True)
+    mfa_verified: Mapped[bool] = mapped_column(Boolean,nullable=False,default=False,server_default='0')
+    mfa_attempts: Mapped[int] = mapped_column(Integer,nullable=False,default=0,server_default='0')
     csrf_token: Mapped[str] = mapped_column(String(64), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    user: Mapped[User | None] = relationship()
+    user: Mapped[User | None] = relationship(foreign_keys=[user_id])
+
+
+class MfaCredential(Base):
+    __tablename__='mfa_credentials'
+    __table_args__=(CheckConstraint('last_step >= -1',name='mfa_step_nonnegative'),)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id',ondelete='RESTRICT'),primary_key=True)
+    seed_ciphertext: Mapped[str | None] = mapped_column(Text,nullable=True,deferred=True)
+    enabled: Mapped[bool] = mapped_column(Boolean,nullable=False,default=False,server_default='0')
+    last_step: Mapped[int] = mapped_column(Integer,nullable=False,default=-1,server_default='-1')
+    authorization_expires_at: Mapped[datetime | None] = mapped_column(DateTime,nullable=True)
+
+
+class MfaPolicy(Base):
+    __tablename__='mfa_policy'
+    __table_args__=(CheckConstraint('id = 1',name='mfa_single_policy'),)
+    id: Mapped[int] = mapped_column(Integer,primary_key=True,autoincrement=False)
+    required: Mapped[bool] = mapped_column(Boolean,nullable=False,default=False,server_default='0')
 
 
 class IntegrationToken(Base):

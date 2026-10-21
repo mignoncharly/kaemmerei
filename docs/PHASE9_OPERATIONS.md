@@ -388,3 +388,200 @@ Task/contract department eager loading preserves the report labels without N+1
 queries. Regression compares SQL groups with the existing reference aggregation
 for global and department scope, including zero versus missing annual values.
 A further workload rerun and frozen-source full suites are required below.
+
+
+## U018 frozen-source verification (c349996)
+
+[Final initial read-load run](evidence/phase9-workload-aggregated.json):
+10,000 contracts/50,000 external metadata records/10 independent accounts,
+50 requests per operation. All 200 returned 200. p95 list 0.361s, reports
+0.242s, detail 0.542s, bounded export 2.747s. Both earlier failed results remain
+retained. This is the explicitly described undated baseline, not a representative
+mixed workload, network/TLS benchmark or operational Phase 9 acceptance.
+
+[Local evidence](evidence/phase9-u018-local.json): full 219 collected;
+PostgreSQL 217 passed + 2 local skips, SQLite 196 passed + 23 explicit skips;
+15 passing subtests each; explicit PostgreSQL 21 passed. Zero failures/errors/
+xfails. Clean/populated/repeated migrations, actual restricted roles, existing
+security regressions and synthetic PostgreSQL restore passed in the full suite.
+Read-only catalog after all runs: zero guarded databases and generated roles;
+control privileges unchanged. Existing HTTPX deprecation/cache ACL warnings remain.
+The explicit run additionally collected seven new, deselected MFA codec tests;
+these are not part of the 219-item checkpoint suite or the 21-item selection.
+
+[Hosted exact-source evidence](evidence/phase9-ci-39650882010.json): all five
+jobs passed for c3499965fa619b48e126d18e0ddb8103c9b03828. Job/step conclusions and
+artifact metadata inspected; archives not downloaded. Subsequent MFA work needs
+its own tests/CI; none of these results certifies MFA or production deployment.
+
+
+## U019: local TOTP, encrypted seed custody and audited operator recovery
+
+D12 implementation follows the user's selected local-account strategy. Migration
+0023_human_mfa adds a separate encrypted-credential table, owner-only rollout
+policy, pending challenge identity, factor verification/attempt fields and session
+revocation indexes. It retains existing data and does not automatically enable
+MFA, enroll accounts, invent secrets or revoke business sessions on upgrade.
+Production startup now requires the explicit enabled database policy and a usable
+private key file; there is no password-only production fallback. Migration/grants
+were exercised only on marked disposable databases, not a business database.
+
+### Authentication and database boundary
+
+A valid password issues a new five-minute challenge cookie with no authenticated
+user_id. It grants no ordinary contract/metadata/administrative access. Both web
+application checks and PostgreSQL principal resolution require a verified factor
+when rollout is enabled or the account already has an enrolled factor. Successful
+TOTP verification consumes the challenge and grants a newly rotated full session
+in the same transaction. Service tokens remain separate, with existing scoped,
+expiring, accountable API-v2 authorization; a browser's pending MFA does not turn
+a valid service credential into human authentication.
+
+Enrollment requires an explicit operator authorization following out-of-band
+identity verification, valid for 24 hours, plus a fresh password challenge. Only a
+CSRF-protected POST starts setup. The manual authenticator secret appears only to
+that password-proven unenrolled account; it is not displayed again after confirmed
+enrollment. No external QR/image service receives it. Server-side checks enforce
+six ASCII digits, 30-second TOTP steps and a +/-1-step clock window. A persisted
+last-step counter and the shared identity lock prevent cross-session/worker replay;
+a process-local cache is not the authority. Five wrong codes burn the challenge;
+existing shared account/IP/network/global budgets also limit verification. These
+are temporary windows, not permanent account suspension.
+
+PostgreSQL mfa_credentials and mfa_policy have forced owner-only RLS and no direct
+web/integration/maintenance grants. Narrow fixed-search-path definer functions
+bind material/confirmation to the exact live pending cookie, active user and
+active department. PUBLIC execution is revoked; integration/audit roles cannot
+call human MFA functions. SELECT policy optimization preserves the principal
+checks. Missing policy fails closed. Password, role, membership and recovery
+revocations include pending sessions; ordinary department password changes keep
+the verified factor on the newly issued session. Enrollment revokes other full
+and pending sessions. Existing R01/R04/R10 safeguards remain required regressions.
+
+### Key material and recovery
+
+PyOTP 2.10.0 supplies OTP primitives; cryptography 50.0.2 supplies authenticated
+Fernet/MultiFernet encryption for these small seed messages. Ciphertext is bound
+to user ID so swapping database ciphertext between accounts fails authentication.
+The keyring is an absolute local JSON file containing 1-5 Fernet keys; the first
+encrypts and the remaining keys permit managed rotation/recovery. Keys must be
+outside served paths and document backups, and outside the project/release in
+production. Existing read-only private Windows ACL checks are reused for the key
+file and directory at production startup; no ACL is weakened or rewritten. Files
+must be regular, nonlinked and bounded. The web process needs read access to its
+keyring, not access to migration-owner credentials.
+
+Recovery is an operator/DB-owner command, not a factor-disable or emergency-login
+browser endpoint. It records a nonsecret case reference and explicit verified-
+identity assertion, clears the old factor, revokes all affected sessions, sets
+mandatory password change, and grants a new time-limited enrollment window. It
+never reactivates an inactive account or department. Human MFA events and operator
+authorization/recovery/rotation are audited without passwords, OTPs, seeds,
+ciphertext or key values in event details. Named custodians, independent identity
+verification procedure, actual private Windows ACL/key provisioning and device
+usability acceptance remain operational approval gates.
+
+### Review-only rollout commands (not executed on business data)
+
+Use a reviewed maintenance window with web traffic stopped; inject per-role
+configuration/passfiles through the approved native launcher/secret mechanism.
+Do not put passwords, keys or authenticated URLs in commands, task XML or chat.
+
+1. Provision a separate private key directory for the intended service identity
+   and approved administrative custodians. Generate a new file under the intended
+   identity or use the approved secret provisioning mechanism. This command checks
+   the private parent ACL, never overwrites an existing file and never prints key
+   contents:
+
+   ```powershell
+   & $Python -m app.cli mfa-key-create --output 'C:\ohvr-private\keys\mfa.json'
+   ```
+
+2. Record MFA_KEY_FILE in protected role configuration; web REQUIRE_MFA=1 is
+   explicit, and production requires it even if omitted. Escrow key material
+   separately with authorized custodians; a database/document backup alone cannot
+   recover encrypted seeds. The scan/purge operator may reference the nonsecret
+   key path for Settings validation without reading the key; rotation requires
+   explicitly authorized key custody.
+3. Under the explicit migration-owner configuration, upgrade the reviewed named
+   application database, then rerun role grants. Substitute actual approved names:
+
+   ```powershell
+   & $Python -m app.cli init-db
+   & $Python scripts/configure_database_roles.py --database $ApplicationDatabase `
+     --web $WebRole --integration $IntegrationRole --maintenance $MaintenanceRole `
+     --audit-owner $AuditOwnerRole
+   ```
+
+   Verify the supplied owner URL uses verify-full and the intended CA; the grants
+   command refuses postgres/template databases and requires the current head.
+4. After each real identity check, authorize enrollment (the case reference is
+   nonsecret; examples are not real employee/case values):
+
+   ```powershell
+   & $Python -m app.cli mfa-enroll-authorize EMPLOYEE_USERNAME `
+     --reference APPROVED_CASE_ID --identity-verified
+   & $Python -m app.cli mfa-enforce --reference APPROVED_ROLLOUT_ID `
+     --confirm-session-revocation
+   ```
+
+   MFA enforcement intentionally revokes human/guest sessions. Confirm a verified
+   administrator can enroll and use the protected recovery procedure before
+   broader rollout. Check production key/policy/TLS/host/private-storage startup,
+   then expose only through the approved TLS proxy after release gates pass.
+5. Device loss: verify identity through the approved independent procedure, then:
+
+   ```powershell
+   & $Python -m app.cli mfa-recover EMPLOYEE_USERNAME `
+     --reference APPROVED_RECOVERY_CASE_ID --identity-verified
+   ```
+
+   The user needs their password, a new authenticator enrollment and the forced
+   password-change flow. If the password is also lost, use the existing separately
+   controlled change-password command with its secure local prompt. No replacement
+   password or bypass session is printed or sent.
+6. Rotation: securely provision a keyring with new primary and retained old keys;
+   restart every web worker to load both before re-encrypting rows. Under explicit
+   owner/key-custodian credentials, repeat bounded batches using the returned
+   last_user_id, without logging or displaying keys:
+
+   ```powershell
+   & $Python -m app.cli mfa-key-rotate --after-user-id 0 --limit 100
+   ```
+
+   Preserve prior keys in protected recovery escrow for retained database backups;
+   remove them from active keyrings only after verifying live rows and the approved
+   recovery/retention procedure. This work never automatically deletes old keys.
+
+### Dependency and verification evidence
+
+Official wheel hashes were checked before ordinary offline installation; no
+third-party package source was changed. Existing CFFI 2.1.1 satisfies cryptography.
+Installer temp-directory cleanup warnings were retained; external temp directories
+were not deleted. [Wheel provenance](evidence/phase9-mfa-dependency-provenance.json),
+[30-version runtime closure](evidence/phase9-mfa-runtime-dependencies.json), and
+[actual OSV query/response](evidence/phase9-mfa-osv-runtime.json) show zero matches,
+no query errors and no pagination for that scope. This is not an OS/tooling review
+or a reproducible transitive hash lock.
+
+Targeted checks cover RFC vectors, encryption/tamper/account binding/rotation,
+CSRF, five-minute/five-attempt challenges, persisted replay, simultaneous
+submission, operator-only setup/recovery, inactive departments, ordinary user
+password-change revocation, service-token separation, missing policy and real
+PostgreSQL private-table/function denials. A synthetic real pg_dump/pg_restore
+round trip preserves encrypted seed, replay step and MFA audit IDs; its dump is
+not an encrypted production-backup acceptance or a measured RPO/RTO certificate.
+
+Investigation history: an initial exact Cache-Control string assertion failed
+because existing layers both supply no-store; the check now verifies its actual
+cache-control semantics. A service-token test used a v2 capability at a v1-only
+endpoint and correctly received 403; it now exercises API v2. No application
+authorization was weakened to satisfy either assertion. Corrected targeted MFA/
+codec runs passed 21 on PostgreSQL, then 24 including startup-policy cases; the
+added restore/missing-policy selection passed 3. Final full/current-source results
+and hosted CI must be recorded below before technical completion is claimed.
+
+Primary references: [PyOTP API/security guidance](https://pyauth.github.io/pyotp/),
+[Fernet and key rotation](https://cryptography.io/en/50.0.2/fernet/),
+[RFC 6238](https://www.rfc-editor.org/rfc/rfc6238),
+[OWASP MFA recovery guidance](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html).

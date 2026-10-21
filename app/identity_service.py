@@ -106,7 +106,7 @@ def save_user(db, form, *, actor_id=None, user_id=None):
     after = {key: getattr(target, key) for key in ('role', 'department_id', 'is_active', 'can_approve')}
     changed = created or before != after or bool(values['password'])
     if changed:
-        db.execute(delete(LoginSession).where(LoginSession.user_id == target.id))
+        db.execute(delete(LoginSession).where((LoginSession.user_id == target.id) | (LoginSession.pending_user_id == target.id)))
     audit(db, actor_id, 'user_created' if created else 'user_updated', f'user:{target.id}',
           before=before, after=after, password_reset=bool(values['password']))
     return target, changed

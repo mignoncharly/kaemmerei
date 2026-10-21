@@ -81,7 +81,7 @@ jobs:
           python -m pytest -q tests/test_phase6.py --database postgresql --junitxml=.verification/phase6-native.xml
           python -m pytest -q tests/test_phase7.py --database postgresql --junitxml=.verification/phase7-native.xml
           python -m pytest -q tests/test_phase8.py --database postgresql --junitxml=.verification/phase8-native.xml
-          python -m pytest -q tests/test_phase9.py tests/test_phase9_operations.py tests/test_phase9_queries.py tests/test_windows_operations.py --database postgresql --junitxml=.verification/phase9-native.xml
+          python -m pytest -q tests/test_phase9.py tests/test_phase9_operations.py tests/test_phase9_queries.py tests/test_windows_operations.py tests/test_phase9_mfa.py tests/test_mfa_codec.py --database postgresql --junitxml=.verification/phase9-native.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -168,7 +168,7 @@ jobs:
       - name: Phase 8 frontend contracts under restricted PostgreSQL logins
         run: python -m pytest -q tests/test_phase8.py --database postgresql --junitxml=.verification/phase8-postgresql.xml
       - name: Phase 9 ingress and shared availability controls
-        run: python -m pytest -q tests/test_phase9.py tests/test_phase9_operations.py tests/test_phase9_queries.py tests/test_windows_operations.py --database postgresql --junitxml=.verification/phase9-postgresql.xml
+        run: python -m pytest -q tests/test_phase9.py tests/test_phase9_operations.py tests/test_phase9_queries.py tests/test_windows_operations.py tests/test_phase9_mfa.py tests/test_mfa_codec.py --database postgresql --junitxml=.verification/phase9-postgresql.xml
       - name: Publish safe failed-test classifications
         if: failure()
         run: |

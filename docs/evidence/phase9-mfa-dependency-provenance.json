@@ -1,0 +1,24 @@
+{
+  "packages": [
+    {
+      "name": "pyotp",
+      "version": "2.10.0",
+      "python": ">=3.8",
+      "filename": "pyotp-2.10.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/65/33/7b83bde70eddaaaaef487751a9c3a5cc0c0be54620ded0e120ebdc401ff9/pyotp-2.10.0-py3-none-any.whl",
+      "sha256": "1df2f6a1bcc3bb0716172a5215ddc2f8c7c7fd26a13df9927d52e1746934836c",
+      "source": "https://pypi.org/pypi/pyotp/2.10.0/json"
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "python": "!=3.9.0,!=3.9.1,>=3.9",
+      "filename": "cryptography-50.0.2-cp311-abi3-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/9a/4f/adfc442765721292fff86d314ce385d3249d22db42295c0dd057727b60f3/cryptography-50.0.2-cp311-abi3-win_amd64.whl",
+      "sha256": "7afa5a6602a9f29af1f3a2965f831bae7c9d5d597b7cbb716d41ab3b7d89879c",
+      "source": "https://pypi.org/pypi/cryptography/50.0.2/json"
+    }
+  ],
+  "installation": "Ordinary offline pip --no-index --no-deps from official hash-verified wheels; existing CFFI 2.1.1 satisfies dependency; no third-party source modified",
+  "installer_warning": "Managed temporary-directory cleanup warnings; no external directories deleted"
+}

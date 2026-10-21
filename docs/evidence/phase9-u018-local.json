@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-21",
+  "source": "c3499965fa619b48e126d18e0ddb8103c9b03828",
+  "migration_head": "0022_read_admission",
+  "results": [
+    {
+      "selection": "sqlite",
+      "executed_items": 219,
+      "passed": 196,
+      "skipped": 23,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 154.986,
+      "junit_sha256": "98d609b2395c881d649bea4481deac7f9fc45a5855efe8327623584b066e9643"
+    },
+    {
+      "selection": "postgresql",
+      "executed_items": 219,
+      "passed": 217,
+      "skipped": 2,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 476.194,
+      "junit_sha256": "8ef8a55d755e072e55554d2693df582ed157abefda766419ea096ea74e2cb3af"
+    },
+    {
+      "selection": "explicit-postgresql",
+      "executed_items": 21,
+      "passed": 21,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": 73.086,
+      "junit_sha256": "10bbf8055c9f706d2d7214b180b353e3ce7c6271cb52699dbb5c0c3b7bb5c818"
+    }
+  ],
+  "explicit_selection_collection_note": "226 collected during explicit run, including 7 newly drafted but deselected MFA codec tests; 21 PostgreSQL selected/205 deselected. Full frozen-source suites collected 219.",
+  "catalog": {
+    "guarded_databases": 0,
+    "generated_roles": 0,
+    "control_privileges_unchanged": true
+  },
+  "scope": "Operations/query checkpoint only; later MFA work excluded; no production deployment"
+}

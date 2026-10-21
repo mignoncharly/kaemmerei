@@ -505,6 +505,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 from app.db_roles import validate_runtime_engine
                 validate_runtime_engine(engine, 'web')
                 validate_runtime_engine(app.state.integration_engine, 'integration')
+            if settings.mfa_key_file is not None:
+                from app.mfa_codec import SeedCipher
+                if settings.production:
+                    from app.documents import verify_private_acl
+                    verify_private_acl(settings.mfa_key_file)
+                    verify_private_acl(settings.mfa_key_file.parent)
+                app.state.mfa_cipher=SeedCipher(settings.mfa_key_file)
+            if settings.human_mfa:
+                with app.state.session_factory() as db:
+                    if settings.enforce_database_security:
+                        enabled=db.scalar(text('SELECT ohvr_security.mfa_policy_required()'))
+                    else:
+                        from app.models import MfaPolicy
+                        policy=db.get(MfaPolicy,1)
+                        enabled=policy and policy.required
+                    if not enabled:
+                        raise ValueError('Owner must explicitly enable database MFA policy before human MFA startup')
             yield
         finally:
             engine.dispose()
@@ -566,6 +583,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.config = settings
     app.state.document_storage_dir = ensure_storage(settings)
     app.state.document_scanner = ClamAVScanner(settings)
+    app.state.mfa_cipher = None
     app.state.session_factory = make_session_factory(engine)
     app.state.engine = engine
     app.state.integration_engine = make_engine(replace(settings,database_url=settings.integration_database_url)) if settings.integration_database_url else engine
@@ -622,9 +640,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         db.execute(delete(LoginAttempt).where(LoginAttempt.key_hash == key))
         db.delete(guest)
         db.flush()
-        new_login, token = new_session(db, settings.session_hours, user.id)
+        from app.mfa_service import required_for
+        needs_mfa=settings.human_mfa or required_for(db,user.id)
+        new_login, token = new_session(db, settings.session_hours, None if needs_mfa else user.id,
+            pending_user_id=user.id if needs_mfa else None,expires_minutes=5 if needs_mfa else None)
         db.commit()
-        return cookie_response(redirect("/?notice=login"), token, production=settings.production, hours=settings.session_hours)
+        return cookie_response(redirect('/account/mfa' if needs_mfa else '/?notice=login'), token,
+                               production=settings.production, hours=settings.session_hours,seconds=300 if needs_mfa else None)
 
     @app.post("/logout")
     def logout(request: Request, db: Session = Depends(get_db)):
@@ -1710,6 +1732,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from app.identity_routes import install_identity_routes
     install_identity_routes(app, get_db=get_db, html=html, base_context=base_context,
                             user_csrf=user_csrf, check_admin=check_admin)
+    from app.mfa_routes import install_mfa_routes
+    install_mfa_routes(app,get_db=get_db,html=html)
     from app.request_boundary import RequestBoundary
     app.add_middleware(RequestBoundary, settings=settings)
     return app

@@ -35,6 +35,19 @@ def main():
     scans=subs.add_parser('scan-pending', help='Bounded durable PostgreSQL scan retries; explicit schema operator')
     scans.add_argument('--limit',type=int,default=10)
     scans.add_argument('--seconds',type=int,default=120)
+    keys=subs.add_parser('mfa-key-create',help='Create a new key file in a separately provisioned private directory; never print key')
+    keys.add_argument('--output',required=True)
+    for command in ('mfa-enroll-authorize','mfa-recover'):
+        mfa=subs.add_parser(command,help='Owner-only verified enrollment/recovery, no bypass session')
+        mfa.add_argument('username')
+        mfa.add_argument('--reference',required=True)
+        mfa.add_argument('--identity-verified',action='store_true',required=True)
+    mfa=subs.add_parser('mfa-enforce',help='Require MFA and revoke all human/guest sessions; service tokens unchanged')
+    mfa.add_argument('--reference',required=True)
+    mfa.add_argument('--confirm-session-revocation',action='store_true',required=True)
+    rotation=subs.add_parser('mfa-key-rotate',help='Re-encrypt a bounded credential batch using the configured keyring primary key')
+    rotation.add_argument('--after-user-id',type=int,default=0)
+    rotation.add_argument('--limit',type=int,default=100)
     d = subs.add_parser("add-department", help="Fachbereich anlegen")
     d.add_argument("name")
     subs.add_parser("list-departments")
@@ -48,6 +61,25 @@ def main():
     x = subs.add_parser("disable-user")
     x.add_argument("username")
     args = parser.parse_args()
+    if args.command=='mfa-key-create':
+        import os
+        from pathlib import Path
+        from cryptography.fernet import Fernet
+        from app.documents import reject_links,verify_private_acl
+        try:
+            output=Path(args.output)
+            if not output.is_absolute() or (os.name=='nt' and str(output).startswith('\\\\')):
+                raise ValueError('Explicit local key path required')
+            reject_links(output)
+            verify_private_acl(output.parent)
+            data=(json.dumps([Fernet.generate_key().decode('ascii')])+'\n').encode('ascii')
+            fd=os.open(output,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_BINARY',0),0o600)
+            with os.fdopen(fd,'wb') as stream:
+                stream.write(data);stream.flush();os.fsync(stream.fileno())
+        except Exception:
+            raise SystemExit('Key creation failed safely; use a new local file in a provisioned private directory') from None
+        print('Private MFA key created; arrange separate protected recovery escrow before enabling MFA')
+        return
     settings = get_settings()
     # Privileged operator credentials are never inherited by the web engine.
     # Provisioning remains an explicit owner operation, not an RLS bypass grant.
@@ -119,6 +151,40 @@ def main():
             print(json.dumps(result))
             if result['errors'] or result['exhausted'] or result['retry'] or result['suspended']:
                 raise SystemExit(2)
+            return
+        if args.command in ('mfa-enroll-authorize','mfa-recover','mfa-enforce'):
+            from app.mfa_service import authorize_enrollment,enforce_policy
+            with SessionFactory() as db:
+                try:
+                    if args.command=='mfa-enforce':
+                        enforce_policy(db,args.reference)
+                    else:
+                        authorize_enrollment(db,args.username,args.reference,recovery=args.command=='mfa-recover')
+                    db.commit()
+                except Exception:
+                    db.rollback()
+                    raise SystemExit('MFA administration failed; verify active identity, owner permissions and case reference locally') from None
+            print('MFA policy/enrollment authorization recorded; affected sessions revoked; no bypass session issued')
+            return
+        if args.command=='mfa-key-rotate':
+            from app.mfa_codec import SeedCipher
+            from app.models import MfaCredential
+            if settings.mfa_key_file is None or not 1<=args.limit<=100 or args.after_user_id<0:
+                raise SystemExit('Explicit keyring and bounded rotation arguments required')
+            with SessionFactory() as db:
+                try:
+                    cipher=SeedCipher(settings.mfa_key_file)
+                    lock_identities(db)
+                    rows=db.scalars(select(MfaCredential).where(MfaCredential.user_id>args.after_user_id,
+                        MfaCredential.seed_ciphertext.is_not(None)).order_by(MfaCredential.user_id).limit(args.limit)).all()
+                    for row in rows:row.seed_ciphertext=cipher.rotate(row.user_id,row.seed_ciphertext)
+                    last=rows[-1].user_id if rows else args.after_user_id
+                    audit(db,None,'mfa_key_rotation','mfa_credentials',count=len(rows),last_user_id=last)
+                    db.commit()
+                except Exception:
+                    db.rollback()
+                    raise SystemExit('Key rotation failed; preserve old keys and investigate without logging seed material') from None
+            print(json.dumps({'rotated':len(rows),'last_user_id':last,'old_keys_must_be_retained_for_backups':True}))
             return
         if args.command == 'purge-sessions' and settings.enforce_database_security:
             from app.db_roles import validate_runtime_engine

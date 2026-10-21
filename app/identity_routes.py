@@ -34,7 +34,8 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         request.state.safe_values = safe_values(form)
         lock_identities(db)
         user, csrf = user_csrf(request, db)
-        require_csrf(request, db, str(form.get('csrf_token', '')))
+        current_session = require_csrf(request, db, str(form.get('csrf_token', '')))
+        verified_mfa = current_session.mfa_verified
         key = attempt_key('password-change:' + user.username, request.client.host if request.client else 'unknown')
         if throttled(db, key):
             raise HTTPException(429, 'Passwortprüfung vorübergehend gesperrt; später erneut versuchen')
@@ -57,8 +58,8 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         user.password_hash = ph.hash(password)
         user.must_change_password = False
         db.execute(delete(LoginAttempt).where(LoginAttempt.key_hash == key))
-        db.execute(delete(LoginSession).where(LoginSession.user_id == user.id))
-        _, token = new_session(db, app.state.config.session_hours, user.id)
+        db.execute(delete(LoginSession).where((LoginSession.user_id == user.id) | (LoginSession.pending_user_id == user.id)))
+        _, token = new_session(db, app.state.config.session_hours, user.id, mfa_verified=verified_mfa)
         audit(db, user.id, 'password_changed', f'user:{user.id}', sessions_revoked=True)
         db.commit()
         return cookie_response(RedirectResponse('/', status_code=303), token,
@@ -115,12 +116,12 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
             db.flush()
             if entity == 'departments' and not target.is_active:
                 ids = select(User.id).where(User.role == 'department', User.department_id == target.id)
-                db.execute(delete(LoginSession).where(LoginSession.user_id.in_(ids)))
+                db.execute(delete(LoginSession).where(LoginSession.user_id.in_(ids) | LoginSession.pending_user_id.in_(ids)))
                 # Scoped tokens are suspended by the live department gate, not
                 # irreversibly revoked. Reactivation restores their prior state.
             if entity == 'teams' and not target.is_active:
                 ids = select(RecipientMembership.user_id).where(RecipientMembership.team_id == target.id)
-                db.execute(delete(LoginSession).where(LoginSession.user_id.in_(ids)))
+                db.execute(delete(LoginSession).where(LoginSession.user_id.in_(ids) | LoginSession.pending_user_id.in_(ids)))
             audit(db, actor.id, entity + ('_updated' if identity_id else '_created'),
                   f'{entity}:{target.id}', before=before, after={field: name, 'is_active': target.is_active},
                   **({'department_id': target.department_id, 'user_id': target.user_id} if entity == 'contacts' else {}))
@@ -147,7 +148,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
                 db.add(RecipientMembership(team_id=team_id, user_id=user_id))
             elif not enabled and member is not None:
                 db.delete(member)
-            db.execute(delete(LoginSession).where(LoginSession.user_id == user_id))
+            db.execute(delete(LoginSession).where((LoginSession.user_id == user_id) | (LoginSession.pending_user_id == user_id)))
             audit(db, actor.id, 'recipient_membership_changed', f'team:{team_id}', user_id=user_id, enabled=enabled)
             db.commit()
         except ValueError:

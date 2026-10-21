@@ -201,3 +201,5 @@ Vor einem dienstlichen Produktivbetrieb sind fachliche Abnahme, Datenschutzprüf
 - `docs/ARBEITSPLAN.md`: Umsetzungsstand, offene fachliche Fragen und nächste Schritte
 
 Phase 9 U018 continues with durable scan batches, review-only native Windows operations templates, approved workload/recovery targets and statement-scoped RLS/read optimizations (head 0022). Initial workload failures are preserved in docs/evidence/phase9-workload-before.json. Full current-source verification and remaining MFA/backup/deployment gates are tracked in HANDOFF.md and docs/PHASE9_OPERATIONS.md. No Phase 9 exit or deployment acceptance.
+
+Phase 9 U019 implements the approved local TOTP strategy: encrypted user-bound seeds, operator-authorized enrollment/recovery, short pending challenges, persisted replay protection, PostgreSQL enforcement and separate service credentials. Head 0023; full SQLite 244 collected: 219 passed + 25 explicit skips, 15 passing subtests. Full PostgreSQL and exact-source hosted verification are running; no production rollout or Phase 9 exit. See HANDOFF U019 and docs/PHASE9_OPERATIONS.md.

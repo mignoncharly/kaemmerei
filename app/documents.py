@@ -41,6 +41,22 @@ def validate_storage_setting(root):
             raise ValueError('Document storage must be outside public/static/template roots')
 
 
+def verify_private_acl(path):
+    if os.name=='nt':
+        # Read ACL only. Existing operator-owned directories are never re-ACL'd.
+        script="$a=Get-Acl -LiteralPath $env:OHVR_STORAGE_ACL_PATH; @($a.Access | Where-Object {$_.AccessControlType -eq 'Allow'} | ForEach-Object {$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}) | ConvertTo-Json -Compress"
+        try:
+            sid=subprocess.run(['whoami','/user','/fo','csv','/nh'],capture_output=True,text=True,check=True,timeout=10).stdout.split(',')[-1].strip().strip('"')
+            output=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-Command',script],env={**os.environ,'OHVR_STORAGE_ACL_PATH':str(path)},capture_output=True,text=True,check=True,timeout=10)
+            allowed=json.loads(output.stdout)
+            if isinstance(allowed,str):allowed=[allowed]
+            if not allowed or any(x not in (sid,'S-1-5-18','S-1-5-32-544') for x in allowed):
+                raise ValueError('Storage ACL permits other identities')
+        except Exception:
+            raise ValueError('Private Windows storage ACL must be provisioned and verified by the operator') from None
+    elif path.stat().st_mode & 0o077:
+        raise ValueError('Production storage requires owner-only permissions')
+
 def ensure_storage(settings):
     root=Path(settings.document_storage_dir).absolute()
     validate_storage_setting(root)
@@ -51,25 +67,10 @@ def ensure_storage(settings):
         raise ValueError('Provision private Windows storage as the service identity before startup')
     mode=0o777 if os.name=='nt' and not settings.production else 0o700
     root.mkdir(mode=mode,parents=True,exist_ok=True)
-    def verify_private(path):
-        if os.name=='nt':
-            # Read ACL only. Existing operator-owned directories are never re-ACL'd.
-            script="$a=Get-Acl -LiteralPath $env:OHVR_STORAGE_ACL_PATH; @($a.Access | Where-Object {$_.AccessControlType -eq 'Allow'} | ForEach-Object {$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}) | ConvertTo-Json -Compress"
-            try:
-                sid=subprocess.run(['whoami','/user','/fo','csv','/nh'],capture_output=True,text=True,check=True,timeout=10).stdout.split(',')[-1].strip().strip('"')
-                output=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-Command',script],env={**os.environ,'OHVR_STORAGE_ACL_PATH':str(path)},capture_output=True,text=True,check=True,timeout=10)
-                allowed=json.loads(output.stdout)
-                if isinstance(allowed,str):allowed=[allowed]
-                if not allowed or any(x not in (sid,'S-1-5-18','S-1-5-32-544') for x in allowed):
-                    raise ValueError('Storage ACL permits other identities')
-            except Exception:
-                raise ValueError('Private Windows storage ACL must be provisioned and verified by the operator') from None
-        elif path.stat().st_mode & 0o077:
-            raise ValueError('Production storage requires owner-only permissions')
-    if settings.production:verify_private(root)
+    if settings.production:verify_private_acl(root)
     for area in ('staging','blobs'):
         path=root/area;reject_links(path);path.mkdir(mode=mode,exist_ok=True)
-        if settings.production:verify_private(path)
+        if settings.production:verify_private_acl(path)
     return root
 
 

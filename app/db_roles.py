@@ -35,9 +35,13 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
     connection.exec_driver_sql(f'GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA ohvr_security TO {w},{i},{a}')
     connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.password_hash(integer) FROM {i}')
     connection.exec_driver_sql(f'REVOKE EXECUTE ON FUNCTION ohvr_security.lock_contract(integer) FROM {i}')
+    connection.exec_driver_sql(f'''REVOKE EXECUTE ON FUNCTION ohvr_security.mfa_policy_required(),
+        ohvr_security.mfa_required_for(integer),ohvr_security.mfa_subject(text),
+        ohvr_security.mfa_material(text,text),ohvr_security.mfa_confirm(text,integer),
+        ohvr_security.mfa_denied(text) FROM {i},{a}''')
     tables=inspect(connection).get_table_names()
     for table in tables:
-        if table in ('alembic_version','security_events') or table.startswith('sync_'):
+        if table in ('alembic_version','security_events','mfa_credentials','mfa_policy') or table.startswith('sync_'):
             continue
         cols=[col['name'] for col in inspect(connection).get_columns(table) if col['name'] not in ('password_hash','token_hash') or table=='login_sessions']
         # token_hash on LoginSession is an opaque lookup key, restricted by RLS;
@@ -100,3 +104,6 @@ def validate_runtime_engine(engine, expected_kind):
         row=connection.execute(text("SELECT count(*),bool_and(c.relrowsecurity AND c.relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('contracts','contract_documents','contract_tasks','contract_reviews','revisions','identity_audit','security_events','review_decisions','document_jobs','sync_state','sync_outbox','sync_events','sync_cursors','sync_snapshot_items')")).one()
         if row[0]!=14 or not row[1]:
             raise ValueError('Required forced RLS policies are missing')
+        private=connection.execute(text("SELECT count(*),bool_and(relrowsecurity AND relforcerowsecurity) FROM pg_class WHERE oid IN ('public.mfa_credentials'::regclass,'public.mfa_policy'::regclass)")).one()
+        if private[0]!=2 or not private[1]:
+            raise ValueError('Required private MFA protection is missing')

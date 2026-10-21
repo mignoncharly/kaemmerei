@@ -197,3 +197,17 @@ files as well as existing availability regressions. Actual native service/TLS,
 MFA, backup, alert and release acceptance are separate outstanding gates.
 Initial workload failures remain in `phase9-workload-before.json` and
 `phase9-workload-read-optimized.json`; do not replace them with a success claim.
+
+
+## Phase 9 U019 human MFA
+
+`tests/test_mfa_codec.py` uses public RFC vectors/disposable keys for encryption,
+account binding, tamper rejection, replay/format and rotation.
+`tests/test_phase9_mfa.py` covers operator enrollment/recovery, challenge scope,
+expiry/throttling, concurrent consumption, ordinary user revocation, service-token
+separation, private PostgreSQL tables/functions, missing policy/startup config
+and a real synthetic database/seed/audit restore. CI explicit Phase 9 selections
+include both. Full SQLite: 244 collected, 219 passed/25 explicit skips, 15 passing
+subtests; PostgreSQL/current-source CI results must be appended after completion.
+No deployed keys/ACLs/TLS, real identity recovery or encrypted scheduled backup
+acceptance is implied by these checks.

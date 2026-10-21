@@ -36,6 +36,9 @@ def get_user(request: Request, db: Session) -> User | None:
         return None
     if login_session.user is None or not active_access(login_session.user):
         return None
+    from app.mfa_service import required_for
+    if (request.app.state.config.human_mfa or required_for(db,login_session.user_id)) and not login_session.mfa_verified:
+        return None
     if db.bind.dialect.name == 'sqlite':
         db.connection().info['actor_id'] = login_session.user.id
     return login_session.user
@@ -57,18 +60,22 @@ def require_csrf(request: Request, db: Session, supplied: str) -> LoginSession:
     return session
 
 
-def new_session(db: Session, hours: int, user_id: int | None = None) -> tuple[LoginSession, str]:
+def new_session(db: Session, hours: int, user_id: int | None = None, *, mfa_verified=False,
+                pending_user_id=None,expires_minutes=None) -> tuple[LoginSession, str]:
     raw = secrets.token_urlsafe(48)
     record = LoginSession(token_hash=hash_value(raw), user_id=user_id,
                           csrf_token=secrets.token_hex(32),
-                          expires_at=now_utc() + timedelta(hours=hours))
+                          mfa_verified=mfa_verified,
+                          pending_user_id=pending_user_id,
+                          expires_at=now_utc() + (timedelta(minutes=expires_minutes)
+                              if expires_minutes is not None else timedelta(hours=hours)))
     db.add(record)
     db.flush()
     return record, raw
 
 
-def cookie_response(response, token: str, *, production: bool, hours: int):
-    response.set_cookie(COOKIE_NAME, token, max_age=hours * 3600, httponly=True,
+def cookie_response(response, token: str, *, production: bool, hours: int, seconds: int | None=None):
+    response.set_cookie(COOKIE_NAME, token, max_age=hours * 3600 if seconds is None else seconds, httponly=True,
                         secure=production, samesite="lax", path="/")
     return response
 

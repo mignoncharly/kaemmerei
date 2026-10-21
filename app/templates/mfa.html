@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Mehrfaktor-Anmeldung{% endblock %}
+{% block content %}
+<section class="panel login-card">
+ <h1>{% if enrolling %}Authentifikator einrichten{% else %}Anmeldecode eingeben{% endif %}</h1>
+ <p>Konto: {{ username }}. Die Anmeldung ist erst nach erfolgreicher Codeprüfung abgeschlossen.</p>
+ {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+ {% if enrolling and not seed %}
+ <p>Die Einrichtung wurde nach Identitätsprüfung freigegeben. Starten Sie jetzt die Einrichtung in Ihrer Authentifikator-App.</p>
+ <form method="post" action="/account/mfa/start"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button primary" type="submit">Einrichtung starten</button></form>
+ {% else %}
+ {% if seed %}<p>In Ihrer Authentifikator-App manuell hinzufügen: Konto {{ username }}, Aussteller OPEN.HERZ Vertragsregister, zeitbasiert (TOTP), sechs Ziffern, 30 Sekunden, SHA-1.</p>
+ <label for="enrollment-secret">Einrichtungsschlüssel (vertraulich)</label><input id="enrollment-secret" value="{{ seed }}" readonly autocomplete="off" spellcheck="false">
+ <p>Diesen Schlüssel nicht weitergeben. Er wird nach bestätigter Einrichtung nicht erneut angezeigt.</p>{% endif %}
+ <form method="post" action="/account/mfa">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label for="mfa-code">Aktueller sechsstelliger Code</label><input id="mfa-code" name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required autofocus>
+  <button class="button primary" type="submit">Anmeldung abschließen</button>
+ </form>
+ {% endif %}
+ <p>Bei Verlust des Geräts kontaktieren Sie die lokale Administration zur Identitätsprüfung. Es gibt keinen Ersatzcode per E-Mail.</p>
+ <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="link-button" type="submit">Anmeldung abbrechen</button></form>
+</section>
+{% endblock %}

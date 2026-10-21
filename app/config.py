@@ -35,6 +35,12 @@ class Settings:
     document_storage_quota_bytes: int = 10 * 1024**3
     document_storage_reserve_bytes: int = 256 * 1024**2
     defer_document_scans: bool = False
+    require_mfa: bool = False
+    mfa_key_file: Path | None = None
+
+    @property
+    def human_mfa(self) -> bool:
+        return self.production or self.require_mfa
 
     @property
     def queued_document_scans(self) -> bool:
@@ -94,6 +100,20 @@ class Settings:
                     raise ValueError('Production database connections require sslmode=verify-full and sslrootcert')
                 if not Path(url.query['sslrootcert']).is_absolute():
                     raise ValueError('Production database CA certificate must be an absolute path')
+        if self.human_mfa and self.mfa_key_file is None:
+            raise ValueError('Human MFA requires an explicitly provisioned private MFA_KEY_FILE')
+        if self.mfa_key_file is not None:
+            if not self.mfa_key_file.is_absolute():
+                raise ValueError('MFA_KEY_FILE must be an absolute private path')
+            if os.name=='nt' and str(self.mfa_key_file).startswith('\\\\'):
+                raise ValueError('MFA keys require local private storage')
+            key=Path(os.path.normpath(str(self.mfa_key_file)))
+            for excluded in (self.document_storage_dir.absolute(),Path(__file__).parent/'static',
+                             Path(__file__).parent/'templates',Path(__file__).parent.parent/'public'):
+                if key.is_relative_to(excluded.absolute()):
+                    raise ValueError('MFA keys must be outside document backups and served directories')
+            if self.production and key.is_relative_to(Path(__file__).resolve().parent.parent):
+                raise ValueError('Production MFA keys must be outside the release/project directory')
         if self.enforce_database_security and (not self.database_url.startswith('postgresql+psycopg://') or
                 not self.integration_database_url or not self.integration_database_url.startswith('postgresql+psycopg://')):
             raise ValueError('Database security requires PostgreSQL web and integration URLs')
@@ -121,6 +141,8 @@ def get_settings() -> Settings:
                         document_storage_quota_bytes=int(os.getenv('DOCUMENT_STORAGE_QUOTA_BYTES',str(10*1024**3))),
                         document_storage_reserve_bytes=int(os.getenv('DOCUMENT_STORAGE_RESERVE_BYTES',str(256*1024**2))),
                         defer_document_scans=os.getenv('DEFER_DOCUMENT_SCANS','0')=='1',
+                        require_mfa=os.getenv('REQUIRE_MFA','0')=='1',
+                        mfa_key_file=Path(os.environ['MFA_KEY_FILE']) if os.getenv('MFA_KEY_FILE') else None,
                         clamav_executable=Path(os.environ['CLAMAV_EXECUTABLE']) if os.getenv('CLAMAV_EXECUTABLE') else None,
                         clamav_database_dir=Path(os.environ['CLAMAV_DATABASE_DIR']) if os.getenv('CLAMAV_DATABASE_DIR') else None,
                         scanner_timeout=int(os.getenv('SCANNER_TIMEOUT','60')),

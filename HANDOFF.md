@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 9 in progress (U018). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
+Current stage: Phase 9 in progress (U019). Bounded ingress/shared throttling/synchronous handlers implemented; operations, job scheduling, workload, recovery and identity/deployment gates remain open. See docs/PHASE9_OPERATIONS.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -24,7 +24,7 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Documents reviewed | README and ARBEITSPLAN updated to distinguish prototype behavior, known defects, verification, and outstanding approvals |
 | Application | FastAPI, SQLAlchemy, Jinja templates, local static CSS/JS |
 | Database | SQLite development default; production configuration requires PostgreSQL/psycopg |
-| Latest migration observed | `0022_read_admission`; statement-scoped SELECT admission and archived/end index tested in disposable databases only. Rerun runtime-role configuration in a reviewed maintenance window before serving traffic. |
+| Latest migration observed | `0023_human_mfa`; encrypted owner-only credentials, challenge sessions and deliberate rollout policy, tested only in disposable databases. Rerun reviewed runtime-role configuration after migrations. No business migration. |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
 | Tests | U017 adopted environment: 199 collected; PostgreSQL 197 passed + 2 explicit local skips; SQLite 181 passed + 18 skips; 15 subtests each. Phase 9 21/21 on both; explicit PostgreSQL 16/16. Five exact-source hosted jobs passed for 1649b15. See docs/evidence/phase9-local.json. |
@@ -437,3 +437,18 @@ D11 platform selected by user: native Windows, PostgreSQL and a TLS reverse prox
 - Added scoped SQL status/approval counts, dated-only reminder candidates and department eager loading. Migration 0022 evaluates the exact existing department SELECT rule via an uncorrelated statement InitPlan. Mutation policies unchanged; helper PUBLIC execute revoked. Actual-role rule-equivalence/plan tests pass 2/2 after correcting EXPLAIN to VERBOSE; original assertion failure retained in verification history.
 - Existing document/operations/Windows PostgreSQL selection: 46 passed + 2 explicit local skips (before query optimization); Windows/operations SQLite selection: 13 passed + 3 PG-only skips (before later added uploader recheck test). Final frozen-source full tests, benchmark rerun, cleanup and hosted results must be appended below before acceptance claims.
 - Remaining Phase 9 work: MFA enrollment/challenge/replay/seed protection/recovery, encrypted consistent backups and measured RPO/RTO, representative dates/history/mixed-load benchmark, remaining schedules/queue admission/monitoring/alert ownership, live native proxy/service/ACL/storage validation and reproducible release gate. U017 exact-source CI is historical evidence, not CI for these new operations changes.
+
+
+U018 final checkpoint: source c3499965fa619b48e126d18e0ddb8103c9b03828 committed/pushed main. Full 219 collected: PostgreSQL 217 passed + 2 local skips (476.19s), SQLite 196 + 23 skips (154.99s); 15 passing subtests each. Explicit actual PostgreSQL 21 passed/205 deselected; seven new draft MFA codec tests were collected but deselected in that run. No failures/errors/xfails. All five exact-source hosted jobs passed: run 39650882010. Initial undated read-load rerun meets all four targets, all 200 HTTP 200; mixed dates/history/files remain unverified. Catalog cleanup confirmed 0 guarded databases/0 generated roles, control privileges unchanged. See phase9-u018-local.json, phase9-workload-aggregated.json and phase9-ci-39650882010.json. U019 MFA work is beginning and is excluded from this acceptance checkpoint; existing user launcher whitespace change remains untouched. Phase 9 exit remains open.
+
+
+### U019 - Approved local TOTP and audited recovery implementation (2026-10-21)
+
+- D12 implementation: password-proven five-minute pending sessions, CSRF-protected operator-authorized enrollment, six-digit/30s TOTP with persisted monotonic replay step, shared throttling/five-attempt challenge burn and atomic verified full-session rotation. PostgreSQL principal checks enforce MFA; service-token authorization remains separate.
+- Additive 0023: encrypted MFA credentials and rollout policy have forced owner-only RLS; no direct runtime grants, fixed-search-path scoped functions, PUBLIC revoke and integration/audit function denial. Migration preserves old rows and never silently enables rollout or enrolls users. Production startup requires key/policy; missing policy fails closed. Password and identity changes revoke pending challenges as well as full sessions.
+- PyOTP 2.10.0/cryptography 50.0.2 adopted from official hash-verified wheels; user-bound Fernet ciphertext, private external keyring, read-only production ACL checks, bounded operator key rotation and separate escrow requirements. Runtime closure 30 versions has zero OSV matches/errors/pagination; broader tooling/hash-lock work remains open. Installer temp cleanup warnings retained without external deletions.
+- Recovery requires an explicit owner command, verified-identity assertion and case reference; revokes sessions, clears old factor, authorizes 24h new setup and forces password change. No browser factor-disable endpoint or bypass session. Enrollment/recovery/verification/denial/rotation audited without secret material. Windows role launcher/example updated for nonsecret key-path configuration.
+- Targeted real PG MFA/codec: 21 passed, later 24 with configuration checks; real synthetic MFA database restore/missing-policy selection 3 passed. Initial cache-header and wrong API-version test assertions were corrected without weakening application controls. New full suites/hosted checks are running; their final results must be appended. U018 c349996 remains the last fully recorded checkpoint until then.
+- Deployment and actual private key/ACL/custodian/device acceptance remain open, along with encrypted scheduled backup/recovery, representative mixed workload, remaining operations/alerts/schedules and release reproducibility. Production has not been deployed, migrated, reconfigured or granted new roles. Existing native cluster/Unicode fixes and unrelated launcher whitespace remain intact.
+
+U019 interim full verification: SQLite 244 collected, 219 passed/25 explicit skips, 15 passing subtests (233.36s), zero failures/errors/xfails. Native PostgreSQL full suite remains running. Exact-source MFA CI is pending the new implementation push; U018 CI remains verified only for c349996.

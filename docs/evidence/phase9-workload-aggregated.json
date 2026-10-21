@@ -1,0 +1,68 @@
+{
+  "dataset": {
+    "contracts": 10000,
+    "documents": 50000,
+    "concurrent_users": 10
+  },
+  "profile": "Undated draft contracts, no revision history/tasks/reviews, external-link metadata without files; initial read-load baseline only",
+  "source_hashes": {
+    "app\\main.py": "d72cbb2e9c60f2ecf25fb49ee334a4a6fce6671ac38ff03b51267cf6430d07d5",
+    "app\\models.py": "ef15bad70b81abbc96ab087ead5d42d2c2ce208f77c10b94792f7cf15e67b6fb",
+    "app\\financial.py": "ca3411cbd425b2ebee1e4e383b65134a4402fdd54b79eb8760198ac3d1e8e16d",
+    "alembic\\versions\\0022_read_admission.py": "05c8ad39d1fb868d69afcfaf4f888e8a9a7fa7a6a1b511ad41a5ddcd4177204d",
+    "scripts\\benchmark_phase9.py": "4889988dfd50f8eae9d5f33746736b1a9310bb740d66a6004cde9dd0e26a3f6a"
+  },
+  "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+  "targets": {
+    "page_p95_seconds": 2,
+    "export_seconds": 15
+  },
+  "selections": [
+    {
+      "operation": "/",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 0.3611187000060454,
+      "max_seconds": 0.3679497999983141,
+      "max_response_bytes": 34213,
+      "passed": true
+    },
+    {
+      "operation": "/reports",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 0.24207000000751577,
+      "max_seconds": 0.27649899999960326,
+      "max_response_bytes": 6884,
+      "passed": true
+    },
+    {
+      "operation": "/contracts/1",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 0.5423461000027601,
+      "max_seconds": 0.5636471000034362,
+      "max_response_bytes": 17910,
+      "passed": true
+    },
+    {
+      "operation": "bounded_export",
+      "requests": 50,
+      "statuses": {
+        "200": 50
+      },
+      "p95_seconds": 2.747376400002395,
+      "max_seconds": 2.992370000007213,
+      "max_response_bytes": 81675,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "source": "c3499965fa619b48e126d18e0ddb8103c9b03828"
+}
