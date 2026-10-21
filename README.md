@@ -1,5 +1,7 @@
 # OPEN.HERZ Vertragsregister
 
+Phase 8 U016: frontend/navigation corrections implemented; final verification in progress. [Behavior, browser constraints and evidence](docs/PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
+
 Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel technically verified: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18; 15 subtests each. Phase 7 restricted PostgreSQL 19 passed; all four hosted jobs passed for 2fd1bf8. [Definitions, migration and verification](docs/PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
 
 Das Vertragsregister ist eine deutschsprachige Webanwendung zur Erfassung, Suche, Verwaltung und Auswertung kommunaler Verträge. Die Anwendung läuft lokal oder kann nach technischer und fachlicher Freigabe auf einem internen Server betrieben werden.

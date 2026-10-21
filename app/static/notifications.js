@@ -1,9 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".notice, .alert").forEach((notification) => {
-    window.setTimeout(() => {
-      notification.classList.add("notification-dismissed");
-      notification.setAttribute("aria-hidden", "true");
-      window.setTimeout(() => notification.remove(), 300);
-    }, 5000);
+  document.querySelectorAll("[data-dismiss-notice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = document.getElementById(button.dataset.dismissNotice);
+      if (target) {
+        target.remove();
+        const main = document.getElementById('main-content');
+        if (main) main.focus();
+      }
+    });
   });
 });

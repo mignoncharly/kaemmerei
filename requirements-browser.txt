@@ -1,0 +1,4 @@
+-r requirements-dev.txt
+# Verification only; not an application runtime dependency.
+playwright==1.64.0
+pyee==14.0.0

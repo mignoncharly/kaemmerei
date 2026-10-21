@@ -6,12 +6,12 @@ from hashlib import sha256
 import os
 from pathlib import Path
 import secrets
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from urllib.parse import urlsplit
 from uuid import uuid4
 from zipfile import BadZipFile
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -22,6 +22,9 @@ from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.exceptions import RequestValidationError
+from app.presentation import safe_values, review_options, FIELD_LABELS
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
 from app.documents import ensure_storage, stage_upload, new_document, process_document, download_response, audit_denied, ClamAVScanner, MEDIA
@@ -34,6 +37,7 @@ from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, re
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.dates import add_months, calculate_notice_deadline, calculate_next_end_date, contract_dates
 from app.financial import aggregate, inventory_trend, amount as metadata_amount
+from app.listing import normalize_filters, filtered_contracts, EXPORT_MAX_ROWS
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
 from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
@@ -49,6 +53,7 @@ MAX_DOCUMENTS_PER_UPLOAD = 5
 REMINDER_WINDOW_DAYS = 90
 DOCUMENT_TYPES = MEDIA
 TEMPLATES = Jinja2Templates(directory=str(BASE / "templates"))
+TEMPLATES.env.globals['recovery_labels']=FIELD_LABELS
 TEMPLATES.env.globals['new_request_id']=lambda: str(uuid4())
 TEMPLATES.env.filters["euro"] = lambda amount: format_euro(amount)
 SUCCESS_NOTICES = {
@@ -190,7 +195,7 @@ def check_admin(user: User):
 
 
 def form_values(request_form):
-    return {k: str(v) for k, v in request_form.items() if isinstance(v, str)}
+    return safe_values(request_form)
 
 
 def validate_task_fields(form, db: Session, contract: Contract, creating: bool = False) -> dict:
@@ -279,6 +284,16 @@ def split_deadline_reminders(contracts, today: date) -> tuple[list[dict], list[d
     return overdue, upcoming
 
 
+def listing_spec(db, user, values):
+    filters = normalize_filters(values)
+    upcoming_ids = []
+    if filters['focus'] == 'expiring':
+        population = db.scalars(contract_query(user).where(Contract.archived_at.is_(None))).all()
+        _, upcoming = split_deadline_reminders(population, date.today())
+        upcoming_ids = [item['contract'].id for item in upcoming]
+    return filters, filtered_contracts(user, filters, upcoming_ids=upcoming_ids).order_by(Contract.updated_at.desc(), Contract.id.desc())
+
+
 def format_euro(amount) -> str:
     raw = f"{amount:,.2f}"
     whole, cents = raw.rsplit(".", 1)
@@ -331,6 +346,8 @@ HISTORY_FIELDS = (
     ("renewal_period_months", "Verlängerungszeitraum"),
     ("contract_value", "Gesamtvertragswert"),
     ("annual_value", "Jahreswert"),
+    ("value_basis", "Wertbasis"),
+    ("external_reference", "Externe Referenz"),
     ("financial_direction", "Finanzielle Richtung"),
     ("payment_interval", "Zahlungsintervall"),
     ("budget_assignment", "Haushaltszuordnung"),
@@ -365,7 +382,7 @@ def history_value(key: str, value, department_names: dict[int, str]) -> str:
             return str(value)
     if key == "tax_reviewed_at":
         try:
-            return datetime.fromisoformat(str(value)).strftime("%d.%m.%Y %H:%M")
+            return datetime.fromisoformat(str(value)).strftime("%d.%m.%Y %H:%M") + ' UTC'
         except ValueError:
             return str(value)
     if key in ("annual_value", "contract_value"):
@@ -379,6 +396,8 @@ def history_value(key: str, value, department_names: dict[int, str]) -> str:
         return "Ja" if value else "Nein"
     if key == "renewal_period_months":
         return f"{value} {'Monat' if str(value) == '1' else 'Monate'}"
+    if key == "value_basis":
+        return {"net":"Netto","gross":"Brutto","unknown":"Unbekannt"}.get(str(value), str(value))
     if key == "financial_direction":
         return dict(FINANCIAL_DIRECTIONS).get(str(value), str(value))
     if key == "payment_interval":
@@ -483,9 +502,35 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                   openapi_url=None, lifespan=lifespan)
     @app.exception_handler(WorkflowConflict)
     async def workflow_conflict(request, exc):
+        if request.url.path.startswith('/api/'):
+            return JSONResponse({'detail':'Changed since this form was loaded'},status_code=409)
         return TEMPLATES.TemplateResponse(request=request, name='workflow_conflict.html', context={
             'request':request,'submitted':exc.submitted,'current_version':exc.current_version,
             'reload_url':'/'.join(request.url.path.split('/')[:3]),'user':None},status_code=409)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_error(request, exc):
+        if 300 <= exc.status_code < 400:
+            return Response(status_code=exc.status_code,headers=exc.headers)
+        if request.url.path.startswith('/api/'):
+            return JSONResponse({'detail':exc.detail},status_code=exc.status_code,headers=exc.headers)
+        messages={400:'Die Anfrage konnte nicht verarbeitet werden.',401:'Bitte erneut anmelden.',
+            403:'Keine Berechtigung oder abgelaufenes Formular. Bitte neu laden und erneut anmelden.',
+            404:'Der Eintrag ist nicht vorhanden oder für Sie nicht zugänglich.',
+            409:'Der Vorgang steht im Konflikt mit dem aktuellen Zustand. Bitte neu laden.',
+            413:'Die Anfrage oder der Export ist zu groß. Bitte den Umfang verkleinern.',
+            422:'Bitte die Angaben prüfen und korrigieren.',429:'Zu viele Anfragen. Bitte später erneut versuchen.'}
+        return TEMPLATES.TemplateResponse(request=request,name='error.html',context={
+            'user':None,'status_code':exc.status_code,'message':messages.get(exc.status_code,'Der Vorgang konnte nicht abgeschlossen werden.'),
+            'submitted':getattr(request.state,'safe_values',{}),
+            'reload_url':request.url.path if request.method=='GET' else '/'.join(request.url.path.split('/')[:3]) or '/'},
+            status_code=exc.status_code,headers=exc.headers)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request, exc):
+        if request.url.path.startswith('/api/'):
+            return JSONResponse({'detail':'Invalid request parameters'},status_code=422)
+        return await http_error(request,HTTPException(422))
 
     app.state.config = settings
     app.state.document_storage_dir = ensure_storage(settings)
@@ -526,6 +571,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/login", response_class=HTMLResponse)
     async def login(request: Request, db: Session = Depends(get_db)):
         form = await request.form(max_files=0, max_fields=3)
+        request.state.safe_values = form_values(form)
         # Serialize credential verification/session creation with password reset
         # and permission changes; no commit may release this lock in between.
         lock_identities(db)
@@ -535,12 +581,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ip = request.client.host if request.client else "unknown"
         key = attempt_key(username, ip)
         if len(username) > 80 or len(password) > 512 or throttled(db, key):
-            return html(request, "login.html", {"csrf_token": guest.csrf_token,
+            return html(request, "login.html", {"csrf_token": guest.csrf_token, "username": username[:80],
                          "error": "Anmeldung vorübergehend nicht möglich. Bitte später erneut versuchen."}, 429)
         user = db.scalar(select(User).where(User.username == username, User.is_active.is_(True)))
         if not verify_password(password, user) or not active_access(user):
             record_failure(db, key)
-            return html(request, "login.html", {"csrf_token": guest.csrf_token,
+            return html(request, "login.html", {"csrf_token": guest.csrf_token, "username": username[:80],
                          "error": "Benutzername oder Passwort ungültig."}, 401)
         db.execute(delete(LoginAttempt).where(LoginAttempt.key_hash == key))
         db.delete(guest)
@@ -552,6 +598,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/logout")
     async def logout(request: Request, db: Session = Depends(get_db)):
         form = await request.form()
+        request.state.safe_values = form_values(form)
         login_session = require_csrf(request, db, str(form.get("csrf_token", "")))
         db.delete(login_session)
         db.commit()
@@ -590,6 +637,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, csrf = user_csrf(request, db)
         check_admin(user)
         form = await request.form(max_fields=20)
+        request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         lock_actor(db,user)
         check_admin(user)
@@ -631,6 +679,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, _csrf = user_csrf(request, db)
         check_admin(user)
         form = await request.form(max_fields=2)
+        request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         lock_actor(db,user)
         check_admin(user)
@@ -762,6 +811,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, csrf = user_csrf(request, db)
         check_admin(user)
         form = await request.form(max_fields=10)
+        request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
             values = validate_user_fields(form, db)
@@ -797,6 +847,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not target:
             raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
         form = await request.form(max_fields=10)
+        request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
             target, changed = save_user(db, form, actor_id=user.id, user_id=target.id)
@@ -825,64 +876,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                          contract_type: str = "", contact_person: str = "", deputy_contact_person: str = "",
                          status: str = "", tax_review_status: str = "", db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        q, contract_type = q.strip()[:100], contract_type.strip()[:120]
-        contact_person, deputy_contact_person = contact_person.strip()[:160], deputy_contact_person.strip()[:160]
-        valid_statuses = {code for code, _label in CONTRACT_STATUSES}
-        status = status if status in valid_statuses | {"archived"} else ""
-        tax_review_status = tax_review_status if tax_review_status in TAX_REVIEW_LABELS else ""
-        stmt = contract_query(user).order_by(Contract.updated_at.desc(), Contract.id.desc())
-        if user.role == "department":
-            stmt = stmt.where(Contract.department_id == user.department_id)
-        stmt = stmt.where(Contract.archived_at.is_not(None) if status == "archived" else Contract.archived_at.is_(None))
-        if q:
-            search_filter = (Contract.designation.contains(q, autoescape=True) |
-                             Contract.contract_number.contains(q, autoescape=True) |
-                             Contract.contract_partner.contains(q, autoescape=True) |
-                             Contract.contact_person.contains(q, autoescape=True) |
-                             Contract.deputy_contact_person.contains(q, autoescape=True) |
-                             Contract.contract_type.contains(q, autoescape=True) |
-                             Contract.tax_review_result.contains(q, autoescape=True) |
-                             Contract.department.has(Department.name.contains(q, autoescape=True)))
-            matching_statuses = [code for code, label in CONTRACT_STATUSES
-                                 if q.casefold() in code.casefold() or q.casefold() in label.casefold()]
-            if matching_statuses:
-                search_filter = search_filter | Contract.status.in_(matching_statuses)
-            matching_tax_statuses = [code for code, label in TAX_REVIEW_STATUSES
-                                     if q.casefold() in code.casefold() or q.casefold() in label.casefold()]
-            if matching_tax_statuses:
-                search_filter = search_filter | Contract.tax_review_status.in_(matching_tax_statuses)
-            stmt = stmt.where(search_filter)
-        if user.role != "department" and department.isdecimal():
-            stmt = stmt.where(Contract.department_id == int(department))
-        if contract_type:
-            stmt = stmt.where(Contract.contract_type == contract_type)
-        if contact_person:
-            stmt = stmt.where(Contract.contact_person == contact_person)
-        if deputy_contact_person:
-            stmt = stmt.where(Contract.deputy_contact_person == deputy_contact_person)
-        if status and status != "archived":
-            stmt = stmt.where(Contract.status == status)
-        if tax_review_status:
-            stmt = stmt.where(Contract.tax_review_status == tax_review_status)
-        if focus in ("active", "expiring", "review", "approval", "ended"):
-            stmt = stmt.where(Contract.archived_at.is_(None))
-            if focus == "active":
-                stmt = stmt.where(Contract.status == "active")
-            elif focus == "review":
-                stmt = stmt.where(Contract.status.in_(("draft", "in_progress")))
-            elif focus == "approval":
-                stmt = stmt.where(Contract.id.in_(select(ContractReview.contract_id).where(
-                    ContractReview.status.in_(("open", "in_review")))))
-            elif focus == "ended":
-                stmt = stmt.where(Contract.status.in_(("terminated", "ended")))
-            else:
-                dashboard_contracts = db.scalars(contract_query(user).where(
-                    Contract.archived_at.is_(None),
-                    *([Contract.department_id == user.department_id] if user.role == "department" else []))).all()
-                _, upcoming = split_deadline_reminders(dashboard_contracts, date.today())
-                upcoming_ids = [item["contract"].id for item in upcoming]
-                stmt = stmt.where(Contract.id.in_(upcoming_ids))
-        contracts_to_export = db.scalars(stmt).all()
+        _filters, stmt = listing_spec(db, user, locals())
+        contracts_to_export = db.scalars(stmt.limit(EXPORT_MAX_ROWS+1)).all()
+        if len(contracts_to_export) > EXPORT_MAX_ROWS:
+            raise HTTPException(413, 'Der Export ist auf 5000 Verträge begrenzt. Bitte die Filter eingrenzen.')
         payment_labels = dict(PAYMENT_INTERVALS)
         direction_labels = dict(FINANCIAL_DIRECTIONS)
         tax_labels = dict(TAX_REVIEW_STATUSES)
@@ -1038,6 +1035,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, csrf = user_csrf(request, db)
         check_write(user)
         form = await request.form(max_files=1, max_fields=2)
+        request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         upload = form.get("file")
         if not isinstance(upload, UploadFile) or not upload.filename.lower().endswith(".xlsx"):
@@ -1175,54 +1173,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                   focus: str = "",
                   contract_type: str = "", contact_person: str = "",
                   deputy_contact_person: str = "", status: str = "", tax_review_status: str = "",
+                  page: int = Query(1, ge=1, le=1000000), page_size: int = Query(50, ge=1, le=100),
                   db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
-        q = q.strip()[:100]
-        contract_type = contract_type.strip()[:120]
-        contact_person = contact_person.strip()[:160]
-        deputy_contact_person = deputy_contact_person.strip()[:160]
-        valid_statuses = {code for code, _label in CONTRACT_STATUSES}
-        status = status if status in valid_statuses | {"archived"} else ""
-        tax_review_status = tax_review_status if tax_review_status in TAX_REVIEW_LABELS else ""
-        stmt = contract_query(user).order_by(Contract.updated_at.desc(), Contract.id.desc())
-        if user.role == "department":
-            stmt = stmt.where(Contract.department_id == user.department_id)
-        if status == "archived":
-            stmt = stmt.where(Contract.archived_at.is_not(None))
-        else:
-            stmt = stmt.where(Contract.archived_at.is_(None))
-        if q:
-            search_filter = (Contract.designation.contains(q, autoescape=True) |
-                             Contract.contract_number.contains(q, autoescape=True) |
-                             Contract.contract_partner.contains(q, autoescape=True) |
-                             Contract.contact_person.contains(q, autoescape=True) |
-                             Contract.deputy_contact_person.contains(q, autoescape=True) |
-                             Contract.contract_type.contains(q, autoescape=True) |
-                             Contract.tax_review_result.contains(q, autoescape=True) |
-                             Contract.department.has(Department.name.contains(q, autoescape=True)))
-            matching_statuses = [code for code, label in CONTRACT_STATUSES
-                                 if q.casefold() in code.casefold() or q.casefold() in label.casefold()]
-            if matching_statuses:
-                search_filter = search_filter | Contract.status.in_(matching_statuses)
-            matching_tax_statuses = [code for code, label in TAX_REVIEW_STATUSES
-                                     if q.casefold() in code.casefold() or q.casefold() in label.casefold()]
-            if matching_tax_statuses:
-                search_filter = search_filter | Contract.tax_review_status.in_(matching_tax_statuses)
-            stmt = stmt.where(search_filter)
-        if user.role != "department" and department.isdecimal():
-            stmt = stmt.where(Contract.department_id == int(department))
-        if contract_type:
-            stmt = stmt.where(Contract.contract_type == contract_type)
-        if contact_person:
-            stmt = stmt.where(Contract.contact_person == contact_person)
-        if deputy_contact_person:
-            stmt = stmt.where(Contract.deputy_contact_person == deputy_contact_person)
-        if status and status != "archived":
-            stmt = stmt.where(Contract.status == status)
-        if tax_review_status:
-            stmt = stmt.where(Contract.tax_review_status == tax_review_status)
+        filters, stmt = listing_spec(db, user, locals())
+        q, department, focus = filters['q'], filters['department'], filters['focus']
+        contract_type, contact_person = filters['contract_type'], filters['contact_person']
+        deputy_contact_person, status = filters['deputy_contact_person'], filters['status']
+        tax_review_status = filters['tax_review_status']
         focus_labels = {"active": "Laufende Verträge", "expiring": "Bald auslaufende Verträge",
-                        "review": "Verträge mit offener Prüfung",
+                        "review": "Entwürfe / in Bearbeitung",
                         "approval": "Verträge mit offenen Freigaben",
                         "ended": "Gekündigte und beendete Verträge"}
         focus = focus if focus in focus_labels else ""
@@ -1232,23 +1192,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         dashboard_contracts = db.scalars(dashboard_stmt.order_by(Contract.end_date, Contract.id)).all()
         overdue_reminders, upcoming_reminders = split_deadline_reminders(dashboard_contracts, date.today())
         upcoming_ids = [item["contract"].id for item in upcoming_reminders]
-        if focus == "active":
-            stmt = stmt.where(Contract.status == "active")
-        elif focus == "expiring":
-            stmt = stmt.where(Contract.id.in_(upcoming_ids))
-        elif focus == "review":
-            stmt = stmt.where(Contract.status.in_(("draft", "in_progress")))
-        elif focus == "approval":
-            stmt = stmt.where(Contract.id.in_(select(ContractReview.contract_id).where(
-                ContractReview.status.in_(("open", "in_review")))))
-        elif focus == "ended":
-            stmt = stmt.where(Contract.status.in_(("terminated", "ended")))
-        items = db.scalars(stmt.limit(501)).all()
+        total_count = db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
+        page_count = max(1, (total_count + page_size - 1) // page_size)
+        page = min(page, page_count)
+        items = db.scalars(stmt.limit(page_size).offset((page - 1) * page_size)).all()
+        def page_url(number):
+            return '/?' + urlencode({**filters, 'page':number, 'page_size':page_size})
         focus_counts = {
             "active": sum(contract.status == "active" for contract in dashboard_contracts),
             "expiring": len(upcoming_reminders),
             "review": sum(contract.status in ("draft", "in_progress") for contract in dashboard_contracts),
-            "approval": len(db.scalars(select(ContractReview.id).join(Contract).where(
+            "approval": len(db.scalars(select(ContractReview.contract_id).distinct().join(Contract).where(
                 Contract.archived_at.is_(None), ContractReview.status.in_(("open", "in_review")), contract_scope(user),
                 *([Contract.department_id == user.department_id] if user.role == "department" else []))).all()),
             "ended": sum(contract.status in ("terminated", "ended") for contract in dashboard_contracts),
@@ -1261,7 +1215,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         contract_types = list(CONTRACT_TYPES) + sorted(stored_types - set(CONTRACT_TYPES))
         contact_persons = list(CONTACT_PERSONS) + sorted(stored_people - set(CONTACT_PERSONS))
         return html(request, "list.html", {**base_context(request, user, csrf),
-                    "contracts": items[:500], "truncated": len(items) > 500,
+                    "contracts": items, "total_count": total_count, "page":page, "page_size":page_size,
+                    "page_count":page_count, "previous_page_url":page_url(page-1) if page>1 else None,
+                    "next_page_url":page_url(page+1) if page<page_count else None,
                     "departments": departments, "q": q, "selected_department": department,
                     "contract_types": contract_types, "selected_contract_type": contract_type,
                     "contact_persons": contact_persons, "selected_contact_person": contact_person,
@@ -1289,6 +1245,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, csrf = user_csrf(request, db)
         check_write(user)
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         lock_actor(db,user)
         check_write(user)
@@ -1298,7 +1255,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             values = validate_data(form, user, db)
             if values["status"]=="active":
-                raise ValidationError("New contracts must start as draft pending independent approval")
+                raise ValidationError("Neue Verträge beginnen als Entwurf und benötigen eine unabhängige Freigabe")
             tax_values(user,None,values)
         except ValidationError as exc:
             for upload in uploads:
@@ -1389,11 +1346,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "status_label": dict(CONTRACT_STATUSES).get(contract.status, contract.status),
                     **contract_dates(contract),
                     "can_edit": can_write(user, contract) and contract.archived_at is None,
-                    "review_decisions": {review.id: can_decide_review(db, user, contract, review) for review in contract_reviews}})
+                    "review_options": {review.id: review_options(user,contract,review,
+                        can_decide_review(db,user,contract,review),CONTRACT_REVIEW_STATUSES) for review in contract_reviews}})
 
     @app.post("/contracts/{contract_id}/tasks")
     async def create_contract_task(request: Request, contract_id: int, db: Session = Depends(get_db)):
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
@@ -1419,6 +1378,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def update_contract_task(request: Request, contract_id: int, task_id: int,
                                    db: Session = Depends(get_db)):
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
@@ -1448,6 +1408,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/reviews")
     async def create_contract_review(request: Request, contract_id: int, db: Session = Depends(get_db)):
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
@@ -1484,6 +1445,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def update_contract_review(request: Request, contract_id: int, review_id: int,
                                      db: Session = Depends(get_db)):
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         # Consume bounded form input before taking shared identity/parent locks.
         lock_identities(db)
         user, _csrf = user_csrf(request, db)
@@ -1524,6 +1486,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/documents")
     async def upload_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
@@ -1571,6 +1534,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/documents/link")
     async def link_external_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
         form = await request.form(max_files=MAX_DOCUMENTS_PER_UPLOAD, max_fields=32)
+        request.state.safe_values = form_values(form)
         user, _csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
@@ -1626,6 +1590,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/edit")
     async def save_edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
         form = await request.form(max_files=0, max_fields=32)
+        request.state.safe_values = form_values(form)
         user, csrf = user_csrf(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)
@@ -1668,7 +1633,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/contracts/{contract_id}/archive")
     async def archive(request: Request, contract_id: int, db: Session = Depends(get_db)):
-        form = await request.form(max_files=0,max_fields=3)
+        form = await request.form(max_files=0,max_fields=5)
+        request.state.safe_values = form_values(form)
         user = require_user(request, db)
         contract = begin_mutation(db, user, contract_id)
         check_read(user, contract)

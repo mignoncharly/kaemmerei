@@ -1,3 +1,4 @@
+from app.presentation import safe_values
 """Authorized lifecycle operations retain predecessors and prohibit disposal."""
 from fastapi import Depends,HTTPException,Request
 from fastapi.responses import RedirectResponse
@@ -25,6 +26,7 @@ def install_document_routes(app,*,get_db,user_csrf):
     @app.post('/contracts/{contract_id}/documents/{document_id}/replace')
     async def replace_document(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
         form=await request.form(max_files=1,max_fields=4)
+        request.state.safe_values = safe_values(form)
         user,contract,old=writable(request,db,form,contract_id,document_id)
         upload=form.get('document')
         if upload is None or not hasattr(upload,'filename'):raise HTTPException(400,'A replacement file is required')
@@ -45,6 +47,7 @@ def install_document_routes(app,*,get_db,user_csrf):
     async def correct_link(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
         from app.main import approved_external_url
         form=await request.form(max_files=0,max_fields=5)
+        request.state.safe_values = safe_values(form)
         user,contract,old=writable(request,db,form,contract_id,document_id)
         if not old.external_url:raise HTTPException(400,'Only existing DMS links can be corrected here')
         if db.scalar(select(ContractDocument.id).where(ContractDocument.replaces_id==old.id,
@@ -65,6 +68,7 @@ def install_document_routes(app,*,get_db,user_csrf):
     @app.post('/contracts/{contract_id}/documents/{document_id}/hold')
     async def hold(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
         form=await request.form(max_files=0,max_fields=4)
+        request.state.safe_values = safe_values(form)
         user,_=user_csrf(request,db)
         if user.role!='admin':raise HTTPException(403,'Records administrator required')
         user,contract,document=writable(request,db,form,contract_id,document_id)

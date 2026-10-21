@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2026-10-21 - Phase 8: frontend behavior and navigation
+
+- CSP-compatible chart classes; persistent notifications and safe checkbox/form recovery.
+- Shared authorized list/export filters, stable pagination/totals and explicit export capacity.
+- Personal task/review inbox, distinct approval contract counts and valid review controls.
+- German text, UTC clarity, HTML error recovery, archive confirmation and accessibility/reflow improvements.
+- Real browser CI gate and restricted PostgreSQL frontend regressions; evidence/boundaries in HANDOFF U016. No deployment.
+
 ## 2026-10-21 - Phase 7: recorded financial history, dates and Excel
 
 - Additive 0020: unknown financial value basis and scoped external references; minimal authorized PostgreSQL historical aggregates independent of current contract population.

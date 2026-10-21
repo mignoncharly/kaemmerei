@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Zugewiesene Prüfungen{% endblock %}
 {% block content %}
-<h1>Zugewiesene Prüfungen</h1>
-<p>Nur aktuell entscheidbare Vorgänge mit bestehendem Vertragszugriff werden angezeigt.</p>
-<ul>{% for review in reviews %}<li><a href="/contracts/{{ review.contract_id }}">{{ review.subject }}</a> · {{ review.status }}</li>{% else %}<li>Keine zugewiesenen Prüfungen.</li>{% endfor %}</ul>
+<h1>Mein Arbeitskorb</h1>
+<p>Persönlich zugewiesene offene Aufgaben und aktuell entscheidbare Prüfungen zur aktuellen Inhaltsrevision. Bestehende Vertragsrechte bleiben erforderlich. Dies ist keine vollständige Administrationsliste.</p>
+<section class="panel inbox-section"><h2>Meine Prüfungen ({{ reviews|length }})</h2>
+<ul>{% for review in reviews %}<li><a href="/contracts/{{ review.contract_id }}">{{ review.subject }}</a> · {{ contract_review_status_labels.get(review.status,review.status) }}{% if review.due_date %} · <span {% if review.due_date < today %}class="inbox-overdue"{% endif %}>{{ review.due_date.strftime('%d.%m.%Y') }}{% if review.due_date < today %} · Überfällig{% endif %}</span>{% endif %}</li>{% else %}<li>Keine zugewiesenen entscheidbaren Prüfungen.</li>{% endfor %}</ul></section>
+<section class="panel inbox-section"><h2>Meine Aufgaben ({{ tasks|length }})</h2>
+<ul>{% for task in tasks %}<li><a href="/contracts/{{ task.contract_id }}">{{ task.title }}</a>{% if task.due_date %} · <span {% if task.due_date < today %}class="inbox-overdue"{% endif %}>{{ task.due_date.strftime('%d.%m.%Y') }}{% if task.due_date < today %} · Überfällig{% endif %}</span>{% endif %}</li>{% else %}<li>Keine offenen zugewiesenen Aufgaben.</li>{% endfor %}</ul></section>
 {% endblock %}

@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phase 7 technical defaults verified locally and in all four hosted jobs (U015); Phases 8-10 and owner/production acceptance remain pending.\
+Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phase 7 technical defaults verified locally and in all four hosted jobs (U015); Phase 8 implemented and in verification (U016); Phases 9-10 and owner/production acceptance remain pending.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -299,14 +299,14 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 ### Tasks
 
-- [ ] P08-T01: Remove inline chart styles using CSP-compatible markup, such as a stylesheet-backed percentage class set with bounded integer values. Keep the restrictive policy. Present exact values in accessible text/table form independent of bar graphics.
-- [ ] P08-T02: Normalize submitted booleans before rendering forms; avoid truth-testing raw strings. Preserve unchecked, checked, selected, empty, zero, and validation-error states correctly for contract and account forms.
-- [ ] P08-T03: Keep errors until correction or explicit dismissal. Success messages may expire when appropriate; give users time and an accessible announcement. Never hide substantive failure information automatically.
-- [ ] P08-T04: Add consistent HTML validation, permission, not-found, conflict, expired-session/CSRF, and upload error pages. Preserve safe entered values, provide recovery actions, and never echo passwords/tokens. Keep JSON errors for API clients through an explicit route/content contract.
-- [ ] P08-T05: Count distinct contracts on the approvals dashboard or relabel the metric as review count. Align labels and filters for tax assessment, contract lifecycle, and approval state. Show archived immutability and revision validity clearly.
-- [ ] P08-T06: Add server-side pagination, total count, stable sort/tiebreaker, query bounds, and filter-preserving links. Remove unreachable records behind the 500-item cap. Ensure export uses the same authorized filter specification, with its own capacity limits.
-- [ ] P08-T07: Add a personal task/review inbox based on actual assignment and capability. Include overdue review deadlines, not just contract dates/tasks. Avoid an inbox that grants broader contract visibility.
-- [ ] P08-T08: Repair German encoding/text corruption. Review role labels, activation/approval messages, UTC/local-time presentation, archive statements, and financial descriptions against implemented behavior.
+- [x] P08-T01: Remove inline chart styles using CSP-compatible markup, such as a stylesheet-backed percentage class set with bounded integer values. Keep the restrictive policy. Present exact values in accessible text/table form independent of bar graphics.
+- [x] P08-T02: Normalize submitted booleans before rendering forms; avoid truth-testing raw strings. Preserve unchecked, checked, selected, empty, zero, and validation-error states correctly for contract and account forms.
+- [x] P08-T03: Keep errors until correction or explicit dismissal. Success messages may expire when appropriate; give users time and an accessible announcement. Never hide substantive failure information automatically.
+- [x] P08-T04: Add consistent HTML validation, permission, not-found, conflict, expired-session/CSRF, and upload error pages. Preserve safe entered values, provide recovery actions, and never echo passwords/tokens. Keep JSON errors for API clients through an explicit route/content contract.
+- [x] P08-T05: Count distinct contracts on the approvals dashboard or relabel the metric as review count. Align labels and filters for tax assessment, contract lifecycle, and approval state. Show archived immutability and revision validity clearly.
+- [x] P08-T06: Add server-side pagination, total count, stable sort/tiebreaker, query bounds, and filter-preserving links. Remove unreachable records behind the 500-item cap. Ensure export uses the same authorized filter specification, with its own capacity limits.
+- [x] P08-T07: Add a personal task/review inbox based on actual assignment and capability. Include overdue review deadlines, not just contract dates/tasks. Avoid an inbox that grants broader contract visibility.
+- [x] P08-T08: Repair German encoding/text corruption. Review role labels, activation/approval messages, UTC/local-time presentation, archive statements, and financial descriptions against implemented behavior.
 - [ ] P08-T09: Perform keyboard, screen-reader structure, focus, contrast, responsive layout, long-content, and validation recovery checks. Add an archive confirmation/recovery policy appropriate to its effect; preserve CSRF and version checks.
 
 ### Verification and exit criteria

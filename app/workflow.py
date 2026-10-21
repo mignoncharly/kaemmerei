@@ -6,12 +6,13 @@ from app.identity_service import lock_identities
 from app.logic import active_access, can_write
 from app.models import ContractReview, ReviewDecision, Revision, LoginSession, now_utc
 from uuid import UUID
+from app.presentation import safe_values
 
 
 class WorkflowConflict(HTTPException):
     def __init__(self,form,current_version):
         super().__init__(409,'Changed since this form was loaded')
-        self.submitted={k:str(v)[:5000] for k,v in form.items() if k not in ('csrf_token','request_id')}
+        self.submitted=safe_values(form)
         self.current_version=current_version
 
 

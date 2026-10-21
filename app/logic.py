@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models import ContactIdentity, Contract, Department, User
 from app.options import CONTRACT_STATUSES, FINANCIAL_DIRECTIONS, PAYMENT_INTERVALS, TAX_REVIEW_STATUSES
 from app.dates import add_months, calculate_notice_deadline
+from app.presentation import FIELD_LABELS
 
 
 class ValidationError(Exception):
@@ -37,9 +38,9 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
     def text(name: str, limit: int, required: bool = False) -> str:
         value = str(form.get(name, "") or "").strip()
         if len(value) > limit:
-            raise ValidationError(f"{name}: hÃ¶chstens {limit} Zeichen erlaubt")
+            raise ValidationError(f"{FIELD_LABELS.get(name,name)}: höchstens {limit} Zeichen erlaubt")
         if required and not value:
-            raise ValidationError(f"{name}: Pflichtfeld")
+            raise ValidationError(f"{FIELD_LABELS.get(name,name)}: Pflichtfeld")
         return value
 
     designation = text("designation", 200, True)
@@ -51,29 +52,29 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
     status = text("status", 20) or (existing.status if existing else "draft")
     value_basis = text('value_basis', 12) or (existing.value_basis if existing else 'unknown')
     if value_basis not in ('net', 'gross', 'unknown'):
-        raise ValidationError('Value basis must be net, gross or unknown')
+        raise ValidationError('Bitte Netto, Brutto oder unbekannte Wertbasis auswählen')
     external_reference = (text('external_reference', 120) if 'external_reference' in form
                           else existing.external_reference if existing else None) or None
     if status not in {code for code, _label in CONTRACT_STATUSES}:
-        raise ValidationError("Bitte einen gÃ¼ltigen Vertragsstatus auswÃ¤hlen")
+        raise ValidationError("Bitte einen gültigen Vertragsstatus auswählen")
     try:
         relevant_date = date.fromisoformat(text("relevant_date", 10, True))
     except ValueError as exc:
-        raise ValidationError("Bitte ein gÃ¼ltiges Vertragsbeginn-Datum angeben") from exc
+        raise ValidationError("Bitte ein gültiges Vertragsbeginn-Datum angeben") from exc
     end_date_text = text("end_date", 10)
     try:
         end_date = date.fromisoformat(end_date_text) if end_date_text else None
     except ValueError as exc:
-        raise ValidationError("Bitte ein gÃ¼ltiges Vertragsende angeben") from exc
+        raise ValidationError("Bitte ein gültiges Vertragsende angeben") from exc
     if end_date and end_date < relevant_date:
         raise ValidationError("Das Vertragsende darf nicht vor dem Vertragsbeginn liegen")
     notice_period_text = text("notice_period_months", 3)
     try:
         notice_period_months = int(notice_period_text) if notice_period_text else None
     except ValueError as exc:
-        raise ValidationError("Die KÃ¼ndigungsfrist muss in ganzen Monaten angegeben werden") from exc
+        raise ValidationError("Die Kündigungsfrist muss in ganzen Monaten angegeben werden") from exc
     if notice_period_months is not None and not 0 <= notice_period_months <= 120:
-        raise ValidationError("Die KÃ¼ndigungsfrist muss zwischen 0 und 120 Monaten liegen")
+        raise ValidationError("Die Kündigungsfrist muss zwischen 0 und 120 Monaten liegen")
     automatic_renewal = str(form.get("automatic_renewal", "")) == "1"
     renewal_period_text = text("renewal_period_months", 3)
     try:
@@ -93,12 +94,12 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
         if automatic_renewal:
             add_months(end_date, renewal_period_months)
     except ValueError as exc:
-        raise ValidationError('Notice or renewal calculation is outside years 0001–9999') from exc
+        raise ValidationError('Kündigung oder Verlängerung liegt außerhalb des Kalenderbereichs 0001–9999') from exc
     annual_value_text = text("annual_value", 24).replace(",", ".")
     try:
         annual_value = Decimal(annual_value_text).quantize(Decimal("0.01")) if annual_value_text else None
     except InvalidOperation as exc:
-        raise ValidationError("Bitte einen gÃ¼ltigen Jahreswert in Euro angeben") from exc
+        raise ValidationError("Bitte einen gültigen Jahreswert in Euro angeben") from exc
     if annual_value is not None and (not annual_value.is_finite() or annual_value < 0 or annual_value > Decimal("9999999999.99")):
         raise ValidationError("Der Jahreswert muss zwischen 0 und 9.999.999.999,99 Euro liegen")
     contract_value_text = text("contract_value", 24).replace(",", ".")
@@ -129,7 +130,7 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
         try:
             department_id = int(text("department_id", 12, True))
         except ValueError as exc:
-            raise ValidationError("Bitte Fachbereich auswÃ¤hlen") from exc
+            raise ValidationError("Bitte Fachbereich auswählen") from exc
     else:
         raise ValidationError("Keine Schreibberechtigung")
     department = db.scalar(select(Department).where(Department.id == department_id, Department.is_active.is_(True)))
@@ -149,7 +150,7 @@ def validate_data(form, user: User, db: Session, existing: Contract | None = Non
             Contract.external_reference == external_reference,
             Contract.id != (existing.id if existing else -1)))
         if duplicate is not None:
-            raise ValidationError('External reference already exists in this department')
+            raise ValidationError('Die externe Referenz ist in diesem Fachbereich bereits vorhanden')
     return dict(designation=designation, contract_type=contract_type,
                 value_basis=value_basis, external_reference=external_reference,
                 contract_partner=contract_partner, relevant_date=relevant_date,

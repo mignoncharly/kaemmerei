@@ -1,3 +1,4 @@
+from app.presentation import safe_values
 """Identity/catalog routes, installed without replacing existing application routes."""
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.authorization import can_decide_review, contract_query, load_child
 from app.identity_service import audit, lock_identities, validate_department_name, validate_password
 from app.logic import active_access, can_read
-from app.models import (ContactIdentity, Contract, ContractReview, Department, IdentityAudit, LoginAttempt, LoginSession,
+from app.models import (ContactIdentity, Contract, ContractReview, ContractTask, Department, IdentityAudit, LoginAttempt, LoginSession,
                         RecipientMembership, RecipientTeam, Revision, User)
 from app.security import (attempt_key, cookie_response, new_session, ph, require_csrf,
                           require_user, throttled, verify_password)
@@ -29,6 +30,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
     @app.post('/account/password')
     async def change_password(request: Request, db: Session = Depends(get_db)):
         form = await request.form(max_files=0, max_fields=4)
+        request.state.safe_values = safe_values(form)
         lock_identities(db)
         user, csrf = user_csrf(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
@@ -76,6 +78,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
     @app.post('/admin/identities/{entity}/{identity_id}')
     async def maintain_identity(request: Request, entity: str, identity_id: int, db: Session = Depends(get_db)):
         form = await request.form(max_files=0, max_fields=7)
+        request.state.safe_values = safe_values(form)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
         model = {'departments': Department, 'contacts': ContactIdentity, 'teams': RecipientTeam}.get(entity)
@@ -129,6 +132,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
     @app.post('/admin/recipient-memberships')
     async def membership(request: Request, db: Session = Depends(get_db)):
         form = await request.form(max_files=0, max_fields=4)
+        request.state.safe_values = safe_values(form)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
         try:
@@ -154,6 +158,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
     async def assign_review(request: Request, contract_id: int, review_id: int, db: Session = Depends(get_db)):
         from app.workflow import begin_mutation, expected_version
         form = await request.form(max_files=0, max_fields=5)
+        request.state.safe_values = safe_values(form)
         actor = admin_locked(request, db)
         require_csrf(request, db, str(form.get('csrf_token', '')))
         begin_mutation(db,actor,contract_id)
@@ -194,7 +199,15 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
     @app.get('/reviews')
     def review_inbox(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
-        contract_ids = contract_query(user).with_only_columns(Contract.id)
-        reviews = db.scalars(select(ContractReview).where(ContractReview.contract_id.in_(contract_ids))).all()
-        items = [review for review in reviews if can_decide_review(db, user, review.contract, review)]
-        return html(request, 'review_inbox.html', {**base_context(request, user, csrf), 'reviews': items})
+        contract_ids = contract_query(user).where(Contract.archived_at.is_(None)).with_only_columns(Contract.id)
+        reviews = db.scalars(select(ContractReview).where(ContractReview.contract_id.in_(contract_ids),
+            ContractReview.assigned_user_id==user.id,ContractReview.status.in_(('open','in_review')))
+            .order_by(ContractReview.due_date.asc().nulls_last(),ContractReview.id)).all()
+        items = [review for review in reviews if can_decide_review(db, user, review.contract, review)
+                 and review.content_revision==review.contract.content_revision]
+        tasks = db.scalars(select(ContractTask).where(ContractTask.contract_id.in_(contract_ids),
+            ContractTask.assigned_user_id==user.id,ContractTask.status!='done')
+            .order_by(ContractTask.due_date.asc().nulls_last(),ContractTask.id)).all()
+        from datetime import date
+        return html(request, 'review_inbox.html', {**base_context(request, user, csrf), 'reviews': items,
+                    'tasks':tasks,'today':date.today()})

@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 7 technically verified locally and in all four hosted jobs. See U015 and docs/PHASE7_FINANCE_DATES_EXCEL.md. P07-T01 finance agreement, D08-D10 adoption and production acceptance remain pending.\
+Current stage: Phase 8 frontend implementation in verification. See U016 and docs/PHASE8_FRONTEND_NAVIGATION.md. Local browser blocked by Windows named-pipe permissions; hosted browser gate pending. Earlier owner decisions and production acceptance remain pending.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -61,7 +61,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 5 - Document lifecycle | Verified technically; D05/D06 owner acceptance pending | P05-T01-T08 | PostgreSQL 128 passed + 2 local skips; SQLite 116 + 14; real PG restore; successful hosted run including required real ClamAV | Engineering: Codex; security/records owners unassigned | Next technical phase P06-T01; production setup and owner decisions pending |
 | 6 - Integration synchronization | Verified technically; D07 owner acceptance pending | P06-T01-T08 | PG 149 + 2 local skips; SQLite 134 + 17; 21 actual PG integration regressions; all four CI jobs passed | Engineering: Codex; integration/security owners unassigned | Next P07-T01; D07 consumer profiles/transition and retention before production |
 | 7 - Reports/dates/Excel | Verified technically; D08-D10 unapproved | P07-T02-T09 technical defaults; T01 owner agreement pending | PG 168 + 2 local skips; SQLite 152 + 18; Phase 7 PG 19; explicit PG 16; four hosted jobs passed | Engineering: Codex; municipal owners unassigned | Next technical phase P08-T01; obtain D08-D10 before business deployment |
-| 8 — Frontend and navigation | Not started | None | Not run | Unassigned | Repair CSP-compatible charts and form state |
+| 8 - Frontend and navigation | Implemented, verification in progress | P08-T01-T08 implemented; T09 automated browser gate pending | Targeted SQLite/PG regressions pass; full suites running; local browser permission-limited | Engineering: Codex; usability owner unassigned | Finish exact-source local/hosted/browser evidence |
 | 9 — Operations and availability | Not started | None | Not run | Unassigned | Define ingress limits, workload, and deployment targets |
 | 10 — Acceptance and release | Not started | None | Not run | Unassigned | Assign acceptance owners and release scope |
 
@@ -350,6 +350,15 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Hosted:** [Run 39629880926](https://github.com/mignoncharly/kaemmerei/actions/runs/39629880926) completed success for exact final implementation 2fd1bf8. All four actual jobs/steps confirmed: SQLite, PostgreSQL 18 service, native PostgreSQL and ClamAV. Dependencies, migrations, full suites, explicit PostgreSQL and Phase 4/5/6/7 selections passed. Four artifact metadata entries inspected, archives not downloaded. Evidence: docs/evidence/phase7-ci-39629880926.json.
 - **Remaining limitations:** Two unsuppressed local warnings (Starlette/AnyIO and managed pytest cache ACL); local real scanner/symlink/production ACL and earlier Phase 5 retained synthetic filesystem residues unchanged. Finance/legal/product D08-D10 are not approved. Historical evidence gaps, no effective-at/payment ledger, no automatic Excel updates, browser/CSP/accessibility/encoding and operational release gates are explicit. P07-T01 remains unchecked; no municipal sign-off or deployment is inferred.
 - **State/next:** Phase 7 technically verified. Next technical phase P08-T01 under the existing plan; owner adoption and production deployment remain separate.
+
+### U016 - 2026-10-21 - Phase 8 frontend behavior and navigation
+
+- **Scope:** Next phase under the existing plan. P08-T01-T08 implemented; T09 browser/semantic/keyboard/reflow gate added, actual hosted result pending. Prior ownership/RLS/workflow/document/integration safeguards preserved. No schema, native cluster or business deployment change. Unrelated Start-TestDatabase.ps1 whitespace preserved.
+- **Changes:** External chart width classes under unchanged CSP; normalized checkbox presentation; persistent feedback and explicit success dismissal; allowlisted bounded noncredential recovery with HTML/API error separation. Shared list/export filters, stable pagination beyond 500, exact totals and explicit 5000-row export bound. Distinct approval contract counts; scoped personal task/actionable-current-review inbox. German validation/text/UTC clarity, review action consistency, archive confirmation/recovery wording, focus/skip/contrast/semantic/reflow improvements.
+- **Verification progress:** Initial broad SQLite selection 70 passed + one PG-only skip; Phase 8 initial 6/6 on both backends, extended to seven items. Full suites and hosted evidence pending actual execution. Fixture-only failures corrected without relaxing safety limits. No xfail or warning suppression.
+- **Local browser:** Browser service inventory empty. pip proxy/private temp ACL limitations; official PyPI wheel hashes checked and tools isolated in ignored workspace scratch. Playwright failed before browser start with Windows named-pipe WinError 5. No permissions/sandbox/security weakening. Required Linux browser CI job added; no local browser pass claimed. Not the historical PostgreSQL error 87.
+- **Boundaries:** No complete WCAG/assistive-technology or municipal usability certification, production workload target, owner acceptance or deployment inferred. Earlier D08-D10 and other decisions remain pending. Existing local ClamAV/symlink/production ACL and earlier retained synthetic filesystem residues unchanged.
+- **Docs/next:** docs/PHASE8_FRONTEND_NAVIGATION.md and existing project docs. Finish local full suites, explicit PostgreSQL/Phase 8, actual hosted browser/jobs and final read-only cleanup catalog; append exact source/counts/hashes/results.
 
 ### Update entry template — copy for the next update
 

@@ -1,3 +1,4 @@
+from app.presentation import safe_values
 """Explicit service ownership, bounded grants, overlapping rotation and deferred usage."""
 from datetime import timedelta
 import secrets
@@ -35,6 +36,7 @@ def install_token_routes(app,*,get_db,user_csrf,render):
     @app.post('/admin/integrations/{token_id}/rotate')
     async def rotate(request:Request,token_id:int,db=Depends(get_db)):
         form=await request.form(max_fields=2);user,csrf=user_csrf(request,db)
+        request.state.safe_values = safe_values(form)
         require_csrf(request,db,str(form.get('csrf_token','')));lock_actor(db,user)
         if user.role!='admin':raise HTTPException(403,'Administrator required')
         old=db.get(IntegrationToken,token_id)
@@ -52,6 +54,7 @@ def install_token_routes(app,*,get_db,user_csrf,render):
     @app.post('/admin/integrations/{token_id}/scope')
     async def rescope(request:Request,token_id:int,db=Depends(get_db)):
         form=await request.form(max_fields=8);user,csrf=user_csrf(request,db)
+        request.state.safe_values = safe_values(form)
         require_csrf(request,db,str(form.get('csrf_token','')));lock_actor(db,user)
         if user.role!='admin':raise HTTPException(403,'Administrator required')
         token=db.get(IntegrationToken,token_id)
