@@ -39,6 +39,10 @@ Runtime: Windows, Python 3.14.3, pytest 9.1.1, native PostgreSQL 18,
 Psycopg/SQLAlchemy, existing test cluster at loopback port 55432.
 The agent did not inherit TEST_POSTGRES_ADMIN_URL/PGPASSFILE; it configured its test processes
 to use the existing dedicated role and existing passfile without reading or printing credentials.
+An additional read-only probe used the existing private bootstrap passfile solely to run
+`assert_connected_cluster`: **the live binary cluster identity matched local marked storage**.
+Separate test-role queries confirmed server version **18.3**, server encoding **UTF8**, and
+current role **ohvr_verify**. No role provisioning or server configuration was performed by those probes.
 
 | Check | Collected / executed | Passed | Failed / errors | Skipped | Xfailed | Result |
 |---|---:|---:|---:|---:|---:|---|
@@ -117,7 +121,7 @@ jobs and their PostgreSQL/full-suite/explicit-lifecycle steps succeed. Do not su
 ### Acceptance checklist and boundaries
 
 - [x] Dedicated native cluster running; restricted-role authentication succeeds.
-- [x] Cluster identity check preserved and regression-tested without Unicode path decoding.
+- [x] Cluster identity check preserved, regression-tested and matched against the live server without Unicode path decoding.
 - [x] Nonblocking Windows startup previously confirmed by operator; file-based subprocess regression passes.
 - [x] Isolated PostgreSQL clean/populated migrations and application operations pass.
 - [x] R01/R04/R10 have normal passing regression tests; zero expected failures remain.

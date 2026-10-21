@@ -60,5 +60,10 @@
     "known_open_checks": [],
     "successful_verification_foundation": true,
     "production_accepted": false
-  }
+  },
+  "live_binary_cluster_identity_match": true,
+  "server_version": "18.3",
+  "server_encoding": "UTF8",
+  "application_test_role": "ohvr_verify",
+  "identity_probe": "read-only existing bootstrap connection; no role or cluster changes"
 }
