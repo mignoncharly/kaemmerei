@@ -1,0 +1,75 @@
+# Verification matrix and implementation boundaries
+
+Stand: 2026-10-21. Phase 1 engineering baseline; no business acceptance implied.
+
+## Permission regression matrix
+
+The desired rules below are implementation targets. They do not claim that future approval, delegation, RLS, or retention capabilities already exist. `Expected failure` means the desired assertion currently fails and remains an OPEN finding. A setup/migration/transport failure is not an acceptable expected failure.
+
+| Case | Principal / resource | Desired result | Current evidence or pending phase |
+|---|---|---|---|
+| V01 | Guest -> list/detail/export/document/API | Login redirect for HTML; API 401; no business data | Original guest test covers list/create; API credentials test covers missing auth. Other guest endpoints extend in P2/P6. |
+| V02 | Own-department writer -> own contract | Read/create/edit/archive under version and CSRF rules | Original isolation, CRUD/conflict, CSRF tests |
+| V03 | Department writer -> other department contract | No read/write; forged posted department cannot change ownership | Original ownership/direct mutation tests |
+| V04 | Department writer -> other department metadata | No private names/types from dropdown queries | R01 strict expected failure; Phase 2 |
+| V05 | Admin -> all department contracts | Authorized read/write; explicit department selected | Original search/filter and CRUD tests |
+| V06 | Reviewer -> all contracts | Read permitted, normal contract/task/document writes forbidden | Original reviewer test and new child-permission test |
+| V07 | Reviewer -> review decision | Forbidden without explicit approval capability/assignment | Known R02; targeted decision test to add in Phase 2/4. Current reviewer can decide. |
+| V08 | Authorized approver -> assigned current-content review | Only allowed transitions/reasons/version; no unrelated decision | Capability/assignment model not implemented; Phase 2/4 |
+| V09 | Wrong approver/self-approver -> decision | Denied under accepted separation-of-duty rules | Phase 4 after D01/D02/D04 |
+| V10 | Inactive account -> login | 401; no authenticated session | New inactive-user test |
+| V11 | Active account in inactive department -> protected access | Access denied/session invalidated consistently | R10 strict expected failure; Phase 2 |
+| V12 | Any user -> forged child under different parent | 404 regardless of guessed child identifier | New parent/child task ownership test; extend to reviews/documents in Phase 2 |
+| V13 | Other-department writer -> tasks/reviews/uploads/DMS link | No child creation or information exposure | New child-permission test |
+| V14 | Admin -> upload/preview/download/API document | Only its application instance's private storage used | New end-to-end storage test, including a second isolated app |
+| V15 | Scoped token -> contracts | Only token's department | New scoped-token test |
+| V16 | Unscoped token -> contracts | Explicitly authorized global read | New unscoped-token test; narrower field capabilities Phase 6 |
+| V17 | Expired/revoked/invalid/missing token | 401 consistently | New token test |
+| V18 | Token -> wrong department or mismatched document parent | 404; no file bytes | Extend direct download matrix in Phase 6 |
+| V19 | Any authorized writer -> archived aggregate | No contract or child mutation | Original edit/archive checks; R04 strict expected failure for review updates |
+| V20 | Concurrent task/review/archive -> same aggregate | Consistent versioned outcome; no lost decision | Phase 4 PostgreSQL concurrency checks |
+| V21 | Missing CSRF -> authenticated HTML mutations | 403 and zero writes | Original login/create/edit/archive tests; extend child/admin paths in Phase 2/4 |
+| V22 | Low-privilege DB role -> deliberately unscoped SQL | RLS denies other departments and invalid context | Phase 3; no RLS exists at Phase 1 |
+| V23 | Reused pooled connection -> different identity | No retained authorization context | Phase 3 |
+| V24 | Token -> scope transfer/incremental document changes | Removal and changed content reliably delivered | Phase 6; R05 remains open |
+
+## Migration and environment matrix
+
+| Case | SQLite | PostgreSQL |
+|---|---|---|
+| Clean Alembic upgrade to head and idempotent repeat | Passed locally | Fixture/CI implemented; local cluster bootstrap blocked |
+| Populated 0001 -> 0003 -> head | Passed; record/version/revision/document metadata preserved | Same synthetic fixture ready; not executed locally |
+| Existing CRUD/authentication suite using migrated schema | 10 original checks passed | Ready through disposable database fixture; not executed locally |
+| Document isolation and new permission checks | 4 checks passed | Same suite ready; not executed locally |
+| Production configuration rejection | Passed (one check with six invalid-setting subcases) | No connection required |
+| Per-call document configuration | Passed | No connection required |
+| Known defects | R01/R04/R10 expected failures confirmed | Not verified |
+
+Migration preservation fixture uses synthetic records and metadata, not a copied business database. It does not constitute a full legacy production-data migration rehearsal. Existing schema differences, including the missing migrated tax-reviewer foreign key, remain R14 for Phase 3.
+
+## Domain/service boundaries (P01-T07)
+
+Use these contracts for incremental extraction. Authorization must remain enforceable at every HTTP/API entry; moving functions alone does not close findings.
+
+| Boundary | Current location | Intended responsibility / interface | Next phase |
+|---|---|---|---|
+| Runtime configuration | `app/config.py` | Immutable settings; each app owns DB/storage; env read at configuration time | Storage hardened in P5; operation limits P9 |
+| Migration execution | `app/migrations.py`, `alembic/env.py` | Explicit disposable connection, head lookup; supplied connection cannot fall back to regular environment DB | P3 schema/RLS |
+| Authentication/session | `app/security.py`, login routes | Resolve authenticated principal; CSRF/session/password lifecycle | P2/P9 |
+| Authorization/query scope | `app/logic.py`, duplicated route queries | Capability decisions, authorized query specifications, parent/child lookup | P2 extraction |
+| Aggregate mutations | `app/main.py` contract/child handlers | One authorization/version/archive/lock/audit/commit protocol | P4 service |
+| Workflow/tax | Review routes and contract validation | Assignment, state transitions, decision provenance, content revision | P4 service |
+| Documents | Upload helper and document routes | Explicit app-instance storage passed to helpers; future staged/scan/download lifecycle | P5 service |
+| Integration/change publication | Token/API routes | Scoped read contract, durable change events/cursors/removals | P6 service |
+| Reporting/deadlines | Report/date functions in `app/main.py` | Approved financial/date specification; shared status-aware calculations | P7 service |
+| Excel | `app/excel.py`, import/export routes | Workbook encoding/parsing plus separate authorized application operations | P7 |
+| HTTP/templates | `app/main.py`, `app/templates` | Parse input, invoke services, render consistent responses; no independent policy copies | P8 |
+
+Phase 1 extracts only explicit migration execution and reusable verification resources, and removes module-global document storage. It deliberately leaves business authorization/workflow/reporting behavior for its scheduled phase.
+
+## Release checks
+
+- Phase 1 exit requires working verification foundations and actual PostgreSQL migration evidence. It is not fully verified while local PostgreSQL and hosted CI remain unexecuted.
+- Expected failures count as open defects. Removing a marker requires target-phase evidence; an unexpected success fails the verification command and requires review.
+- R08 is partially addressed: harness repairs and initial matrix are delivered, while later feature, RLS, concurrency, and acceptance coverage remain outstanding.
+- Zero Critical/High findings, explicit Medium risk decisions, named owners, privacy/security/domain acceptance, and recovery evidence remain production gates in the plan.

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Schnittstellen{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">F15 · VERBINDUNGEN</div><h1>Schnittstellen</h1><p>Externe Verwaltungsanwendungen können freigegebene Vertragsdaten über eine geschützte JSON-API abrufen.</p></div><a class="button secondary" href="/">Zur Vertragsübersicht</a></div>
+
+{% if new_token %}<section class="panel integration-secret"><strong>Neuer Integrationstoken</strong><p>Kopiere diesen Token jetzt in die externe Anwendung. Er wird später nicht erneut angezeigt.</p><code>{{ new_token }}</code><small>Nur lesender Zugriff. Beenden kannst du den Zugriff jederzeit unten über „Widerrufen“.</small></section>{% endif %}
+{% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+
+<section class="panel integration-form-panel"><div class="panel-heading"><div><h2>Neue Schnittstelle anlegen</h2><p class="history-subtitle">Erstellt einen geheimen API-Token. Schreibzugriffe sind nicht möglich.</p></div></div>
+ <form class="integration-form" method="post" action="/admin/integrations">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div><label for="integration-name">Name der Anwendung</label><input id="integration-name" name="name" maxlength="120" required placeholder="z. B. H&H Finanzwesen"></div>
+  <div><label for="integration-department">Datenzugriff</label><select id="integration-department" name="department_id"><option value="">Alle Fachbereiche · nur lesend</option>{% for department in departments %}<option value="{{ department.id }}">Nur {{ department.name }}</option>{% endfor %}</select></div>
+  <div><label for="integration-expiry">Gültigkeit</label><select id="integration-expiry" name="expires_in"><option value="90" selected>90 Tage</option><option value="365">1 Jahr</option><option value="never">Unbegrenzt</option></select></div>
+  <button class="button primary" type="submit">Token erstellen</button>
+ </form>
+ <p class="integration-note">Tokens erlauben den lesenden Abruf von Vertragsdaten einschließlich archivierter Verträge, Vertragswerten, zuständiger Personen, DMS-Verknüpfungen und hochgeladener Vertragsdateien. Gib den Token nur an eine dafür vorgesehene Anwendung weiter.</p>
+</section>
+
+<section class="panel integration-list-panel"><div class="panel-heading"><div><h2>Vergebene Zugriffstokens</h2><p class="history-subtitle">Geheimnisse werden nur bei der Erstellung gezeigt; gespeichert wird ausschließlich ein Hash.</p></div><span class="count">{{ tokens|length }}</span></div>
+ {% if tokens %}<div class="table-scroll"><table class="integration-table"><thead><tr><th>Anwendung</th><th>Zugriff</th><th>Token</th><th>Erstellt</th><th>Läuft ab</th><th>Letzte Nutzung</th><th>Status</th><th></th></tr></thead><tbody>
+ {% for token in tokens %}<tr><td><strong>{{ token.name }}</strong><small class="contract-id">von {{ token.created_by.username }}</small></td><td>{% if token.department %}{{ token.department.name }}{% else %}Alle Fachbereiche{% endif %}</td><td><code>{{ token.token_prefix }}…</code></td><td>{{ token.created_at.strftime('%d.%m.%Y') }}</td><td>{% if token.expires_at %}{{ token.expires_at.strftime('%d.%m.%Y') }}{% else %}Unbegrenzt{% endif %}</td><td>{% if token.last_used_at %}{{ token.last_used_at.strftime('%d.%m.%Y %H:%M') }} UTC{% else %}Noch nie{% endif %}</td><td><span class="account-status {% if token.is_active and (not token.expires_at or token.expires_at > now) %}is-active{% else %}is-inactive{% endif %}">{% if not token.is_active %}Widerrufen{% elif token.expires_at and token.expires_at <= now %}Abgelaufen{% else %}Aktiv{% endif %}</span></td><td>{% if token.is_active %}<form method="post" action="/admin/integrations/{{ token.id }}/revoke"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button danger" type="submit">Widerrufen</button></form>{% endif %}</td></tr>{% endfor %}
+ </tbody></table></div>{% else %}<div class="empty">Noch keine Schnittstellen-Tokens angelegt.</div>{% endif %}
+</section>
+
+<section class="panel integration-docs"><div class="panel-heading"><div><h2>API v1</h2><p class="history-subtitle">Server-zu-Server-Zugriff mit Bearer-Token, JSON-Antworten und Seitensteuerung.</p></div></div>
+ <dl><div><dt>Fachbereiche</dt><dd><code>GET /api/v1/departments</code></dd></div><div><dt>Verträge</dt><dd><code>GET /api/v1/contracts?limit=100&amp;offset=0</code></dd></div><div><dt>Änderungen ab einem Zeitpunkt</dt><dd><code>GET /api/v1/contracts?updated_since=2026-10-20T00:00:00Z</code></dd></div></dl>
+ <p>Jede Anfrage benötigt den Header <code>Authorization: Bearer &lt;Token&gt;</code>. Verträge werden in Seiten von bis zu 500 Einträgen geliefert. Die Antwort enthält <code>total</code> und <code>next_offset</code>. Archivierte Verträge enthalten den Zeitpunkt in <code>archived_at</code>; hochgeladene Dateien bieten eine geschützte <code>download_url</code>, DMS-Verknüpfungen ihre <code>external_url</code>.</p>
+ <pre><code>curl -H "Authorization: Bearer TOKEN" https://SERVER/api/v1/contracts</code></pre>
+ <p class="integration-note">Für ein konkretes H&amp;H-, LDAP- oder Dokumentenmanagementsystem braucht es zusätzlich dessen API-Dokumentation und Zugangsdaten. Bestehende DMS-Links an Verträgen bleiben direkt nutzbar.</p>
+</section>
+{% endblock %}

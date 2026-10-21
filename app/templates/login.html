@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Anmeldung{% endblock %}
+{% block content %}
+<div class="login-shell">
+ <div class="login-heading"><div class="eyebrow">INTERNE ANWENDUNG</div><h1>Verträge im Überblick.</h1><p>Melden Sie sich mit Ihrem persönlichen Benutzerkonto an.</p></div>
+ <section class="panel login-card">
+  <h2>Anmeldung</h2>
+  {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+  <form action="/login" method="post">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <label for="username">Benutzername</label><input id="username" name="username" required autocomplete="username" maxlength="80" autofocus>
+   <label for="password">Passwort</label><input id="password" name="password" type="password" required autocomplete="current-password">
+   <button class="button primary full" type="submit">Anmelden</button>
+  </form>
+ </section>
+</div>
+{% endblock %}

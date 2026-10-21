@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Vertragsregister{% endblock %} | OPEN.HERZ</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/site.css') }}">
+</head>
+<body>
+<header class="topbar">
+ <div class="topbar-inner">
+  <a class="brand" href="/">OPEN<span class="dot">.</span>HERZ <span class="brand-suffix">/ Vertragsregister</span></a>
+  {% if user %}
+  <div class="account"><span>{{ user.username }} <small>({% if user.role == 'department' %}Fachbereich{% elif user.role == 'reviewer' %}Leseberechtigung{% else %}Administration{% endif %})</small></span>
+   <a href="/reports">Auswertungen</a>
+   {% if user.role == 'admin' %}<a href="/admin/users">Benutzerverwaltung</a><a href="/admin/integrations">Schnittstellen</a>{% endif %}
+   <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="link-button" type="submit">Abmelden</button></form>
+  </div>
+  {% endif %}
+ </div>
+</header>
+<main class="container">
+{% if notice %}<div class="notice" role="status" aria-live="polite">{{ notice }}</div>{% endif %}
+{% block content %}{% endblock %}
+</main>
+<footer class="footer">Interne Arbeitsversion · Datenzugriff nur mit persönlicher Anmeldung</footer>
+<script src="{{ url_for('static', path='/notifications.js') }}" defer></script>
+</body>
+</html>

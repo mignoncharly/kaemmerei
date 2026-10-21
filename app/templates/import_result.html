@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Excel-Import{% endblock %}
+{% block content %}
+<div class="page-head"><div><a class="back" href="/">‹ Zur Übersicht</a><h1>Excel-Import</h1></div></div>
+<section class="panel import-result-panel">
+ {% if errors %}<div class="import-error-heading"><h2>Import nicht durchgeführt</h2><p>Es wurde kein Vertrag importiert. Bitte korrigiere die Angaben und lade die Datei erneut hoch.</p></div>
+  <ul class="import-errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  {% if error_count > errors|length %}<p class="hint">Weitere {{ error_count - errors|length }} Fehler wurden nicht angezeigt.</p>{% endif %}
+ {% else %}<div class="import-success-heading"><h2>Import abgeschlossen</h2><p>{% if imported == 1 %}1 Vertrag ist{% else %}{{ imported }} Verträge sind{% endif %} erfolgreich übernommen worden.</p><a class="button primary" href="/">Zur Vertragsübersicht</a></div>{% endif %}
+</section>
+{% endblock %}

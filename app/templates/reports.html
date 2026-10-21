@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Auswertungen und Berichte{% endblock %}
+{% block content %}
+<div class="page-head">
+ <div><div class="eyebrow">F14 · AUSWERTUNGEN</div><h1>Auswertungen und Berichte</h1>
+  <p>Vertragsvolumen, Finanzentwicklung, Aufgaben und Fristen{% if user.role == 'department' %} für Ihren Fachbereich{% endif %}.</p></div>
+ <a class="button secondary" href="/">Zur Vertragsübersicht</a>
+</div>
+
+<section class="report-metrics" aria-label="Kennzahlen">
+ <article class="report-metric"><span>Nicht archivierte Verträge</span><strong>{{ contract_count }}</strong><small>im Register erfasste Verträge</small></article>
+ <article class="report-metric"><span>Jährliche Ausgaben</span><strong>{{ annual_expenses|euro }}</strong><small>Jahreswerte der nicht archivierten Verträge</small></article>
+ <article class="report-metric"><span>Jährliche Einnahmen</span><strong>{{ annual_income|euro }}</strong><small>Jahreswerte der nicht archivierten Verträge</small></article>
+ <article class="report-metric"><span>Gesamtvertragswert</span><strong>{{ total_contract_value|euro }}</strong><small>bekannte Vertragswerte</small></article>
+ <article class="report-metric"><span>Offene Aufgaben</span><strong>{{ open_task_count }}</strong><small>{{ open_review_count }} offene Prüf- und Freigabevorgänge</small></article>
+</section>
+
+<section class="panel report-panel">
+ <div class="panel-heading report-panel-heading"><div><h2>Finanzentwicklung</h2><p class="history-subtitle">Jahreswerte zum Jahresende, aus der Änderungshistorie rekonstruiert.</p></div><span class="count">Letzte 5 Jahre</span></div>
+ {% if trend_peak %}<div class="trend-chart" role="img" aria-label="Jährliche Entwicklung der Ausgaben und Einnahmen">
+  {% for item in trend %}<div class="trend-row"><strong>{{ item.year }}</strong><div class="trend-bars">
+   <div class="trend-bar-line"><span class="trend-series-label">Ausgaben</span><span class="trend-track"><span class="trend-bar expense-bar" style="width:{{ item.expense_width }}%"></span></span><span class="trend-value">{{ item.expenses|euro }}</span></div>
+   <div class="trend-bar-line"><span class="trend-series-label">Einnahmen</span><span class="trend-track"><span class="trend-bar income-bar" style="width:{{ item.income_width }}%"></span></span><span class="trend-value">{{ item.income|euro }}</span></div>
+  </div></div>{% endfor %}
+ </div>{% else %}<div class="report-empty">Für die ausgewählten Jahre liegen noch keine erfassten Finanzwerte vor.</div>{% endif %}
+</section>
+
+<section class="panel report-panel">
+ <div class="panel-heading report-panel-heading"><div><h2>Vertragsvolumen nach Fachbereich</h2><p class="history-subtitle">Jahresausgaben und -einnahmen, Gesamtwerte sowie offene Vorgänge.</p></div><span class="count">{{ report_rows|length }} Fachbereiche</span></div>
+ {% if report_rows %}<div class="table-scroll"><table class="report-table"><thead><tr><th>Fachbereich</th><th>Verträge</th><th>Jahresausgaben</th><th>Jahreseinnahmen</th><th>Vertragswert gesamt</th><th>Offene Aufgaben</th><th>Offene Prüfungen</th><th>Fristen ≤ {{ reminder_window_days }} Tage</th></tr></thead>
+ <tbody>{% for row in report_rows %}<tr><td><strong>{{ row.department.name }}</strong></td><td>{{ row.contract_count }}</td><td>{{ row.annual_expenses|euro }}</td><td>{{ row.annual_income|euro }}</td><td>{{ row.contract_value|euro }}</td><td>{{ row.open_tasks }}{% if row.overdue_tasks %}<small class="report-alert">{{ row.overdue_tasks }} überfällig</small>{% endif %}</td><td>{{ row.open_reviews }}</td><td>{{ row.upcoming_deadlines + row.upcoming_tasks }}{% if row.overdue_deadlines %}<small class="report-alert">{{ row.overdue_deadlines }} überfällig</small>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+ {% else %}<div class="report-empty">Für diesen Zugriff sind keine Fachbereiche vorhanden.</div>{% endif %}
+</section>
+
+<div class="report-deadline-grid">
+ <section class="panel report-panel report-deadline-panel"><div class="panel-heading report-panel-heading"><div><h2>Überfällig</h2><p class="history-subtitle">Offene Aufgaben und Vertragsfristen vor heute.</p></div><span class="report-count is-overdue">{{ overdue_items|length }}</span></div>
+  {% if overdue_items %}<ul class="report-deadline-list">{% for item in overdue_items %}<li><a href="/contracts/{{ item.contract.id }}"><strong>{{ item.title }}</strong><small>{{ item.contract.contract_number }} · {{ item.contract.department.name }} · {{ item.kind }}</small></a><span>{{ item.due_date.strftime('%d.%m.%Y') }}</span></li>{% endfor %}</ul>{% else %}<p class="report-empty">Keine überfälligen Vorgänge.</p>{% endif %}
+ </section>
+ <section class="panel report-panel report-deadline-panel"><div class="panel-heading report-panel-heading"><div><h2>Anstehend</h2><p class="history-subtitle">Die nächsten {{ reminder_window_days }} Tage.</p></div><span class="report-count">{{ upcoming_items|length }}</span></div>
+  {% if upcoming_items %}<ul class="report-deadline-list">{% for item in upcoming_items %}<li><a href="/contracts/{{ item.contract.id }}"><strong>{{ item.title }}</strong><small>{{ item.contract.contract_number }} · {{ item.contract.department.name }} · {{ item.kind }}</small></a><span>{{ item.due_date.strftime('%d.%m.%Y') }}</span></li>{% endfor %}</ul>{% else %}<p class="report-empty">Keine anstehenden Vorgänge im Zeitraum.</p>{% endif %}
+ </section>
+</div>
+<p class="report-footnote">Die Finanzsummen beruhen auf den aktuell erfassten, nicht archivierten Verträgen. Die Zeitreihe nutzt protokollierte Vertragsänderungen; nicht dokumentierte Altbestände können darin fehlen.</p>
+{% endblock %}

@@ -1,0 +1,54 @@
+# Arbeitsplan Vertragsregister
+
+**Stand: 21. Oktober 2026**\
+**Projektstatus: F1–F15 als Prototyp vorhanden; zehnphasige Nachbesserung begonnen. Phase 1 technisch implementiert, PostgreSQL-Prüfnachweis und Abnahme offen.**
+
+## Ziel
+
+Das Vertragsregister bündelt die Erfassung, Pflege, Suche und Auswertung kommunaler Verträge. Die vollständige Funktionsübersicht, Bedienung, Startanleitung und API-Beschreibung stehen im [README](../README.md). Diese Datei hält den Umsetzungsstand und die noch erforderlichen Entscheidungen fest.
+
+## Umsetzungsstand
+
+Die 15 priorisierten Funktionsbereiche sind im Prototyp vorhanden. Dazu gehören die Vertragsverwaltung, Dokumente und DMS-Verknüpfungen, Fachbereiche und Benutzerrollen, Fristen, Aufgaben, Änderungshistorie, Finanz- und §-2b-Prüfdaten, Prüf- und Freigabeschritte, Excel-Import/-Export, Berichte und die schreibgeschützte JSON-API. Die Codeprüfung hat offene Berechtigungs-, Workflow-, Datenintegritäts- und Betriebsprobleme festgestellt. Eine pauschale Fertigstellung oder Produktivreife ist daraus nicht ableitbar.
+
+Die lokale Anwendung nutzt SQLite und kann über versionierte Alembic-Migrationen aktualisiert werden. Die bestehende API stellt einen technischen Anschluss bereit, ersetzt aber keinen systemspezifischen Adapter.
+
+## Nachbesserung und Prüfstand
+
+Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und Abnahmekriterien steht in [REMEDIATION PLAN PHASES.md](../REMEDIATION%20PLAN%20PHASES.md). [HANDOFF.md](../HANDOFF.md) dokumentiert jede Arbeitsänderung und den aktuellen Zustand. Fachliche Entscheidungen D01–D13 sind Vorschläge und noch nicht als städtisch freigegeben dokumentiert.
+
+| Phase | Inhalt | Stand |
+|---|---|---|
+| 1 | Ausgangslage, Testreparaturen, isolierte Speicher und echte Migrationstests | Implementiert; SQLite 19 bestanden/3 erwartete Fehler; PostgreSQL und direkte pytest-/CI-Ausführung noch nicht nachgewiesen |
+| 2–3 | Anwendungsberechtigungen, Identitäten, Datenbankregeln und RLS | Nicht begonnen |
+| 4–5 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit, Dokumentensicherheit | Nicht begonnen |
+| 6–7 | Zuverlässige API-Synchronisierung, Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
+| 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |
+| 10 | Fachliche/technische Abnahme, Pilot und expliziter Integrationsumfang | Nicht begonnen |
+
+Die [Prüfmatrix](VERIFICATION_MATRIX.md) benennt Rollen, Direktzugriffe, Kindobjekte und noch fehlende Prüfungen. [PHASE1_BASELINE.md](PHASE1_BASELINE.md) hält Umgebung, Befehle, Ergebnisse und Einschränkungen fest. Erwartete Fehler bleiben offen: fachbereichsfremde Filterwerte (R01), veränderbare archivierte Prüfvorgänge (R04) und Zugriff bei deaktiviertem Fachbereich (R10). Weitere Befunde werden in den jeweiligen Phasen behoben und geprüft.
+
+Vor dem Abschluss von Phase 1 muss der PostgreSQL-Prüflauf auf einem erlaubten, getrennten Testcluster tatsächlich erfolgreich ausgeführt und dokumentiert werden. Die lokale Initialisierung scheitert derzeit an Windows-Tokenfehler 87. Reguläre Vertragsdaten wurden hierfür nicht verwendet oder migriert.
+
+## Noch zu klären
+
+- Verbindliche Pflichtfelder, Kataloge und fachliche Bedeutung der Vertragsdaten.
+- Verantwortlichkeiten von Kämmerei, Fachbereichen und IT; Regeln für Rollen und Vertretungen.
+- Datenschutz, Aufbewahrungs- und Löschregeln, Protokollierung sowie Umgang mit Vertragsdateien.
+- Zielsysteme für eine direkte H&H-, DMS- oder Benutzerverzeichnis-Synchronisierung und die dafür verfügbaren APIs, Zugangsdaten und Testumgebungen.
+- Anforderungen an E-Mail- oder Push-Erinnerungen sowie gegebenenfalls eine Beschaffungsintegration.
+- Hosting, Netzwerkzugriff, Backups, Wiederherstellung, Monitoring und Updatebetrieb.
+
+## Nächste Schritte vor einem Produktivbetrieb
+
+1. Fachseite prüft die Pflichtfelder, Statusabläufe und Auswertungen anhand bereinigter Vertragsbeispiele.
+2. IT und Datenschutz legen Betriebs-, Berechtigungs-, Speicher- und Sicherungskonzept fest.
+3. Für jedes gewünschte Zielsystem dessen technische Dokumentation und Testzugang beschaffen; danach den konkreten Adapter planen.
+4. Interne Serverumgebung mit HTTPS, PostgreSQL, Backups und Wiederherstellungstest einrichten.
+5. Berechtigungs-, Sicherheits- und Abnahmetests durchführen und den Pilotbetrieb mit benannten Fachbereichen freigeben.
+
+## Abgrenzung
+
+Die vorhandene Schnittstellen-API liest Vertragsdaten und Dokumente, nimmt aber keine Änderungen entgegen. H&H-, LDAP/SSO- und produktspezifische DMS-Konnektoren, externe Benachrichtigungen und die automatische Übernahme von Dokumenten sind noch nicht integriert. Der §-2b-Prüfbereich dokumentiert Status und Ergebnis; er ersetzt keine fachliche oder rechtsverbindliche Prüfung.
+
+Die Anwendung ist eine Arbeitsversion und noch keine freigegebene kommunale Produktivlösung. Code allein ersetzt keine fachliche Abnahme, Datenschutz- oder Sicherheitsfreigabe.

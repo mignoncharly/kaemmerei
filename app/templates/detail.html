@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}{{ contract.designation }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a class="back" href="/">‹ Zur Übersicht</a><div class="eyebrow">VERTRAG {{ contract.contract_number }}</div><h1>{{ contract.designation }}</h1><div class="contract-tags">{% if contract.archived_at %}<span class="tag">Archiviert</span>{% else %}<span class="tag active">{{ status_label }}</span>{% endif %}<span class="tag type-tag">{{ contract.contract_type }}</span></div></div>{% if can_edit %}<a href="/contracts/{{ contract.id }}/edit" class="button primary">Bearbeiten</a>{% endif %}</div>
+<section class="panel detail-panel"><div class="panel-heading"><h2>Vertragsdaten</h2></div>
+ <dl class="details">
+  <div><dt>Vertragsnummer</dt><dd>{{ contract.contract_number }}</dd></div>
+  <div><dt>Vertragspartner</dt><dd>{{ contract.contract_partner or 'Nicht angegeben' }}</dd></div>
+  <div><dt>Fachbereich</dt><dd>{{ contract.department.name }}</dd></div>
+  <div><dt>Verantwortlich</dt><dd>{{ contract.contact_person or 'Nicht angegeben' }}</dd></div>
+  <div><dt>Vertretung</dt><dd>{{ contract.deputy_contact_person or 'Keine hinterlegt' }}</dd></div>
+  <div><dt>Vertragsbeginn</dt><dd>{{ contract.relevant_date.strftime('%d.%m.%Y') }}</dd></div>
+  <div><dt>Vertragsende</dt><dd>{{ contract.end_date.strftime('%d.%m.%Y') if contract.end_date else 'Unbefristet / nicht angegeben' }}</dd></div>
+  <div><dt>Kündigungsfrist</dt><dd>{{ contract.notice_period_months ~ ' Monate' if contract.notice_period_months is not none else 'Nicht angegeben' }}</dd></div>
+  <div><dt>Automatische Verlängerung</dt><dd>{% if contract.automatic_renewal %}Ja, alle {{ contract.renewal_period_months }} {% if contract.renewal_period_months == 1 %}Monat{% else %}Monate{% endif %}{% else %}Nein{% endif %}</dd></div>
+  <div><dt>Jahreswert</dt><dd>{{ contract.annual_value|euro if contract.annual_value is not none else 'Nicht angegeben' }}</dd></div>
+  <div><dt>Gesamtvertragswert</dt><dd>{{ contract.contract_value|euro if contract.contract_value is not none else 'Nicht angegeben' }}</dd></div>
+  <div><dt>Einnahme / Ausgabe</dt><dd>{% if contract.financial_direction == 'income' %}Einnahme{% elif contract.financial_direction == 'expense' %}Ausgabe{% else %}Nicht festgelegt{% endif %}</dd></div>
+  <div><dt>Zahlungsintervall</dt><dd>{{ payment_interval_labels.get(contract.payment_interval, 'Nicht festgelegt') }}</dd></div>
+  <div><dt>Haushaltszuordnung / Produktkonto</dt><dd>{{ contract.budget_assignment or 'Nicht festgelegt' }}</dd></div>
+ </dl>
+</section>
+<section class="panel tax-review-panel"><div class="panel-heading"><div><h2>§ 2b UStG-Prüfung</h2><p class="history-subtitle">Steuerliche Prüfung und dokumentiertes Ergebnis</p></div><span class="tax-review-tag tax-review-{{ contract.tax_review_status }}">{{ tax_review_labels.get(contract.tax_review_status, contract.tax_review_status) }}</span></div>
+ {% if contract.tax_review_result %}<p class="tax-review-result">{{ contract.tax_review_result }}</p>{% else %}<p class="empty tax-review-empty">Noch kein Prüfergebnis dokumentiert.</p>{% endif %}
+ {% if contract.tax_reviewed_by or contract.tax_reviewed_at %}<p class="tax-review-meta">{% if contract.tax_reviewed_by %}Abgeschlossen von <strong>{{ contract.tax_reviewed_by.username }}</strong>{% endif %}{% if contract.tax_reviewed_at %}{% if contract.tax_reviewed_by %} · {% endif %}{{ contract.tax_reviewed_at.strftime('%d.%m.%Y %H:%M') }} UTC{% endif %}</p>{% endif %}
+</section>
+<section class="panel deadline-panel"><div class="deadline-heading"><h2>Fristenüberwachung</h2>{% if notice_deadline %}<span class="deadline-tag">Kündigungsfrist</span>{% endif %}</div>
+ {% if contract.automatic_renewal and next_end_date %}<p>Automatische Verlängerung alle {{ contract.renewal_period_months }} {% if contract.renewal_period_months == 1 %}Monat{% else %}Monate{% endif %}. Nächster Laufzeitstichtag: <strong>{{ next_end_date.strftime('%d.%m.%Y') }}</strong>{% if notice_deadline %}. Kündigung spätestens zum <strong>{{ notice_deadline.strftime('%d.%m.%Y') }}</strong> ({{ contract.notice_period_months }} {% if contract.notice_period_months == 1 %}Monat{% else %}Monate{% endif %} vorher).{% else %}. Bitte die Kündigungsfrist ergänzen, um die Kündigungsfrist berechnen zu können.{% endif %}</p>
+ {% elif notice_deadline %}<p>Kündigung spätestens zum <strong>{{ notice_deadline.strftime('%d.%m.%Y') }}</strong>, sofern vertraglich eine Frist von {{ contract.notice_period_months }} {% if contract.notice_period_months == 1 %}Monat{% else %}Monaten{% endif %} zum Laufzeitende gilt.</p>
+ {% elif contract.end_date and contract.notice_period_months is none %}<p>Vertragsende am <strong>{{ contract.end_date.strftime('%d.%m.%Y') }}</strong>. Für eine Fristenberechnung bitte die Kündigungsfrist ergänzen.</p>
+ {% else %}<p>Für diesen Vertrag ist kein Laufzeitende mit Kündigungsfrist hinterlegt.</p>{% endif %}
+</section>
+<section class="panel tasks-panel">
+ <div class="panel-heading"><div><h2>Bearbeitungsstatus &amp; Aufgaben</h2><p class="history-subtitle">Prüfungen, Ergänzungen und Aktualisierungen nachhalten</p></div><span class="count">{{ tasks|length }} Aufgabe{% if tasks|length != 1 %}n{% endif %}</span></div>
+ {% if tasks %}<ul class="task-list">{% for task in tasks %}<li class="task-item {% if task.status != 'done' and task.due_date and task.due_date < today %}task-overdue{% endif %}">
+  <div class="task-topline"><div><span class="task-kind">{{ task_kind_labels.get(task.kind, task.kind) }}</span><strong>{{ task.title }}</strong></div><span class="task-status task-status-{{ task.status }}">{{ task_status_labels.get(task.status, task.status) }}</span></div>
+  <div class="task-meta">{% if task.due_date %}<span>{% if task.status != 'done' and task.due_date < today %}Überfällig seit{% else %}Fällig am{% endif %} {{ task.due_date.strftime('%d.%m.%Y') }}</span>{% endif %}<span>Zuständig: {{ task.assigned_user.username if task.assigned_user else 'Nicht zugewiesen' }}</span><span>Angelegt von {{ task.created_by.username }} · {{ task.created_at.strftime('%d.%m.%Y') }}</span></div>
+  {% if task.description %}<p class="task-description">{{ task.description }}</p>{% endif %}
+  {% if can_edit %}<details class="task-edit"><summary>Aufgabe bearbeiten</summary><form method="post" action="/contracts/{{ contract.id }}/tasks/{{ task.id }}">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <div class="task-form-grid"><div><label for="task-title-{{ task.id }}">Aufgabe</label><input id="task-title-{{ task.id }}" name="title" maxlength="160" required value="{{ task.title }}"></div>
+    <div><label for="task-kind-{{ task.id }}">Art</label><select id="task-kind-{{ task.id }}" name="kind">{% for code, label in task_kinds %}<option value="{{ code }}" {% if task.kind == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label for="task-status-{{ task.id }}">Bearbeitungsstatus</label><select id="task-status-{{ task.id }}" name="status">{% for code, label in task_statuses %}<option value="{{ code }}" {% if task.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label for="task-due-{{ task.id }}">Fällig am</label><input id="task-due-{{ task.id }}" name="due_date" type="date" value="{{ task.due_date.isoformat() if task.due_date else '' }}"></div>
+    <div><label for="task-assignee-{{ task.id }}">Zuständig</label><select id="task-assignee-{{ task.id }}" name="assigned_user_id"><option value="">Nicht zugewiesen</option>{% for person in task_assignees %}<option value="{{ person.id }}" {% if task.assigned_user_id == person.id %}selected{% endif %}>{{ person.username }}</option>{% endfor %}</select></div>
+    <div class="task-description-field"><label for="task-description-{{ task.id }}">Beschreibung</label><textarea id="task-description-{{ task.id }}" name="description" maxlength="2000" rows="2">{{ task.description }}</textarea></div>
+   </div><button class="button secondary" type="submit">Aufgabe speichern</button>
+  </form></details>{% endif %}
+ </li>{% endfor %}</ul>{% else %}<p class="empty task-empty">Für diesen Vertrag sind noch keine Aufgaben erfasst.</p>{% endif %}
+ {% if can_edit %}<div class="task-create"><h3>Aufgabe hinzufügen</h3><form method="post" action="/contracts/{{ contract.id }}/tasks">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="task-form-grid"><div><label for="task-title-new">Aufgabe *</label><input id="task-title-new" name="title" maxlength="160" required placeholder="z. B. Vertragsunterlagen vervollständigen"></div>
+   <div><label for="task-kind-new">Art *</label><select id="task-kind-new" name="kind" required>{% for code, label in task_kinds %}<option value="{{ code }}">{{ label }}</option>{% endfor %}</select></div>
+   <div><label for="task-due-new">Fällig am</label><input id="task-due-new" name="due_date" type="date"></div>
+   <div><label for="task-assignee-new">Zuständig</label><select id="task-assignee-new" name="assigned_user_id"><option value="">Nicht zugewiesen</option>{% for person in task_assignees %}<option value="{{ person.id }}">{{ person.username }}</option>{% endfor %}</select></div>
+   <div class="task-description-field"><label for="task-description-new">Beschreibung</label><textarea id="task-description-new" name="description" maxlength="2000" rows="2" placeholder="Optionale Hinweise zur Aufgabe"></textarea></div>
+  </div><button class="button primary" type="submit">Aufgabe anlegen</button>
+ </form></div>{% endif %}
+</section>
+<section class="panel contract-reviews">
+ <div class="panel-heading"><div><h2>Prüfung &amp; Freigabe</h2><p class="history-subtitle">Vertragsdaten an die zuständige Stelle weiterleiten und Rückmeldungen dokumentieren</p></div><span class="count">{{ contract_reviews|length }} Prüfvorgang{% if contract_reviews|length != 1 %}e{% endif %}</span></div>
+ {% if contract_reviews %}<ul class="review-list">{% for review in contract_reviews %}<li class="review-item">
+  <div class="review-topline"><div><span class="review-status review-status-{{ review.status }}">{{ contract_review_status_labels.get(review.status, review.status) }}</span><strong>{{ review.subject }}</strong></div><span class="review-recipient">{{ review.recipient }}{% if review.recipient_detail %} · {{ review.recipient_detail }}{% endif %}</span></div>
+  <div class="review-meta"><span>Eingereicht von {{ review.created_by.username }} · {{ review.created_at.strftime('%d.%m.%Y %H:%M') }} UTC</span>{% if review.due_date %}<span>Frist: {{ review.due_date.strftime('%d.%m.%Y') }}</span>{% endif %}{% if review.updated_by %}<span>Bearbeitet von {{ review.updated_by.username }} · {{ review.updated_at.strftime('%d.%m.%Y %H:%M') }} UTC</span>{% endif %}</div>
+  {% if review.request_text %}<div class="review-text"><strong>Prüfanfrage</strong><p>{{ review.request_text }}</p></div>{% endif %}
+  {% if review.result_text %}<div class="review-result"><strong>Rückmeldung</strong><p>{{ review.result_text }}</p></div>{% endif %}
+  {% if can_handle_reviews %}<details class="review-update"><summary>Prüfstatus / Rückmeldung bearbeiten</summary><form method="post" action="/contracts/{{ contract.id }}/reviews/{{ review.id }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="review-form-grid"><div><label for="review-status-{{ review.id }}">Entscheidung</label><select id="review-status-{{ review.id }}" name="status">{% for code, label in contract_review_statuses %}<option value="{{ code }}" {% if review.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><div class="review-result-field"><label for="review-result-{{ review.id }}">Rückmeldung / Begründung</label><textarea id="review-result-{{ review.id }}" name="result_text" maxlength="5000" rows="3">{{ review.result_text }}</textarea><small class="hint">Für Freigabe, Überarbeitung oder Ablehnung ist eine Begründung erforderlich.</small></div></div><button class="button secondary" type="submit">Rückmeldung speichern</button></form></details>{% endif %}
+ </li>{% endfor %}</ul>{% else %}<p class="empty review-empty">Noch keine Prüfung weitergeleitet.</p>{% endif %}
+ {% if can_edit %}<div class="review-create"><h3>Vertrag zur Prüfung weiterleiten</h3><form method="post" action="/contracts/{{ contract.id }}/reviews"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="review-form-grid">
+  <div><label for="review-recipient">Zuständige Stelle *</label><select id="review-recipient" name="recipient" required>{% for recipient in review_recipients %}<option value="{{ recipient }}">{{ recipient }}</option>{% endfor %}</select></div>
+  <div><label for="review-recipient-detail">Team / Ansprechstelle</label><input id="review-recipient-detail" name="recipient_detail" maxlength="160" placeholder="z. B. Steuern oder Vergabe"></div>
+  <div class="review-result-field"><label for="review-subject">Betreff *</label><input id="review-subject" name="subject" maxlength="200" required placeholder="z. B. Prüfung der Vertragsunterlagen"></div>
+  <div><label for="review-due-date">Gewünschte Rückmeldung bis</label><input id="review-due-date" name="due_date" type="date"></div>
+  <div class="review-result-field"><label for="review-request">Prüffrage / Hinweise</label><textarea id="review-request" name="request_text" maxlength="3000" rows="3" placeholder="Was soll geprüft oder freigegeben werden?"></textarea></div>
+ </div><small class="hint review-dispatch-note">Der Vorgang wird im Vertragsregister für die Prüfstelle sichtbar. Eine E-Mail oder Übergabe an ein externes Fachverfahren ist nicht eingerichtet.</small><button class="button primary" type="submit">Zur Prüfung weiterleiten</button></form></div>{% endif %}
+</section>
+<section class="panel documents">
+ <div class="panel-heading"><div><h2>Zugehörige Unterlagen</h2><p class="history-subtitle">Dateien und Verknüpfungen zum Dokumentenmanagement</p></div><span class="count">{{ documents|length }} Unterlage{% if documents|length != 1 %}n{% endif %}</span></div>
+ {% if documents %}<ul class="document-list">{% for document in documents %}<li>
+  <div class="document-meta"><strong>{% if document.external_url %}↗{% else %}▤{% endif %} {{ document.original_filename }}</strong><small>{% if document.external_url %}Verknüpfung zum Dokumentenmanagement{% else %}{{ (document.size_bytes / 1048576)|round(2) }} MB · {{ document.content_type }}{% endif %} · hinzugefügt von {{ document.uploaded_by.username }} · {{ document.uploaded_at.strftime('%d.%m.%Y %H:%M') }} UTC</small></div>
+  <div class="document-actions">{% if document.external_url %}<a class="button secondary" href="{{ document.external_url }}" target="_blank" rel="noopener noreferrer">Im DMS öffnen</a>{% else %}{% if document.content_type == 'application/pdf' or document.content_type.startswith('image/') %}<a class="button secondary" href="/contracts/{{ contract.id }}/documents/{{ document.id }}" target="_blank" rel="noopener">Vorschau</a>{% endif %}<a class="button subtle" href="/contracts/{{ contract.id }}/documents/{{ document.id }}?download=1">Herunterladen</a>{% endif %}</div>
+ </li>{% endfor %}</ul>{% else %}<p class="empty">Für diesen Vertrag sind noch keine Unterlagen hinterlegt.</p>{% endif %}
+ {% if can_edit %}<div class="document-tools">
+  <form class="document-upload" action="/contracts/{{ contract.id }}/documents" method="post" enctype="multipart/form-data">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <div><label for="documents">Dateien hochladen</label><input id="documents" name="documents" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.png,.jpg,.jpeg,.gif" multiple required><small class="hint">Bis zu 5 Dateien, jeweils maximal 25 MB. PDF und Bilder können in der Vorschau geöffnet werden.</small></div>
+   <button class="button primary" type="submit">Unterlagen hinzufügen</button>
+  </form>
+  <form class="document-link-form" action="/contracts/{{ contract.id }}/documents/link" method="post">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <h3>Mit einem vorhandenen DMS verknüpfen</h3>
+   <div class="document-link-fields"><div><label for="document_name">Bezeichnung</label><input id="document_name" name="document_name" maxlength="200" required placeholder="z. B. Unterzeichneter Vertrag"></div><div><label for="external_url">DMS-Adresse</label><input id="external_url" name="external_url" type="url" maxlength="2048" required placeholder="https://… oder http://…"></div><button class="button secondary" type="submit">Verknüpfung speichern</button></div>
+   <small class="hint">Die Adresse wird hier hinterlegt; Anmeldung und Zugriff im DMS bleiben dort geregelt.</small>
+  </form>
+ </div>{% endif %}
+</section>
+{% if can_edit %}<section class="danger-area"><div><strong>Vertrag archivieren</strong><p>Archivierte Einträge bleiben erhalten, sind aber nicht mehr bearbeitbar.</p></div><form action="/contracts/{{ contract.id }}/archive" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="version" value="{{ contract.version }}"><button class="button danger" type="submit">Archivieren</button></form></section>{% endif %}
+<section class="panel history"><div class="panel-heading"><div><h2>Änderungshistorie</h2><p class="history-subtitle">Änderungen an diesem Vertrag im Überblick</p></div><span class="count">{{ history|length }} Ereignis{% if history|length != 1 %}se{% endif %}</span></div>
+{% if history %}<ol class="history-list">{% for entry in history %}<li class="history-entry">
+ <span class="history-marker history-marker-{{ entry.action }}" aria-hidden="true"></span>
+ <div class="history-content"><div class="history-topline"><span class="history-badge history-badge-{{ entry.action }}">{{ entry.label }}</span><span class="history-actor">von {{ entry.actor }}</span>{% if entry.version %}<span class="history-version">Version {{ entry.version }}</span>{% endif %}<time datetime="{{ entry.created_at.isoformat() }}">{{ entry.created_at.strftime('%d.%m.%Y · %H:%M') }} UTC</time></div>
+ {% if entry.action == 'updated' %}{% if entry.changes %}<ul class="history-changes">{% for change in entry.changes %}<li><strong>{{ change.label }}</strong><div class="history-values"><span class="history-old">{{ change.before }}</span><span class="history-arrow" aria-label="wurde zu">→</span><span class="history-new">{{ change.after }}</span></div></li>{% endfor %}</ul>{% else %}<p class="history-message">Vertragsdaten wurden gespeichert.</p>{% endif %}
+ {% elif entry.action == 'document_uploaded' %}<p class="history-message">{{ entry.filename }}{% if entry.size_bytes %} · {{ (entry.size_bytes / 1048576)|round(2) }} MB{% endif %}</p>
+ {% elif entry.action == 'created' %}<p class="history-message">Der Vertrag wurde im Register angelegt{% if entry.contract_number %} · Vertragsnummer {{ entry.contract_number }}{% endif %}.</p>
+ {% elif entry.action == 'archived' %}<p class="history-message">Der Vertrag wurde ins Archiv verschoben.</p>
+ {% elif entry.action == 'task_created' %}<p class="history-message">{{ entry.task_kind }}: {{ entry.task_title }} · Status {{ entry.task_status }}{% if entry.task_due_date %} · Fällig am {{ entry.task_due_date }}{% endif %}</p>
+ {% elif entry.action == 'task_updated' %}{% if entry.changes %}<ul class="history-changes">{% for change in entry.changes %}<li><strong>{{ change.label }}</strong><div class="history-values"><span class="history-old">{{ change.before }}</span><span class="history-arrow" aria-label="wurde zu">→</span><span class="history-new">{{ change.after }}</span></div></li>{% endfor %}</ul>{% else %}<p class="history-message">Aufgabe wurde gespeichert: {{ entry.task_title }}.</p>{% endif %}{% endif %}
+ {% if entry.action == 'review_created' %}<p class="history-message">{{ entry.review_subject }} an {{ entry.review_recipient }}{% if entry.review_recipient_detail %} · {{ entry.review_recipient_detail }}{% endif %} weitergeleitet.</p>
+ {% elif entry.action == 'review_updated' %}{% if entry.changes %}<ul class="history-changes">{% for change in entry.changes %}<li><strong>{{ change.label }}</strong><div class="history-values"><span class="history-old">{{ change.before }}</span><span class="history-arrow" aria-label="wurde zu">→</span><span class="history-new">{{ change.after }}</span></div></li>{% endfor %}</ul>{% endif %}{% endif %}
+ </div>
+</li>{% endfor %}</ol>{% else %}<p class="empty">Noch keine Einträge in der Änderungshistorie.</p>{% endif %}
+</section>
+{% endblock %}

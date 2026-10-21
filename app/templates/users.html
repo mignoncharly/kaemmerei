@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Benutzerverwaltung{% endblock %}
+{% block content %}
+<div class="page-head">
+ <div><div class="eyebrow">ADMINISTRATION</div><h1>Benutzer &amp; Berechtigungen</h1><p>Rollen, Fachbereichszugriff und Kontostatus verwalten.</p></div>
+ <a class="button primary" href="/admin/users/new">+ Benutzer anlegen</a>
+</div>
+<section class="panel table-panel">
+ <div class="panel-heading"><h2>Benutzerkonten</h2><span class="count">{{ users|length }} Konten</span></div>
+ <div class="table-scroll"><table><thead><tr><th>Benutzername</th><th>Rolle</th><th>Fachbereich</th><th>Status</th><th></th></tr></thead>
+ <tbody>{% for account in users %}<tr>
+  <td><strong>{{ account.username }}</strong>{% if account.id == user.id %}<small class="contract-id">Ihr Konto</small>{% endif %}</td>
+  <td>{{ role_labels.get(account.role, account.role) }}</td>
+  <td>{{ account.department.name if account.department else '—' }}</td>
+  <td><span class="account-status {% if account.is_active %}is-active{% else %}is-inactive{% endif %}">{{ 'Aktiv' if account.is_active else 'Gesperrt' }}</span></td>
+  <td class="nowrap"><a href="/admin/users/{{ account.id }}/edit">Verwalten ›</a></td>
+ </tr>{% endfor %}</tbody></table></div>
+</section>
+<section class="panel role-guide">
+ <h2>Rollenübersicht</h2>
+ <dl><div><dt>Fachbereichsnutzer</dt><dd>Kann Verträge im zugeordneten Fachbereich ansehen, erstellen und bearbeiten.</dd></div>
+ <div><dt>Prüfer</dt><dd>Kann alle Verträge und Änderungshistorien ansehen, aber keine Vertragsdaten ändern.</dd></div>
+ <div><dt>Administrator</dt><dd>Kann alle Verträge verwalten und Benutzerkonten administrieren.</dd></div></dl>
+</section>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Benutzer anlegen' if mode == 'new' else 'Benutzer verwalten' }}{% endblock %}
+{% block content %}
+<a class="back" href="/admin/users">‹ Zur Benutzerverwaltung</a>
+<div class="page-head"><div><div class="eyebrow">ADMINISTRATION</div><h1>{{ 'Benutzer anlegen' if mode == 'new' else 'Benutzer verwalten' }}</h1><p>Rolle und Zugriff gelten nach der nächsten Anmeldung.</p></div></div>
+<section class="panel form-panel user-form-panel">
+ {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+ <form method="post" action="{{ '/admin/users/new' if mode == 'new' else '/admin/users/' ~ target.id ~ '/edit' }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="form-grid">
+   <div><label for="username">Benutzername</label><input id="username" name="username" value="{{ values.get('username', '') }}" maxlength="80" {% if mode == 'edit' %}readonly{% endif %} required autocomplete="username"></div>
+   <div><label for="role">Rolle</label><select name="role" id="role" required>{% for code, label in roles %}<option value="{{ code }}" {% if values.get('role') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+   <div class="wide"><label for="department_id">Fachbereich</label><select name="department_id" id="department_id"><option value="">Kein Fachbereich</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if values.get('department_id')|string == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select><small class="field-hint">Für Fachbereichsnutzer erforderlich und zugriffsbeschränkend. Bei Prüfern und Administratoren ist die Zuordnung optional und dient der organisatorischen Anzeige.</small></div>
+   <div class="wide"><label for="password">{{ 'Startpasswort' if mode == 'new' else 'Neues Passwort' }}</label><input id="password" type="password" name="password" minlength="12" maxlength="256" {% if mode == 'new' %}required{% endif %} autocomplete="new-password" placeholder="{{ 'Mindestens 12 Zeichen' if mode == 'new' else 'Leer lassen, um das Passwort beizubehalten' }}"><small class="field-hint">Mindestens 12 Zeichen. Bei einem Wechsel werden alle Sitzungen dieses Kontos beendet.</small></div>
+   <div class="wide"><input type="hidden" name="is_active" value="0"><label class="check-label"><input type="checkbox" name="is_active" value="1" {% if values.get('is_active', mode == 'new') %}checked{% endif %}> Konto aktiv</label><small class="field-hint">Gesperrte Konten können sich nicht anmelden.</small></div>
+  </div>
+  <div class="form-actions"><a class="button subtle" href="/admin/users">Abbrechen</a><button class="button primary" type="submit">{{ 'Benutzer anlegen' if mode == 'new' else 'Änderungen speichern' }}</button></div>
+ </form>
+</section>
+{% endblock %}

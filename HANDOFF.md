@@ -1,0 +1,250 @@
+# Implementation handoff and current state
+
+Last updated: 2026-10-21\
+Project: OPEN.HERZ Vertragsregister\
+Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
+Current stage: Phase 1 implemented and partially verified; PostgreSQL, direct pytest, and hosted CI evidence outstanding.\
+Production readiness: Not established. No release or deployment approval is recorded here.
+
+## 1. Start here
+
+1. Read this file, the ten-phase plan, [README.md](README.md), and [docs/ARBEITSPLAN.md](docs/ARBEITSPLAN.md).
+2. Inspect the actual working tree, applicable project instructions, environment, and migration head. Do not assume repository state matches the baseline review.
+3. Select the next ready task from the phase tracker. Check dependencies and the decisions register in the plan.
+4. Implement one coherent change, verify the affected behavior in an isolated environment, then update the current-state tables and append an update entry below.
+5. Record unrun checks as **Not run**. Record failed checks and incomplete work plainly. Never mark a phase verified from code inspection alone.
+
+Do not put credentials, full API tokens, password hashes, document contents, or personal contract records in this file or linked evidence.
+
+## 2. Current state snapshot
+
+| Item | Current state |
+|---|---|
+| Review baseline | Static source review dated 2026-10-20 |
+| Documents reviewed | README and ARBEITSPLAN updated to distinguish prototype behavior, known defects, verification, and outstanding approvals |
+| Application | FastAPI, SQLAlchemy, Jinja templates, local static CSS/JS |
+| Database | SQLite development default; production configuration requires PostgreSQL/psycopg |
+| Latest migration observed | `0013_integration_tokens` |
+| Authorization | Application-level department checks; no database RLS policies observed |
+| Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
+| Tests | Actual source count: 10 original functions, all passing through stdlib adapter. Final suite: 22 checks, 19 passed, 3 expected failures; no errors/skips/unexpected successes |
+| PostgreSQL/migrations | SQLite clean/populated upgrades verified to head. PostgreSQL fixture/CI supplied; local initdb blocked by Windows restricted-token error 87. Production grants/RLS unverified |
+| Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
+| Deployment | Not inspected; no deployment performed |
+| Source commit/branch | Git initialized locally on main; origin is https://github.com/mignoncharly/kaemmerei.git. Remote access fails through configured proxy; see U005/U006 |
+| Completed deliverables | Plan/handoff; Phase 1 harness, isolated storage/configuration, migration fixtures, stdlib runner, CI definitions, baseline/matrix docs, corrected German project status |
+| Application remediation | Document storage now per app instance; migrations accept explicit test connections. Business authorization/workflow findings remain open |
+
+## 3. Status definitions
+
+| State | Meaning |
+|---|---|
+| Not started | No implementation work recorded |
+| In progress | Work exists; implementation and/or required verification incomplete |
+| Blocked | A specific missing dependency prevents the next required action; name it and its owner |
+| Implemented, unverified | Code/document change exists, but required checks have not passed or have not run |
+| Verified | Relevant checks passed with recorded evidence; deployment/acceptance may still be pending |
+| Accepted / complete | All phase exit criteria met and required owner acceptance recorded |
+| Deferred | Optional scope excluded with owner, rationale, and review date; never equivalent to fixed |
+| Reopened | A previous completion claim is invalidated by a defect or new evidence |
+
+Track task checkboxes in the plan as implementation progress. Use this file for verification, deployment, and acceptance state. Both must agree.
+
+## 4. Phase tracker
+
+| Phase | State | Implemented tasks | Verification | Owner | Next action |
+|---|---|---|---|---|---|
+| 1 — Baseline and verification | Implemented, partially verified | P01-T01–T08 | SQLite: 19 pass, 3 expected failures; PostgreSQL/pytest/CI outstanding | Engineering: Codex; acceptance owner unassigned | Execute supplied jobs on an allowed disposable PostgreSQL runner |
+| 2 — Authorization and identities | Not started | None | Not run | Unassigned | Adopt capability matrix; then scope all derived queries |
+| 3 — Schema, roles, RLS, audit | Not started | None | Not run | Unassigned | Inventory schema differences; design context/bootstrap |
+| 4 — Workflow/archive/concurrency | Not started | None | Not run | Unassigned | Define material content revision and mutation protocol |
+| 5 — Document lifecycle | Not started | None | Not run | Unassigned | Define storage states, quarantine, recovery, and retention |
+| 6 — Integration synchronization | Not started | None | Not run | Unassigned | Specify versioned cursor/feed/scope-removal contract |
+| 7 — Reports/dates/Excel | Not started | None | Not run | Unassigned | Agree finance/history/date/interchange semantics |
+| 8 — Frontend and navigation | Not started | None | Not run | Unassigned | Repair CSP-compatible charts and form state |
+| 9 — Operations and availability | Not started | None | Not run | Unassigned | Define ingress limits, workload, and deployment targets |
+| 10 — Acceptance and release | Not started | None | Not run | Unassigned | Assign acceptance owners and release scope |
+
+No phase is complete merely because this plan has been written.
+
+## 5. Findings closure tracker
+
+The plan contains the full finding descriptions and primary phase mapping. Split grouped rows when individual findings change status. Record closure evidence and the verifying update ID for each finding before release.
+
+| Finding IDs | Baseline severity | State | Closure evidence / update |
+|---|---|---|---|
+| R01 — Metadata isolation | High | Open | None |
+| R02 — Reviewer/recipient permissions | High | Open | None |
+| R03 — Approval version/activation integrity | High | Open | None |
+| R04 — Archive mutation | High | Open | None |
+| R05 — Incremental synchronization | High | Open | None |
+| R06 — Historical financial population | High | Open | None |
+| R07 — Availability controls | High | Open | None |
+| R08 — Test foundation/coverage | High | Partially addressed; remains open | U003: original tests repaired and matrix/fixtures added; PostgreSQL/pytest and later coverage outstanding |
+| R09–R14 — RLS, inactivity, concurrency, tax, audit, schema | Medium | Open | None |
+| R15–R16 — Document trust/recovery | Medium | Open | None |
+| R17–R20 — Financial/date correctness | Medium | Open | None |
+| R21–R22 — Capacity/operations | Medium | Open | None |
+| R23–R28 — Frontend correctness | Medium | Open | None |
+| R29–R36 — Integration/lifecycle scope gaps | Scope decisions required | Open | None |
+| R37–R41 — Maintainability/usability/token policy | Nice to fix/have | Backlog | None |
+
+## 6. Decisions and dependencies
+
+All D01–D13 decisions in the plan are initially **Proposed / unapproved**. No city policy or sign-off is inferred from the technical plan.
+
+| Decision IDs | Owner to assign | Current state | Immediate effect |
+|---|---|---|---|
+| D01–D02 — Roles, assignment, delegation | Kämmerei, identity/security | Proposed defaults | Implement read-only reviewers and explicit grants; confirm final policy |
+| D03 — RLS and database roles | DBA/security | Proposed default | Design restricted production roles and fail-closed policies |
+| D04 — Approval/activation/material changes | Approval owners | Proposed default | Preserve legacy uncertainty; do not fabricate approval provenance |
+| D05–D06 — Documents, scanning, retention | Operations, security, privacy/records | Proposed defaults | Quarantine new content; no automatic destructive disposal |
+| D07 — API/token/event policy | Integration/security | Proposed default | Design scopes, rotation, removals, and resnapshot behavior |
+| D08–D10 — Finance, dates, Excel | Finance/domain/product | Proposed defaults | Preserve unknowns and define report/interchange contracts |
+| D11–D12 — Hosting, recovery, identity | IT operations/security | Undecided targets/provider | Production acceptance depends on measured targets and identity choice |
+| D13 — Connectors and notifications | Product owner | Scope not accepted | Do not claim unimplemented connectors or delivery capabilities |
+
+**Current verification blockers:** Local PostgreSQL initdb cannot create a restricted Windows token (error 87). pytest is unavailable and network installation failed. SQLite stdlib verification is complete. PostgreSQL/pytest jobs need an allowed disposable runner; no business-policy approval is needed to run those synthetic jobs.
+
+## 7. Verification and environment ledger
+
+Append exact commands only after identifying the correct environment. Record date, configuration, exit code, and evidence path for each executed check. Do not copy secrets from command arguments or environment values.
+
+| Check | Environment | Latest result | Evidence |
+|---|---|---|---|
+| Static source review | Workspace source | Completed; findings recorded in plan | Baseline review and R01–R41 |
+| Documentation creation | Workspace Markdown | Created | U001 below |
+| Documentation cross-reference/content review | Workspace Markdown | Current links resolve; eight Phase 1 task boxes implemented; acceptance gate explicitly open | U004; historical original plan validation in U002 |
+| Python syntax/source snapshot | Workspace source | 31 Python files AST-parsed; 38 source/config inputs fingerprinted | U004; .verification/phase1-source-sha256.json |
+| Existing application tests | Migrated disposable SQLite | 10/10 passed through unittest adapter | U003; .verification/phase1-sqlite.log |
+| New regression tests | Migrated disposable SQLite | Final suite 22 checks: 19 passed, 3 expected failures (R01/R04/R10) | U003; .verification/phase1-sqlite.json |
+| Clean Alembic upgrade | Disposable SQLite / PostgreSQL | SQLite passed incl. idempotent head; PostgreSQL not run (initdb failure) | U003; migration test and bootstrap log |
+| Populated baseline upgrade | Disposable SQLite / PostgreSQL | SQLite passed from populated 0001 through document seed at 0003 to head; PostgreSQL not run | U003; MigrationTests |
+| RLS/application-role isolation | PostgreSQL restricted roles | Not implemented / not run | None |
+| Concurrent archive/review/task writes | PostgreSQL | Not run | None |
+| File scan/recovery fault cases | Isolated document storage | Not implemented / not run | None |
+| API synchronization replay/transfers | Synthetic integration consumer | Not implemented / not run | None |
+| Financial reconciliation/date fixtures | Synthetic domain fixtures | Not implemented / not run | None |
+| Browser/CSP/accessibility | Local disposable app | Not run | None |
+| Load/resource limits | Agreed synthetic workload | Not run; targets unassigned | None |
+| Consistent backup restore | Isolated recovery environment | Not run; RPO/RTO unassigned | None |
+| Pilot/security/privacy acceptance | Named owners | Not performed | None |
+
+## 8. Migration, deployment, and recovery ledger
+
+| Update | Migration/configuration | Data impact | Applied where | Recovery evidence |
+|---|---|---|---|---|
+| U001 | None; Markdown files only | No application/business-data change | Workspace documentation | Remove/revise these two files if needed |
+| U003 | No new schema migration; explicit connection runner and instance storage settings | Synthetic verification DBs/files only | Workspace source; no deployment | Revert Phase 1 source changes together; no business-data restore needed |
+
+For future updates, record schema revisions, backfill counts, legacy exceptions, required application/config versions, deployment state, and tested recovery instructions. Never list a migration as applied solely because its file exists.
+
+## 9. Immediate next work
+
+1. Run the PostgreSQL verification on a permitted disposable cluster; do not use business databases or bypass sandbox restrictions to start the local server.
+2. Install development dependencies on an available runner and execute both pytest jobs. Capture actual commands, results, and failure evidence.
+3. Close Phase 1 acceptance after the actual PostgreSQL migration gate passes. Remove no expected-failure markers without target-finding evidence.
+4. Next application remediation: P02-T01–T03, capability matrix and centralized metadata/query scoping. Phase 2 is not started in this update.
+
+The user authorized Phase 1 implementation on 2026-10-21. Technical artifacts are delivered; outstanding verification is recorded separately from implementation.
+
+## 10. Update history
+
+Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct earlier mistakes with a new entry and update the current snapshot; do not erase failure history. Routine progress entries may group related tasks, but each completed task needs evidence or an explicit unverified state.
+
+### U001 — 2026-10-20 — Remediation plan and initial handoff
+
+- **Implementer:** Codex.
+- **Scope:** Documentation planning only; no phase task marked implemented.
+- **Changes:** Created `REMEDIATION PLAN PHASES.md` with ten ordered phases, R01–R41 coverage, task IDs, dependencies, verification gates, recovery guidance, and D01–D13 decisions. Created `HANDOFF.md` with baseline, phase/finding trackers, evidence ledger, migration ledger, next actions, and update format.
+- **Files:** These two Markdown files in the project root.
+- **Migration/data impact:** None. Application code, business data, existing migrations, README, and ARBEITSPLAN unchanged by U001.
+- **Verification:** Initial document readback and structural/reference review pending at time of entry creation. Application tests, browser checks, migrations, deployment, and security testing not run.
+- **Known limitations:** All source-review findings remain unresolved. Live deployment and PostgreSQL behavior are unverified. No named policy/acceptance owners assigned.
+- **Decisions:** Proposed defaults are documented; none recorded as approved.
+- **Deployment/recovery:** Documentation exists in workspace only; no deployment. Recovery is a documentation revision/removal.
+- **Next action:** Complete documentation readback, then begin P01-T01 when remediation implementation is undertaken.
+
+### U002 — 2026-10-20 — Documentation readback and consistency review
+
+- **Implementer:** Codex.
+- **Scope/state:** Documentation verification completed; all remediation phases remain Not started.
+- **Verification:** Read back both files and checked phase headings, task-ID uniqueness, finding/decision coverage, and decoded relative link targets with PowerShell. Command exited 0. Results: exactly phases 1–10; 86 tasks; zero duplicate task IDs; no missing R01–R41 finding rows; no missing D01–D13 decision rows; no missing link targets.
+- **Content review:** Confirmed that phases specify dependencies, implementation tasks, exit checks, recovery guidance, and handoff requirements. Confirmed that current-state tables do not claim code remediation or operational acceptance.
+- **Changes:** Updated the verification ledger and appended this evidence entry.
+- **Checks not run:** Application tests, browser checks, database migrations, live security checks, load checks, and restore rehearsal; this update concerns the requested planning documents only.
+- **Migration/deployment/data impact:** None.
+- **Remaining work:** All remediation findings remain open; policy decisions and accountable owners remain unassigned.
+- **Next action:** P01-T01: establish the implementation baseline when remediation work begins.
+
+### U003 — 2026-10-21 — Phase 1 implementation and local verification
+
+- **Implementer:** Codex. **Tasks:** P01-T01–T08. **Findings:** R08 partially addressed; R37 boundaries defined; R01/R04/R10 reproduced and still open.
+- **State:** Phase 1 Not started -> Implemented, partially verified. Phases 2–10 not started; no production acceptance.
+- **Baseline:** Windows 11, CPython 3.14.3, source head 0013_integration_tokens. No Git repository/commit available. Usable Python is the parent workspace .venv; project-local .venv lacks runtime packages. Earlier count of 11 original tests corrected to the actual 10 source functions.
+- **Changes:** Repaired redirect-ID parsing and archive-filter assertion. Added per-app document storage and explicit migration connections. Replaced create_all-based fixtures with real isolated migrations, synthetic identities, guarded random PostgreSQL DB creation, shared pytest/unittest support, migration/config/storage/permission checks, and strict known-defect cases. Added a standard runner, disposable Windows PostgreSQL launcher, and SQLite/PostgreSQL CI jobs. Published baseline, matrix, service boundaries, and revised German project status.
+- **Files:** app/config.py, app/main.py, app/migrations.py, alembic/env.py; tests/support.py, conftest.py, test_app.py, test_phase1.py; scripts/verify_phase1.py, verify_phase1_postgres.ps1; pytest.ini; .github/workflows/phase1-verification.yml; .gitignore; docs/PHASE1_BASELINE.md, docs/VERIFICATION_MATRIX.md; README, ARBEITSPLAN, plan, HANDOFF, CHANGELOG.
+- **Migration/data impact:** No new schema migration; existing revision files unchanged. Only generated synthetic SQLite databases migrated. Regular business DB/documents not read or changed. Alembic's supplied-connection path is separate from regular CLI configuration.
+- **Dependency attempts:** requirements-dev install failed because pytest was unavailable through the configured network. Cached httpx/httpcore/certifi wheels installed offline successfully. pytest remains unavailable; no proxy/sandbox restrictions bypassed.
+- **Verification:** `C:\kämmerei\.venv\Scripts\python.exe scripts\verify_phase1.py --database sqlite` -> final exit 0; 22 checks, 19 passed, 3 expected failures, 0 errors/skips/unexpected successes. Includes all 10 original application checks, clean/populated migration preservation, storage upload/preview/download/API isolation, token scopes, child permissions, and configuration/unsafe-test-target rejection.
+- **Expected failures:** R01 private contract-type dropdown leak; R04 archived review decision accepted; R10 access retained after department deactivation. These are OPEN findings. Fixture preparation is outside marked assertion methods, so setup errors remain real errors.
+- **Failed attempts:** First SQLite run failed on Python 3.14 private temporary-directory ACLs (18 setup errors); verification now uses inherited-ACL workspace scratch paths and guarded cleanup. PostgreSQL bootstrap failed before tests: initdb cannot create restricted token, error 87. No existing PostgreSQL service used as fallback.
+- **Evidence:** docs/PHASE1_BASELINE.md, docs/VERIFICATION_MATRIX.md; local .verification/phase1-sqlite.log/.json and .verification/phase1-postgresql.log. Reports contain synthetic verification output and are ignored artifacts.
+- **Not run:** Direct pytest/hosted CI; actual PostgreSQL migrations/regression; production-role RLS and later concurrency/load/browser/restore checks. CI files are definitions, not evidence of execution.
+- **Decisions:** D01–D13 remain proposed/unapproved; no business policy adopted.
+- **Deployment/recovery:** Workspace only, no deployment. Revert Phase 1 source/config changes together if needed; no business-data rollback required. First-attempt restricted-ACL synthetic scratch directories may need workspace-owner cleanup; no broad deletion or ACL changes attempted.
+- **Next action:** Execute PostgreSQL/pytest verification in an allowed disposable environment and record evidence before Phase 1 acceptance. Phase 2 capability/scoping work is next application remediation.
+
+### U004 — 2026-10-21 — Final source and handoff consistency review
+
+- **Scope:** Phase 1 documentation/evidence readback; no additional business behavior changed.
+- **Verification:** Parsed 31 Python files with the stdlib AST parser; fingerprinted 38 source/config inputs with SHA-256 in `.verification/phase1-source-sha256.json`; checked links in README, HANDOFF, plan, ARBEITSPLAN, baseline, and verification matrix with zero missing targets. Confirmed no `DOCUMENTS_DIR` global remains and all eight Phase 1 task checkboxes indicate implementation.
+- **Consistency correction:** Updated the README result after the final fixture-safety test: 22 checks, 19 passed, 3 known expected failures. The final runner report/log already reflect those figures.
+- **State:** Phase 1 remains implemented and partially verified. PostgreSQL/pytest/hosted CI evidence remains outstanding; all application security findings outside the Phase 1 foundation remain open.
+- **Next action:** Obtain permitted PostgreSQL and pytest execution evidence before accepting the Phase 1 exit gate. No deployment or business-data migration performed.
+
+### U005 — 2026-10-21 — Repository initialization and automated host setup
+
+- **Authorization:** User asked the agent to carry out the repository/CI/local-service setup rather than delegate all steps manually.
+- **Changes:** Initialized project-root Git repository on main and configured the explicitly supplied origin. Added compose.test.yml, scripts/Start-TestDatabase.ps1, scripts/Complete-Phase1Setup.ps1, and docs/VERIFICATION_SETUP.md. Added .venv-test/.env.test exclusions. Updated Linux CI with JUnit artifact upload, read-only repository permissions, concurrency cancellation, and a restricted LOGIN/CREATEDB PostgreSQL test role.
+- **Scope:** Setup/verification infrastructure only; no business schema, database, document, or permission workflow changed. R01/R04/R10 remain expected failures; Phase 1 not fully accepted.
+- **Checks executed:** Both new PowerShell scripts parsed successfully. Actual missing-Docker preflight failed with the intended prerequisite message. Reviewed explicit source staging candidates for credential/private-key patterns; observed generated credentials and synthetic test values, no known real credentials. Real Docker orchestration, direct pytest, and Linux CI not executed.
+- **Access findings:** Git is available; GitHub CLI and Docker are absent. No connected browser or GitHub connector is available. Shell `git ls-remote` fails connecting to github.com via configured proxy 127.0.0.1. No credentials were requested, exposed, or added to the repository; proxy/sandbox restrictions were not bypassed.
+- **Remaining host prerequisite:** Install/start Docker Desktop with Linux containers in an authorized host session and provide working package/GitHub network/authentication access. Then the prepared setup command can run all local checks and push reviewed commits.
+- **Next action:** Commit the reviewed source, attempt the authorized push, and record the actual result in U006. Hosted workflow/branch protection still require reachable authenticated GitHub access.
+
+### Update entry template — copy for the next update
+
+```markdown
+### U___ — YYYY-MM-DD — Short description
+
+- Implementer / accountable owner:
+- Phase and task IDs:
+- Finding IDs:
+- State before -> state after:
+- Behavior changed and reason:
+- Files / source revision:
+- Migration, backfill, and configuration changes:
+- Business-data / legacy-state impact:
+- Verification commands and environment:
+- Actual outcomes / exit codes / evidence paths:
+- Checks not run and why:
+- Remaining defects, risks, or blockers:
+- Decisions adopted / pending (D IDs, owner, date):
+- Deployment state:
+- Recovery / rollback implications:
+- Next exact action and owner:
+```
+
+## 11. Release checklist
+
+- [ ] Phase trackers and plan task checkboxes agree.
+- [ ] Every Critical/High finding closed with verification evidence.
+- [ ] Medium risks resolved or accepted by named owners with expiry/review dates.
+- [ ] Scope gaps explicitly included and delivered, or excluded with accepted manual procedures.
+- [ ] PostgreSQL migrations, restricted roles, RLS, and pooled identity isolation verified.
+- [ ] Workflow, archive, concurrency, document integrity, synchronization, and reports verified.
+- [ ] Deployment protections, monitoring, maintenance, and restore rehearsal verified.
+- [ ] Required privacy/domain/security/operations acceptance recorded.
+- [ ] README, ARBEITSPLAN, CHANGELOG, API/operator documentation match actual behavior.
+- [ ] Release version, deployment state, residual backlog, ownership, and next maintenance date recorded.

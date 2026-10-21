@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Übersicht{% endblock %}
+{% block content %}
+<div class="page-head">
+ <div><div class="eyebrow">VERTRAGSVERWALTUNG</div><h1>Vertragsübersicht</h1><p>Verträge strukturiert erfassen, finden und nachvollziehen.</p></div>
+ {% if can_create %}<a class="button primary" href="/contracts/new">+ Vertrag erfassen</a>{% endif %}
+</div>
+<nav class="dashboard-cards" aria-label="Vertragsübersicht nach Status">
+ <a class="dashboard-card {% if focus == 'active' %}selected{% endif %}" href="/?focus=active" {% if focus == 'active' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Laufende Verträge</span><strong>{{ focus_counts.active }}</strong><small>Status Aktiv</small></a>
+ <a class="dashboard-card dashboard-card-expiring {% if focus == 'expiring' %}selected{% endif %}" href="/?focus=expiring" {% if focus == 'expiring' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Bald auslaufend</span><strong>{{ focus_counts.expiring }}</strong><small>Nächste {{ reminder_window_days }} Tage</small></a>
+ <a class="dashboard-card dashboard-card-review {% if focus == 'review' %}selected{% endif %}" href="/?focus=review" {% if focus == 'review' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Prüfung offen</span><strong>{{ focus_counts.review }}</strong><small>Entwurf oder in Abstimmung</small></a>
+ <a class="dashboard-card dashboard-card-approval {% if focus == 'approval' %}selected{% endif %}" href="/?focus=approval" {% if focus == 'approval' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Freigaben offen</span><strong>{{ focus_counts.approval }}</strong><small>Zur Prüfung eingereicht</small></a>
+ <a class="dashboard-card dashboard-card-ended {% if focus == 'ended' %}selected{% endif %}" href="/?focus=ended" {% if focus == 'ended' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Gekündigt / beendet</span><strong>{{ focus_counts.ended }}</strong><small>Alle nicht archivierten Verträge</small></a>
+</nav>
+<section class="reminder-board" aria-label="Vertragsfristen und Warnungen">
+ <div class="reminder-board-heading"><div><h2>Fristen &amp; Warnungen</h2><p>Automatisch berechnet beim Aufruf der Übersicht · aktuelle, nicht archivierte Verträge</p></div><span class="count">Nächste {{ reminder_window_days }} Tage</span></div>
+ <div class="reminder-columns">
+  <section class="reminder-card overdue-card"><div class="reminder-card-heading"><h3>Überfällig</h3><span>{{ overdue_reminders|length }}</span></div>
+   {% if overdue_reminders %}<ul>{% for reminder in overdue_reminders %}<li><a href="/contracts/{{ reminder.contract.id }}"><strong>{{ reminder.contract.designation }}</strong><small>{{ reminder.contract.contract_number }} · {{ reminder.label }} {{ reminder.due_date.strftime('%d.%m.%Y') }}</small></a><span class="reminder-age">{{ -reminder.days_remaining }} Tage überfällig</span></li>{% endfor %}</ul>
+   {% else %}<p class="reminder-empty">Keine überfälligen Fristen.</p>{% endif %}
+  </section>
+  <section class="reminder-card upcoming-card"><div class="reminder-card-heading"><h3>Demnächst fällig</h3><span>{{ upcoming_reminders|length }}</span></div>
+   {% if upcoming_reminders %}<ul>{% for reminder in upcoming_reminders %}<li><a href="/contracts/{{ reminder.contract.id }}"><strong>{{ reminder.contract.designation }}</strong><small>{{ reminder.contract.contract_number }} · {{ reminder.label }} {{ reminder.due_date.strftime('%d.%m.%Y') }}</small></a><span class="reminder-age">{% if reminder.days_remaining == 0 %}Heute{% elif reminder.days_remaining == 1 %}Morgen{% else %}in {{ reminder.days_remaining }} Tagen{% endif %}</span></li>{% endfor %}</ul>
+   {% else %}<p class="reminder-empty">In diesem Zeitraum stehen keine Fristen an.</p>{% endif %}
+  </section>
+ </div>
+</section>
+<section class="panel filters">
+ <form method="get" action="/" class="filter-form">
+  {% if focus %}<input type="hidden" name="focus" value="{{ focus }}">{% endif %}
+  <div class="filter-grow"><label for="q">Suche</label><input id="q" type="search" name="q" value="{{ q }}" maxlength="100" placeholder="Bezeichnung, Nummer, Vertragspartner oder Person"></div>
+  {% if user.role != 'department' %}
+  <div><label for="department">Fachbereich</label><select name="department" id="department"><option value="">Alle Fachbereiche</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if selected_department == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select></div>
+  {% endif %}
+  <div><label for="contract_type">Vertragsart</label><select name="contract_type" id="contract_type"><option value="">Alle Vertragsarten</option>{% for kind in contract_types %}<option value="{{ kind }}" {% if selected_contract_type == kind %}selected{% endif %}>{{ kind }}</option>{% endfor %}</select></div>
+  <div><label for="contact_person">Zuständige Person</label><select name="contact_person" id="contact_person"><option value="">Alle Personen</option>{% for person in contact_persons %}<option value="{{ person }}" {% if selected_contact_person == person %}selected{% endif %}>{{ person }}</option>{% endfor %}</select></div>
+  <div><label for="deputy_contact_person">Vertretung</label><select name="deputy_contact_person" id="deputy_contact_person"><option value="">Alle Vertretungen</option>{% for person in contact_persons %}<option value="{{ person }}" {% if selected_deputy_contact_person == person %}selected{% endif %}>{{ person }}</option>{% endfor %}</select></div>
+  <div><label for="status">Vertragsstatus</label><select name="status" id="status"><option value="">Alle Status</option>{% for code, label in contract_statuses %}<option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}<option value="archived" {% if selected_status == 'archived' %}selected{% endif %}>Archiviert</option></select></div>
+  <div><label for="tax_review_status">§ 2b UStG-Prüfung</label><select name="tax_review_status" id="tax_review_status"><option value="">Alle Prüfstände</option>{% for code, label in tax_review_statuses %}<option value="{{ code }}" {% if selected_tax_review_status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  <button class="button secondary" type="submit">Filtern</button>
+  <button class="button secondary" type="submit" formaction="/contracts/export.xlsx">Gefilterte Liste als Excel exportieren</button>
+ </form>
+</section>
+{% if can_create %}<section class="panel excel-import-panel"><div><h2>Vertragsliste importieren</h2><p class="history-subtitle">Excel-Vorlage laden, ausfüllen und bis zu 500 Verträge auf einmal übernehmen.</p><small class="hint">Pflicht: Bezeichnung, Vertragsart, Vertragsbeginn, zuständige Person; Admins zusätzlich Fachbereich. Datum als JJJJ-MM-TT. Nur .xlsx bis 10 MB; bei Fehlern wird nichts importiert.</small></div><div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a><form method="post" action="/contracts/import" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="visually-hidden" for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required><button class="button primary" type="submit">Import starten</button></form></div></section>{% endif %}
+<section class="panel table-panel">
+ <div class="panel-heading"><h2>{% if focus_label %}{{ focus_label }}{% elif selected_status == 'archived' %}Archivierte Verträge{% else %}Nicht archivierte Verträge{% endif %}</h2><span class="count">{{ contracts|length }} Einträge{% if truncated %} (Anzeige begrenzt){% endif %}{% if focus %} · <a href="/">Fokus zurücksetzen</a>{% endif %}</span></div>
+ {% if contracts %}
+ <div class="table-scroll"><table><thead><tr><th>Bezeichnung / Nummer</th><th>Vertragsart</th><th>Vertragsstatus</th><th>§ 2b UStG-Prüfung</th><th>Beginn</th><th>Fachbereich</th><th>Verantwortlich / Vertretung</th><th></th></tr></thead>
+ <tbody>{% for contract in contracts %}<tr><td><a class="record-link" href="/contracts/{{ contract.id }}">{{ contract.designation }}</a><small class="contract-id">{{ contract.contract_number }}</small></td><td>{{ contract.contract_type }}</td><td>{% if contract.archived_at %}Archiviert{% else %}{{ status_labels.get(contract.status, contract.status) }}{% endif %}</td><td><span class="tax-review-tag tax-review-{{ contract.tax_review_status }}">{{ tax_review_labels.get(contract.tax_review_status, contract.tax_review_status) }}</span></td><td class="nowrap">{{ contract.relevant_date.strftime('%d.%m.%Y') }}</td><td>{{ contract.department.name }}</td><td>{{ contract.contact_person or '–' }}{% if contract.deputy_contact_person %}<small class="contract-id">Vertretung: {{ contract.deputy_contact_person }}</small>{% endif %}</td><td class="nowrap"><a href="/contracts/{{ contract.id }}">Ansehen ›</a></td></tr>{% endfor %}</tbody></table></div>
+ {% else %}<div class="empty"><p>Keine passenden Verträge gefunden.</p>{% if can_create and not archived %}<a href="/contracts/new">Ersten Vertrag erfassen</a>{% endif %}</div>{% endif %}
+</section>
+{% if truncated %}<p class="hint">Die Ansicht zeigt höchstens 500 Verträge. Für einen gezielteren Überblick die Suche oder Filter verwenden.</p>{% endif %}
+{% endblock %}
