@@ -144,8 +144,13 @@ retain the existing per-request/transaction authorization boundary.
 
 PostgreSQL functions that perform publication remain VOLATILE (the default), so
 their internal queries take fresh snapshots after lock waits. Application
-connections use READ COMMITTED. SQLite serializes its writes instead and claims
-no database RLS. The single barrier deliberately trades throughput for a clear
+connections must use READ COMMITTED; the v2 barrier rejects other isolation levels
+with 503 rather than risk a stale boundary. SQLite serializes its writes instead and claims
+no database RLS. Explicit development PostgreSQL owner configurations use the
+same serialized algorithm through their trusted connection and application guards.
+This is selected only by the existing development setting, never as a fallback
+after a restricted-role failure; production still requires enforced runtime roles.
+The single barrier deliberately trades throughput for a clear
 pilot consistency boundary; production load/lock-duration measurements remain
 Phase 9. Direct writes outside the documented aggregate protocol can encounter
 database deadlock rejection; retry the complete transaction, never disable locks.

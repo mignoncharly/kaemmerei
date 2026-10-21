@@ -326,3 +326,17 @@ def test_snapshot_waits_for_writer_and_includes_its_committed_state(sync,request
     body=response.json()
     assert body['data'][0]['designation']=='Committed before snapshot boundary'
     assert changes(client,headers,body['changes_cursor'])['data']==[]
+
+
+@pytest.mark.postgresql
+def test_explicit_development_owner_uses_application_guards_without_runtime_fallback(request):
+    if request.config.getoption('--database')!='postgresql':pytest.skip('Real PostgreSQL development-owner connection required')
+    with environment_context('postgresql') as (client,app):
+        development=(client,app,app);cid=record(development);headers,_=token(development)
+        assert app.state.config.enforce_database_security is False
+        cursor=snapshot(client,headers)['changes_cursor']
+        with app.state.session_factory() as db:db.get(Contract,cid).designation='Development owner update';db.commit()
+        assert changes(client,headers,cursor)['data'][0]['contract_id']==cid
+        from app.db import make_session_factory
+        app.state.integration_session_factory=make_session_factory(app.state.integration_engine.execution_options(isolation_level='REPEATABLE READ'))
+        assert client.get('/api/v2/snapshot',headers=headers).status_code==503

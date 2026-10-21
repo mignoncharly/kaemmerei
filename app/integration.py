@@ -34,7 +34,9 @@ def fingerprint(token):
 
 
 def barrier(db):
-    if db.bind.dialect.name=='postgresql':
+    if db.bind.dialect.name=='postgresql' and db.scalar(text('SHOW transaction_isolation'))!='read committed':
+        raise HTTPException(503,'Synchronization requires READ COMMITTED isolation')
+    if db.bind.dialect.name=='postgresql' and db.info.get('enforce_rls'):
         result=db.scalar(text('SELECT ohvr_security.sync_barrier()'))
         if result is None:raise HTTPException(401,'Token no longer authorized')
         return result
@@ -150,7 +152,8 @@ def install_integration_routes(app,*,get_db,authenticate):
     def changes(request:Request,cursor:str,limit:int=100,db=Depends(get_db)):
         if not 1<=limit<=500:raise HTTPException(400,'limit must be 1..500')
         token,state=prepared(request,db);old=get_cursor(db,token,cursor,'changes',state['floor'])
-        if db.bind.dialect.name=='postgresql':
+        restricted=db.bind.dialect.name=='postgresql' and db.info.get('enforce_rls')
+        if restricted:
             rows=db.execute(text('SELECT * FROM ohvr_security.sync_events_page(:position,:size)'),{'position':old.position,'size':limit+1}).all()
         else:
             query=select(SyncEvent).where(SyncEvent.seq>old.position)
@@ -159,7 +162,7 @@ def install_integration_routes(app,*,get_db,authenticate):
         more=len(rows)>limit;page=rows[:limit];data=[]
         for row in page:
             visible=db.scalar(contract_query(token).where(Contract.id==row.contract_id)) is not None
-            removal=row.removed if db.bind.dialect.name=='postgresql' else not visible or (token.department_id is not None and row.new_department_id!=token.department_id)
+            removal=row.removed if restricted else not visible or (token.department_id is not None and row.new_department_id!=token.department_id)
             item={'event_id':row.event_key,'contract_id':row.contract_id,'operation':'remove' if removal else 'upsert'}
             if removal:item['reason']='no_longer_authorized'
             else:item['resource_url']=f'/api/v2/contracts/{row.contract_id}';item['category']=row.kind
