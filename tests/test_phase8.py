@@ -170,3 +170,13 @@ def test_export_limit_and_ui_review_choices(frontend,monkeypatch):
     assert review_options(user,contract,review,True,choices)==[]
     review.status='open';review.content_revision=1
     assert review_options(user,contract,review,True,choices)==[]
+
+
+def test_tax_and_activation_controls_match_capabilities(frontend):
+    client,app,owner=frontend;login(client,'kultur')
+    page=client.get('/contracts/new')
+    assert 'steuerliche Bewertung ist der Administration vorbehalten' in page.text
+    assert re.search(r'<select[^>]*name="tax_review_status"[^>]*disabled',page.text)
+    assert re.search(r'<textarea[^>]*name="tax_review_result"[^>]*readonly',page.text)
+    assert re.search(r'<option[^>]*disabled[^>]*value="active"',page.text)
+    assert 'name="tax_review_status" value="not_checked"' in page.text

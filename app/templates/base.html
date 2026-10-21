@@ -12,7 +12,7 @@
  <div class="topbar-inner">
   <a class="brand" href="/">OPEN<span class="dot">.</span>HERZ <span class="brand-suffix">/ Vertragsregister</span></a>
   {% if user %}
-  <div class="account"><span>{{ user.username }} <small>({% if user.role == 'department' %}Fachbereich{% elif user.role == 'reviewer' %}Leseberechtigung{% else %}Administration{% endif %})</small></span>
+  <div class="account"><span>{{ user.username }} <small>({% if user.role == 'department' %}Fachbereich{% elif user.role == 'reviewer' %}Leseberechtigung{% else %}Administration{% endif %}{% if user.can_approve %}; explizite Prüffähigkeit{% endif %})</small></span>
    <a href="/reports">Auswertungen</a>
    <a href="/reviews">Mein Arbeitskorb</a><a href="/account/password">Passwort ändern</a>
    {% if user.role == 'admin' %}<a href="/admin/users">Benutzerverwaltung</a><a href="/admin/identities">Fachbereiche &amp; Identitäten</a><a href="/admin/integrations">Schnittstellen</a>{% endif %}

@@ -74,7 +74,7 @@ SUCCESS_NOTICES = {
 }
 USER_ROLES = (
     ("department", "Fachbereichsnutzer"),
-    ("reviewer", "Prüfer (nur Lesen)"),
+    ("reviewer", "Leseberechtigung; Freigaben nur mit expliziter Zuweisung"),
     ("admin", "Administrator"),
 )
 ROLE_LABELS = dict(USER_ROLES)
