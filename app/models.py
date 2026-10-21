@@ -27,6 +27,8 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(16), nullable=False)
     department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id", ondelete="RESTRICT"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    can_approve: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
+    must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
     department: Mapped[Department | None] = relationship()
 
@@ -160,6 +162,8 @@ class ContractTask(Base):
 class ContractReview(Base):
     __tablename__ = "contract_reviews"
     id: Mapped[int] = mapped_column(primary_key=True)
+    team_id: Mapped[int | None] = mapped_column(ForeignKey("recipient_teams.id", ondelete="RESTRICT"), nullable=True)
+    assigned_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=True)
     contract_id: Mapped[int] = mapped_column(ForeignKey("contracts.id", ondelete="RESTRICT"), nullable=False, index=True)
     recipient: Mapped[str] = mapped_column(String(80), nullable=False)
     recipient_detail: Mapped[str] = mapped_column(String(160), nullable=False, default="", server_default="")
@@ -175,3 +179,44 @@ class ContractReview(Base):
     contract: Mapped[Contract] = relationship()
     created_by: Mapped[User] = relationship(foreign_keys=[created_by_id])
     updated_by: Mapped[User | None] = relationship(foreign_keys=[updated_by_id])
+
+
+class IdentityGuard(Base):
+    __tablename__ = "identity_guard"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    epoch: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class IdentityAudit(Base):
+    __tablename__ = "identity_audit"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=True)
+    principal: Mapped[str] = mapped_column(String(16), nullable=False)
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    target: Mapped[str] = mapped_column(String(120), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, nullable=False)
+
+
+class ContactIdentity(Base):
+    __tablename__ = "contact_identities"
+    __table_args__ = (Index("ux_contact_scope_name", "scope_key", "display_name", unique=True),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    display_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id", ondelete="RESTRICT"), nullable=True)
+    scope_key: Mapped[int] = mapped_column(Integer, nullable=False)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class RecipientTeam(Base):
+    __tablename__ = "recipient_teams"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class RecipientMembership(Base):
+    __tablename__ = "recipient_memberships"
+    team_id: Mapped[int] = mapped_column(ForeignKey("recipient_teams.id", ondelete="RESTRICT"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), primary_key=True)

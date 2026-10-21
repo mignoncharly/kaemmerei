@@ -13,7 +13,8 @@
   {% if user %}
   <div class="account"><span>{{ user.username }} <small>({% if user.role == 'department' %}Fachbereich{% elif user.role == 'reviewer' %}Leseberechtigung{% else %}Administration{% endif %})</small></span>
    <a href="/reports">Auswertungen</a>
-   {% if user.role == 'admin' %}<a href="/admin/users">Benutzerverwaltung</a><a href="/admin/integrations">Schnittstellen</a>{% endif %}
+   <a href="/reviews">Prüfungen</a><a href="/account/password">Passwort ändern</a>
+   {% if user.role == 'admin' %}<a href="/admin/users">Benutzerverwaltung</a><a href="/admin/identities">Fachbereiche &amp; Identitäten</a><a href="/admin/integrations">Schnittstellen</a>{% endif %}
    <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="link-button" type="submit">Abmelden</button></form>
   </div>
   {% endif %}

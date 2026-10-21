@@ -22,11 +22,13 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.config import Settings, get_settings
+from app.authorization import can_decide_review, contract_query, contract_scope, load_child, load_contract
+from app.identity_service import audit, lock_identities, save_user, validate_user_fields
 from app.db import make_engine, make_session_factory
 from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, read_xlsx
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
-from app.models import (Contract, ContractDocument, ContractReview, ContractTask, Department,
-                        IntegrationToken, LoginSession, Revision, User, now_utc)
+from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
+                        IntegrationToken, LoginSession, RecipientTeam, Revision, User, now_utc)
 from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
                          PAYMENT_INTERVALS, REVIEW_RECIPIENTS, CONTRACT_REVIEW_STATUSES,
                          TASK_KINDS, TASK_STATUSES, TAX_REVIEW_STATUSES)
@@ -93,6 +95,15 @@ def get_db(request: Request):
 
 
 def html(request: Request, template: str, context: dict, status_code: int = 200):
+    user = context.get('user')
+    if template == 'form.html' and user is not None:
+        with request.app.state.session_factory() as catalog_db:
+            statement = select(ContactIdentity.display_name).where(ContactIdentity.is_active.is_(True))
+            if user.role == 'department':
+                statement = statement.where((ContactIdentity.department_id == user.department_id) |
+                                            ContactIdentity.department_id.is_(None))
+            names = catalog_db.scalars(statement).all()
+        context = {**context, 'contact_persons': sorted(set(CONTACT_PERSONS) | set(names))}
     notice = SUCCESS_NOTICES.get(request.query_params.get("notice", ""))
     if notice:
         if request.query_params.get("notice") == "imported" and request.query_params.get("imported_count", "").isdigit():
@@ -149,13 +160,6 @@ def redirect(target: str):
     return RedirectResponse(target, status_code=303)
 
 
-def fetch_contract(db: Session, contract_id: int) -> Contract:
-    contract = db.get(Contract, contract_id)
-    if not contract:
-        raise HTTPException(status_code=404, detail="Vertrag nicht gefunden")
-    return contract
-
-
 def check_read(user: User, contract: Contract):
     if not can_read(user, contract):
         raise HTTPException(status_code=404, detail="Vertrag nicht gefunden")
@@ -169,38 +173,6 @@ def check_write(user: User, contract: Contract | None = None):
 def check_admin(user: User):
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Nur Administratoren dürfen Benutzer verwalten")
-
-
-def validate_user_fields(form, db: Session, existing: User | None = None) -> dict:
-    username = str(form.get("username", "")).strip().casefold()
-    if not username or len(username) > 80 or not username.replace("_", "a").replace("-", "a").replace(".", "a").isalnum():
-        raise ValueError("Benutzername: 1–80 Zeichen, nur Buchstaben, Zahlen, Punkt, Bindestrich oder Unterstrich")
-    duplicate = db.scalar(select(User).where(User.username == username))
-    if duplicate and (existing is None or duplicate.id != existing.id):
-        raise ValueError("Dieser Benutzername ist bereits vergeben")
-    role = str(form.get("role", "")).strip()
-    if role not in ROLE_LABELS:
-        raise ValueError("Bitte eine gültige Rolle auswählen")
-    raw_department_id = str(form.get("department_id", "")).strip()
-    department_id = None
-    if raw_department_id:
-        try:
-            department_id = int(raw_department_id)
-        except ValueError as exc:
-            raise ValueError("Bitte einen gültigen Fachbereich auswählen") from exc
-        department = db.scalar(select(Department).where(
-            Department.id == department_id, Department.is_active.is_(True)))
-        if not department:
-            raise ValueError("Der ausgewählte Fachbereich ist nicht verfügbar")
-    elif role == "department":
-        raise ValueError("Für Fachbereichsnutzer muss ein Fachbereich ausgewählt werden")
-    password = str(form.get("password", ""))
-    if existing is None and not password:
-        raise ValueError("Für neue Benutzer ist ein Startpasswort erforderlich")
-    if password and not 12 <= len(password) <= 256:
-        raise ValueError("Passwörter müssen 12 bis 256 Zeichen lang sein")
-    return {"username": username, "role": role, "department_id": department_id,
-            "is_active": str(form.get("is_active", "")) == "1", "password": password}
 
 
 def form_values(request_form):
@@ -715,7 +687,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     since = since.astimezone(timezone.utc).replace(tzinfo=None)
             except ValueError as exc:
                 raise HTTPException(status_code=400, detail="updated_since muss ein ISO-8601-Zeitpunkt sein") from exc
-        stmt = select(Contract)
+        stmt = contract_query(token)
         if token.department_id is not None:
             stmt = stmt.where(Contract.department_id == token.department_id)
         if since is not None:
@@ -772,11 +744,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def api_document(request: Request, contract_id: int, document_id: int,
                      db: Session = Depends(get_db)):
         token = require_integration_token(request, db)
-        contract = db.get(Contract, contract_id)
-        if not contract or (token.department_id is not None and contract.department_id != token.department_id):
-            raise HTTPException(status_code=404, detail="Vertrag nicht gefunden")
-        document = db.get(ContractDocument, document_id)
-        if not document or document.contract_id != contract.id or not document.storage_key:
+        contract, document = load_child(db, token, contract_id, ContractDocument, document_id)
+        if not document.storage_key:
             raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
         path = request.app.state.document_storage_dir / document.storage_key
         if not path.is_file():
@@ -797,8 +766,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def render_user_form(request: Request, user: User, csrf: str, db: Session,
                          mode: str, values: dict, target: User | None = None,
                          error: str = "", status_code: int = 200):
-        departments = db.scalars(select(Department).where(Department.is_active.is_(True))
-                                 .order_by(Department.name)).all()
+        statement = select(Department)
+        if target is None:
+            statement = statement.where(Department.is_active.is_(True))
+        departments = db.scalars(statement.order_by(Department.name)).all()
         return html(request, "user_form.html", {**base_context(request, user, csrf),
                     "mode": mode, "values": values, "target": target,
                     "departments": departments, "roles": USER_ROLES, "error": error}, status_code)
@@ -807,20 +778,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def create_user(request: Request, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         check_admin(user)
-        form = await request.form(max_fields=8)
+        form = await request.form(max_fields=10)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
             values = validate_user_fields(form, db)
         except ValueError as exc:
             return render_user_form(request, user, csrf, db, "new", form_values(form),
                                     error=str(exc), status_code=422)
-        new_user = User(username=values["username"], password_hash=ph.hash(values["password"]),
-                        role=values["role"], department_id=values["department_id"],
-                        is_active=values["is_active"])
-        db.add(new_user)
         try:
+            save_user(db, form, actor_id=user.id)
             db.commit()
-        except IntegrityError:
+        except (IntegrityError, ValueError):
             db.rollback()
             return render_user_form(request, user, csrf, db, "new", form_values(form),
                                     error="Dieser Benutzername ist bereits vergeben", status_code=422)
@@ -834,7 +802,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not target:
             raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
         values = {"username": target.username, "role": target.role,
-                  "department_id": target.department_id or "", "is_active": target.is_active}
+                  "department_id": target.department_id or "", "is_active": target.is_active,
+                  "can_approve": target.can_approve}
         return render_user_form(request, user, csrf, db, "edit", values, target)
 
     @app.post("/admin/users/{user_id}/edit", response_class=HTMLResponse)
@@ -844,35 +813,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         target = db.get(User, user_id)
         if not target:
             raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
-        form = await request.form(max_fields=8)
+        form = await request.form(max_fields=10)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
-            values = validate_user_fields(form, db, target)
-            if target.id == user.id and (values["role"] != "admin" or not values["is_active"]):
-                raise ValueError("Das eigene Administratorkonto kann hier nicht zurückgestuft oder gesperrt werden")
-            removes_admin = target.role == "admin" and target.is_active and not (
-                values["role"] == "admin" and values["is_active"])
-            if removes_admin:
-                active_admins = db.scalars(select(User).where(User.role == "admin",
-                                                              User.is_active.is_(True))).all()
-                if len(active_admins) <= 1:
-                    raise ValueError("Der letzte aktive Administrator kann nicht gesperrt oder zurückgestuft werden")
-        except ValueError as exc:
-            return render_user_form(request, user, csrf, db, "edit", form_values(form), target,
-                                    str(exc), 422)
-        permissions_changed = (target.role != values["role"] or
-                               target.department_id != values["department_id"] or
-                               target.is_active != values["is_active"])
-        password_changed = bool(values["password"])
-        target.role = values["role"]
-        target.department_id = values["department_id"]
-        target.is_active = values["is_active"]
-        if password_changed:
-            target.password_hash = ph.hash(values["password"])
-        if permissions_changed or password_changed:
-            db.execute(delete(LoginSession).where(LoginSession.user_id == target.id))
-        db.commit()
-        if target.id == user.id and (permissions_changed or password_changed):
+            target, changed = save_user(db, form, actor_id=user.id, user_id=target.id)
+            db.commit()
+        except (ValueError, IntegrityError) as exc:
+            db.rollback()
+            message = str(exc) if isinstance(exc, ValueError) else "Benutzername bereits vergeben"
+            return render_user_form(request, user, csrf, db, "edit", form_values(form), target, message, 422)
+        if target.id == user.id and changed:
             response = redirect("/login?notice=user_updated")
             response.delete_cookie(COOKIE_NAME, path="/")
             return response
@@ -897,7 +847,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         valid_statuses = {code for code, _label in CONTRACT_STATUSES}
         status = status if status in valid_statuses | {"archived"} else ""
         tax_review_status = tax_review_status if tax_review_status in TAX_REVIEW_LABELS else ""
-        stmt = select(Contract).order_by(Contract.updated_at.desc(), Contract.id.desc())
+        stmt = contract_query(user).order_by(Contract.updated_at.desc(), Contract.id.desc())
         if user.role == "department":
             stmt = stmt.where(Contract.department_id == user.department_id)
         stmt = stmt.where(Contract.archived_at.is_not(None) if status == "archived" else Contract.archived_at.is_(None))
@@ -943,7 +893,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             elif focus == "ended":
                 stmt = stmt.where(Contract.status.in_(("terminated", "ended")))
             else:
-                dashboard_contracts = db.scalars(select(Contract).where(
+                dashboard_contracts = db.scalars(contract_query(user).where(
                     Contract.archived_at.is_(None),
                     *([Contract.department_id == user.department_id] if user.role == "department" else []))).all()
                 _, upcoming = split_deadline_reminders(dashboard_contracts, date.today())
@@ -990,7 +940,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         today = date.today()
         department_filter = ([Contract.department_id == user.department_id]
                              if user.role == "department" else [])
-        contracts = db.scalars(select(Contract).where(
+        contracts = db.scalars(contract_query(user).where(
             Contract.archived_at.is_(None), *department_filter
         ).order_by(Contract.designation)).all()
         contract_ids = [contract.id for contract in contracts]
@@ -1206,7 +1156,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         existing_keys = {
             (item.designation.casefold(), item.contract_type.casefold(), item.contract_partner.casefold(),
              item.relevant_date, item.department_id)
-            for item in db.scalars(select(Contract)).all()
+            for item in db.scalars(contract_query(user)).all()
         }
         imported_keys = set()
         for row_number, values, _is_archived in validated:
@@ -1254,7 +1204,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         valid_statuses = {code for code, _label in CONTRACT_STATUSES}
         status = status if status in valid_statuses | {"archived"} else ""
         tax_review_status = tax_review_status if tax_review_status in TAX_REVIEW_LABELS else ""
-        stmt = select(Contract).order_by(Contract.updated_at.desc(), Contract.id.desc())
+        stmt = contract_query(user).order_by(Contract.updated_at.desc(), Contract.id.desc())
         if user.role == "department":
             stmt = stmt.where(Contract.department_id == user.department_id)
         if status == "archived":
@@ -1296,7 +1246,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         "approval": "Verträge mit offenen Freigaben",
                         "ended": "Gekündigte und beendete Verträge"}
         focus = focus if focus in focus_labels else ""
-        dashboard_stmt = select(Contract).where(Contract.archived_at.is_(None))
+        dashboard_stmt = contract_query(user).where(Contract.archived_at.is_(None))
         if user.role == "department":
             dashboard_stmt = dashboard_stmt.where(Contract.department_id == user.department_id)
         dashboard_contracts = db.scalars(dashboard_stmt.order_by(Contract.end_date, Contract.id)).all()
@@ -1319,12 +1269,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "expiring": len(upcoming_reminders),
             "review": sum(contract.status in ("draft", "in_progress") for contract in dashboard_contracts),
             "approval": len(db.scalars(select(ContractReview.id).join(Contract).where(
-                Contract.archived_at.is_(None), ContractReview.status.in_(("open", "in_review")),
+                Contract.archived_at.is_(None), ContractReview.status.in_(("open", "in_review")), contract_scope(user),
                 *([Contract.department_id == user.department_id] if user.role == "department" else []))).all()),
             "ended": sum(contract.status in ("terminated", "ended") for contract in dashboard_contracts),
         }
         departments = db.scalars(select(Department).order_by(Department.name)).all() if user.role != "department" else []
-        metadata_scope = [Contract.department_id == user.department_id] if user.role == "department" else []
+        metadata_scope = [contract_scope(user)]
         stored_types = set(db.scalars(select(Contract.contract_type).where(*metadata_scope).distinct()).all())
         stored_people = (set(db.scalars(select(Contract.contact_person).where(*metadata_scope).distinct()).all()) |
                          set(db.scalars(select(Contract.deputy_contact_person).where(*metadata_scope).distinct()).all())) - {""}
@@ -1418,7 +1368,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/contracts/{contract_id}", response_class=HTMLResponse)
     def detail(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         revisions = db.scalars(select(Revision).where(Revision.contract_id == contract_id)
                                .order_by(Revision.id.desc())).all()
@@ -1439,6 +1389,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "contract": contract, "history": history,
                     "documents": documents, "tasks": tasks, "task_assignees": task_assignees,
                     "contract_reviews": contract_reviews,
+                    "assignment_teams": db.scalars(select(RecipientTeam).where(RecipientTeam.is_active.is_(True))).all() if user.role == 'admin' else [],
+                    "assignment_accounts": [account for account in db.scalars(select(User).where(User.can_approve.is_(True), User.is_active.is_(True))).all() if can_read(account, contract)] if user.role == 'admin' else [],
                     "task_kinds": TASK_KINDS, "task_statuses": TASK_STATUSES,
                     "task_kind_labels": TASK_KIND_LABELS, "task_status_labels": TASK_STATUS_LABELS,
                     "today": date.today(),
@@ -1451,12 +1403,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         if contract.automatic_renewal else contract.end_date,
                         contract.notice_period_months),
                     "can_edit": can_write(user, contract) and contract.archived_at is None,
-                    "can_handle_reviews": user.role in ("admin", "reviewer") and contract.archived_at is None})
+                    "review_decisions": {review.id: can_decide_review(db, user, contract, review) for review in contract_reviews}})
 
     @app.post("/contracts/{contract_id}/tasks")
     async def create_contract_task(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
@@ -1480,15 +1432,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def update_contract_task(request: Request, contract_id: int, task_id: int,
                                    db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
-        task = db.get(ContractTask, task_id)
+        _parent, task = load_child(db, user, contract_id, ContractTask, task_id)
         if not task or task.contract_id != contract.id:
             raise HTTPException(status_code=404, detail="Aufgabe nicht gefunden")
-        form = await request.form(max_fields=8)
+        form = await request.form(max_fields=10)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         try:
             values = validate_task_fields(form, db, contract)
@@ -1507,7 +1459,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/reviews")
     async def create_contract_review(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
@@ -1541,9 +1493,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/reviews/{review_id}")
     async def update_contract_review(request: Request, contract_id: int, review_id: int,
                                      db: Session = Depends(get_db)):
+        lock_identities(db)
         user, _csrf = user_csrf(request, db)
         # Serialize review changes with contract archival on PostgreSQL.
-        contract = db.scalar(select(Contract).where(Contract.id == contract_id).with_for_update())
+        contract = load_contract(db, user, contract_id, lock=True)
         if contract is None:
             raise HTTPException(status_code=404, detail="Vertrag nicht gefunden")
         check_read(user, contract)
@@ -1551,9 +1504,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=403, detail="Nur die Kämmerei oder Prüfer können Rückmeldungen erfassen")
         if contract.archived_at is not None:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
-        review = db.get(ContractReview, review_id)
+        _parent, review = load_child(db, user, contract_id, ContractReview, review_id, lock=True)
         if not review or review.contract_id != contract.id:
             raise HTTPException(status_code=404, detail="Prüfvorgang nicht gefunden")
+        if not can_decide_review(db, user, contract, review):
+            raise HTTPException(status_code=403, detail="Explizite Freigabeberechtigung und Zuweisung erforderlich")
         form = await request.form(max_fields=4)
         require_csrf(request, db, str(form.get("csrf_token", "")))
         status = str(form.get("status", "")).strip()
@@ -1572,13 +1527,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         db.flush()
         db.add(Revision(contract_id=contract.id, actor_id=user.id, action="review_updated",
                         before=before, after=review_snapshot(review)))
+        audit(db, user.id, 'review_decided', f'review:{review.id}', status=status,
+              team_id=review.team_id, assigned_user_id=review.assigned_user_id)
         db.commit()
         return redirect(f"/contracts/{contract.id}?notice=review_updated")
 
     @app.post("/contracts/{contract_id}/documents")
     async def upload_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
@@ -1619,7 +1576,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/documents/link")
     async def link_external_document(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
@@ -1647,9 +1604,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def get_document(request: Request, contract_id: int, document_id: int,
                      download: bool = False, db: Session = Depends(get_db)):
         user, _csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
-        document = db.get(ContractDocument, document_id)
+        _parent, document = load_child(db, user, contract_id, ContractDocument, document_id)
         if not document or document.contract_id != contract.id or not document.storage_key:
             raise HTTPException(status_code=404, detail="Dokument nicht gefunden")
         path = request.app.state.document_storage_dir / document.storage_key
@@ -1663,7 +1620,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/contracts/{contract_id}/edit", response_class=HTMLResponse)
     def edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         if contract.archived_at is not None:
@@ -1676,7 +1633,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/edit")
     async def save_edit(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         form = await request.form(max_files=0, max_fields=32)
@@ -1685,7 +1642,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=409, detail="Archivierter Vertrag ist schreibgeschützt")
         departments = db.scalars(select(Department).where(Department.is_active.is_(True)).order_by(Department.name)).all()
         try:
-            values = validate_data(form, user, db)
+            values = validate_data(form, user, db, existing=contract)
         except ValidationError as exc:
             return html(request, "form.html", {**base_context(request, user, csrf), "mode": "edit",
                         "contract": contract, "values": form_values(form),
@@ -1724,7 +1681,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/archive")
     async def archive(request: Request, contract_id: int, db: Session = Depends(get_db)):
         user = require_user(request, db)
-        contract = fetch_contract(db, contract_id)
+        contract = load_contract(db, user, contract_id)
         check_read(user, contract)
         check_write(user, contract)
         form = await request.form()
@@ -1748,6 +1705,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         db.commit()
         return redirect(f"/contracts/{contract_id}?notice=archived")
 
+    from app.identity_routes import install_identity_routes
+    install_identity_routes(app, get_db=get_db, html=html, base_context=base_context,
+                            user_csrf=user_csrf, check_admin=check_admin)
     return app
 
 

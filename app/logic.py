@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.models import Contract, Department, User
+from app.models import ContactIdentity, Contract, Department, User
 from app.options import CONTRACT_STATUSES, FINANCIAL_DIRECTIONS, PAYMENT_INTERVALS, TAX_REVIEW_STATUSES
 
 
@@ -13,7 +13,7 @@ class ValidationError(Exception):
 
 def active_access(user: User) -> bool:
     """Department membership only grants access while that department is active."""
-    return user.is_active and (user.role != "department" or (
+    return user.is_active and user.role in ('admin', 'reviewer', 'department') and (user.role != "department" or (
         user.department is not None and user.department.is_active))
 
 
@@ -32,7 +32,7 @@ def can_write(user: User, contract: Contract | None = None) -> bool:
     return contract is None or contract.department_id == user.department_id
 
 
-def validate_data(form, user: User, db: Session) -> dict:
+def validate_data(form, user: User, db: Session, existing: Contract | None = None) -> dict:
     def text(name: str, limit: int, required: bool = False) -> str:
         value = str(form.get(name, "") or "").strip()
         if len(value) > limit:
@@ -123,6 +123,15 @@ def validate_data(form, user: User, db: Session) -> dict:
     department = db.scalar(select(Department).where(Department.id == department_id, Department.is_active.is_(True)))
     if not department:
         raise ValidationError("Fachbereich existiert nicht oder ist gesperrt")
+    for field, value in (('contact_person', contact_person), ('deputy_contact_person', deputy_contact_person)):
+        if not value:
+            continue
+        identities = db.scalars(select(ContactIdentity).where(
+            ContactIdentity.display_name == value,
+            (ContactIdentity.department_id == department_id) | ContactIdentity.department_id.is_(None))).all()
+        if identities and not any(identity.is_active for identity in identities):
+            if existing is None or existing.department_id != department_id or getattr(existing, field) != value:
+                raise ValidationError('Deaktivierte Kontakte dürfen nicht neu zugeordnet werden')
     return dict(designation=designation, contract_type=contract_type,
                 contract_partner=contract_partner, relevant_date=relevant_date,
                 end_date=end_date, notice_period_months=notice_period_months,

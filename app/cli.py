@@ -9,7 +9,7 @@ from sqlalchemy import select, delete
 from app.config import get_settings
 from app.db import make_engine, make_session_factory
 from app.models import Department, LoginAttempt, LoginSession, User, now_utc
-from app.security import ph
+from app.identity_service import audit, lock_identities, save_user, validate_department_name, validate_password
 
 
 def ask_password() -> str:
@@ -17,7 +17,10 @@ def ask_password() -> str:
     again = getpass("Passwort wiederholen: ")
     if first != again or len(first) < 12 or len(first) > 256:
         raise SystemExit("Passwörter stimmen nicht überein oder sind nicht 12–256 Zeichen lang")
-    return first
+    try:
+        return validate_password(first)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None
 
 
 def main():
@@ -45,63 +48,57 @@ def main():
         return
     engine = make_engine(settings)
     SessionFactory = make_session_factory(engine)
-    with SessionFactory() as db:
-        if args.command == "add-department":
-            name = args.name.strip()
-            if not name or len(name) > 150:
-                raise SystemExit("Fachbereich muss 1–150 Zeichen haben")
-            if db.scalar(select(Department).where(Department.name == name)):
-                raise SystemExit("Fachbereich existiert bereits")
-            db.add(Department(name=name))
-            db.commit()
-            print("Fachbereich angelegt")
-        elif args.command == "list-departments":
-            for row in db.scalars(select(Department).order_by(Department.name)):
-                print(f"{row.id}: {row.name}")
-        elif args.command == "purge-sessions":
-            db.execute(delete(LoginSession).where(LoginSession.expires_at <= now_utc()))
-            db.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now_utc() - timedelta(days=7)))
-            db.commit()
-            print("Abgelaufene Sitzungen und alte Anmeldeversuche gelöscht")
-        elif args.command == "add-user":
-            username = args.username.strip().casefold()
-            if not username or len(username) > 80:
-                raise SystemExit("Benutzername muss 1–80 Zeichen lang sein")
-            if db.scalar(select(User).where(User.username == username)):
-                raise SystemExit("Benutzername bereits vorhanden")
-            department_id = None
-            if args.role == "department":
-                if not args.department:
-                    raise SystemExit("Fachbereichsbenutzer benötigen --department")
-                dept = db.scalar(select(Department).where(Department.name == args.department,
-                                                          Department.is_active.is_(True)))
-                if not dept:
+    try:
+        with SessionFactory() as db:
+            if args.command == "add-department":
+                lock_identities(db)
+                try:
+                    name = validate_department_name(args.name)
+                except ValueError as exc:
+                    raise SystemExit(str(exc)) from None
+                if db.scalar(select(Department).where(Department.name == name)):
+                    raise SystemExit("Fachbereich existiert bereits")
+                department = Department(name=name)
+                db.add(department)
+                db.flush()
+                audit(db, None, 'departments_created', f'departments:{department.id}', name=name)
+                db.commit()
+                print("Fachbereich angelegt")
+            elif args.command == "list-departments":
+                for row in db.scalars(select(Department).order_by(Department.name)):
+                    print(f"{row.id}: {row.name}")
+            elif args.command == "purge-sessions":
+                db.execute(delete(LoginSession).where(LoginSession.expires_at <= now_utc()))
+                db.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now_utc() - timedelta(days=7)))
+                db.commit()
+                print("Abgelaufene Sitzungen und alte Anmeldeversuche gelöscht")
+            elif args.command == "add-user":
+                department = db.scalar(select(Department).where(Department.name == args.department)) if args.department else None
+                if args.department and department is None:
                     raise SystemExit("Fachbereich nicht vorhanden")
-                department_id = dept.id
-            elif args.department:
-                raise SystemExit("--department ist nur für role=department erlaubt")
-            db.add(User(username=username, password_hash=ph.hash(ask_password()),
-                        role=args.role, department_id=department_id))
-            db.commit()
-            print("Benutzer angelegt")
-        elif args.command in ("change-password", "disable-user"):
-            username = args.username.strip().casefold()
-            user = db.scalar(select(User).where(User.username == username))
-            if not user:
-                raise SystemExit("Benutzer nicht vorhanden")
-            if args.command == "change-password":
-                user.password_hash = ph.hash(ask_password())
-                db.execute(delete(LoginSession).where(LoginSession.user_id == user.id))
-            else:
-                if user.role == "admin" and user.is_active:
-                    active_admins = list(db.scalars(select(User).where(User.role == "admin", User.is_active.is_(True))))
-                    if len(active_admins) <= 1:
-                        raise SystemExit("Letzter aktiver Administrator darf nicht deaktiviert werden")
-                user.is_active = False
-                db.query(LoginSession).filter(LoginSession.user_id == user.id).delete()
-            db.commit()
-            print("Änderung gespeichert")
-    engine.dispose()
+                try:
+                    save_user(db, dict(username=args.username, role=args.role,
+                        department_id=department.id if department else '', is_active='1', password=ask_password()))
+                except ValueError as exc:
+                    raise SystemExit(str(exc)) from None
+                db.commit()
+                print("Benutzer angelegt; Startpasswort muss beim ersten Gebrauch geändert werden")
+            elif args.command in ("change-password", "disable-user"):
+                user = db.scalar(select(User).where(User.username == args.username.strip().casefold()))
+                if user is None:
+                    raise SystemExit("Benutzer nicht vorhanden")
+                values = dict(username=user.username, role=user.role, department_id=user.department_id or '',
+                    is_active='1' if user.is_active and args.command != 'disable-user' else '0',
+                    can_approve='1' if user.can_approve else '0',
+                    password=ask_password() if args.command == 'change-password' else '')
+                try:
+                    save_user(db, values, user_id=user.id)
+                except ValueError as exc:
+                    raise SystemExit(str(exc)) from None
+                db.commit()
+                print("Änderung gespeichert; alle Sitzungen beendet")
+    finally:
+        engine.dispose()
 
 
 if __name__ == "__main__":

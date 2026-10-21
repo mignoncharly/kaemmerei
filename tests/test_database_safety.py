@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from tests.support import require_database_identity
+from tests.support import drop_disposable_database, require_database_identity
 
 
 @pytest.mark.parametrize('actual', [None, (43, 'ohvr_verify', 'marker'),
@@ -21,3 +21,13 @@ def test_cleanup_rejects_default_database_before_querying():
     with pytest.raises(RuntimeError, match='identity changed'):
         require_database_identity(control, 'postgres', (42, 'ohvr_verify', 'marker'))
     control.execute.assert_not_called()
+
+
+def test_cleanup_never_forces_termination_of_other_connections():
+    control = Mock()
+    expected = (42, 'ohvr_verify', 'marker')
+    control.execute.return_value.fetchone.return_value = expected
+    drop_disposable_database(control, 'ohvr_test_' + 'a' * 32, expected)
+    statement = str(control.execute.call_args.args[0])
+    assert 'DROP DATABASE' in statement
+    assert 'FORCE' not in statement and 'pg_terminate_backend' not in statement

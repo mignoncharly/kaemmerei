@@ -33,6 +33,14 @@ def require_database_identity(control, name, expected):
         raise RuntimeError("Refusing operation: disposable database identity changed")
 
 
+def drop_disposable_database(control, name, expected):
+    from psycopg import sql
+    require_database_identity(control, name, expected)
+    # Engines must be closed by their owners. Do not terminate other-role
+    # connections/background workers or require pg_signal_backend privileges.
+    control.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(name)))
+
+
 @contextmanager
 def scratch_directory(prefix="ohvr-"):
     # Inherit workspace ACLs: Python 3.14's private mkdtemp ACL is inaccessible
@@ -98,8 +106,7 @@ def disposable_database(backend: str, root: Path):
         finally:
             # The live control connection, OID, owner and random database comment
             # must all match. Never drop a replacement DB merely sharing a name.
-            require_database_identity(control, db_name, expected)
-            control.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(db_name)))
+            drop_disposable_database(control, db_name, expected)
 
 
 @contextmanager

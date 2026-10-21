@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Zugewiesene Prüfungen{% endblock %}
+{% block content %}
+<h1>Zugewiesene Prüfungen</h1>
+<p>Nur aktuell entscheidbare Vorgänge mit bestehendem Vertragszugriff werden angezeigt.</p>
+<ul>{% for review in reviews %}<li><a href="/contracts/{{ review.contract_id }}">{{ review.subject }}</a> · {{ review.status }}</li>{% else %}<li>Keine zugewiesenen Prüfungen.</li>{% endfor %}</ul>
+{% endblock %}

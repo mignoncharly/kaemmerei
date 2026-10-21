@@ -43,6 +43,8 @@ def require_user(request: Request, db: Session) -> User:
     user = get_user(request, db)
     if user is None:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
+    if user.must_change_password and request.url.path not in ('/account/password', '/logout'):
+        raise HTTPException(status_code=303, headers={"Location": "/account/password"})
     return user
 
 
