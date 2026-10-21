@@ -1181,7 +1181,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         contract_type, contact_person = filters['contract_type'], filters['contact_person']
         deputy_contact_person, status = filters['deputy_contact_person'], filters['status']
         tax_review_status = filters['tax_review_status']
-        focus_labels = {"active": "Laufende Verträge", "expiring": "Bald auslaufende Verträge",
+        focus_labels = {"active": "Laufende Verträge", "expiring": "Anstehende Vertragsfristen",
                         "review": "Entwürfe / in Bearbeitung",
                         "approval": "Verträge mit offenen Freigaben",
                         "ended": "Gekündigte und beendete Verträge"}
