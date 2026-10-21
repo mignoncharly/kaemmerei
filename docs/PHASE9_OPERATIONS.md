@@ -1,8 +1,11 @@
 # Phase 9 - Availability and operations
 
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
 ## U022 local maintenance and monitoring
 
-Latest candidate head: `0027_child_read_admission`. The `db65014` full workload
+Verified migration head: `0027_child_read_admission`. The following is the retained
+remediation trail; final passing measurements are linked above. The `db65014` full workload
 removed the timeout and reached 2.926s report p95; every other operation and
 isolation passed, but the 2s target remained unmet. Evidence is retained below.
 `0027` computes readable contract IDs once per statement using the existing

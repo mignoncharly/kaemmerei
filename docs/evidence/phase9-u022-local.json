@@ -1,0 +1,336 @@
+{
+  "format": "ohvr-u022-engineering-evidence-v1",
+  "recorded_at": "2026-10-21T23:33:32.332057+00:00",
+  "source": "05648eda3ce6ddb9fe7e33082593e294522fbf24",
+  "migration_head": "0027_child_read_admission",
+  "source_scope": "Committed app/tests/scripts/deployment templates. Existing unrelated Start-TestDatabase.ps1 whitespace remains unstaged.",
+  "results": [
+    {
+      "selection": "postgresql-full",
+      "source": "05648eda3ce6ddb9fe7e33082593e294522fbf24",
+      "collected": 345,
+      "passed": 343,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 2,
+      "passing_subtests": 15,
+      "seconds": 830.726,
+      "junit_sha256": "aa08aae634469189a5ea2b8260085a7104f633857dbef9572a332233e513646c",
+      "skip_reasons": [
+        "ClamAV not installed/configured locally; authoritative scanner CI runs this test",
+        "OS does not permit creating a symlink under this test identity"
+      ]
+    },
+    {
+      "selection": "sqlite-full",
+      "source": "05648eda3ce6ddb9fe7e33082593e294522fbf24",
+      "collected": 345,
+      "passed": 309,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 36,
+      "passing_subtests": 15,
+      "seconds": 256.038,
+      "junit_sha256": "9c59c59578f7796d93063a15db7d3838b781432f3be9b0469c8229b560329939",
+      "skip_reasons": [
+        "Actual PostgreSQL concurrent MFA serialization required",
+        "Actual PostgreSQL function catalog required",
+        "Actual PostgreSQL owner/roles required",
+        "Actual PostgreSQL server identity required",
+        "Actual isolated PostgreSQL backup required",
+        "Actual named PostgreSQL fixture required",
+        "Actual restricted PostgreSQL MFA/RLS boundary required",
+        "Actual restricted PostgreSQL history authorization required",
+        "Actual restricted PostgreSQL history required",
+        "Actual restricted PostgreSQL login roles required",
+        "Actual restricted PostgreSQL logins required",
+        "Actual restricted PostgreSQL policies required",
+        "Actual restricted PostgreSQL workload required",
+        "ClamAV not installed/configured locally; authoritative scanner CI runs this test",
+        "Coordinator requires actual PostgreSQL",
+        "OS does not permit creating a symlink under this test identity",
+        "Real PostgreSQL concurrent transactions required",
+        "Real PostgreSQL development-owner connection required",
+        "Real PostgreSQL transaction lock required",
+        "Run explicitly with --database postgresql; SQLite is not PostgreSQL evidence"
+      ]
+    }
+  ],
+  "mixed_workload": {
+    "dataset": {
+      "contracts": 10000,
+      "documents": 50000,
+      "concurrent_users": 10,
+      "history": 20000,
+      "tasks": 1000,
+      "reviews": 1000,
+      "actual_files": 500,
+      "file_bytes": 32789000,
+      "statuses": [
+        "draft",
+        "in_progress",
+        "terminated",
+        "ended"
+      ]
+    },
+    "profile": "Dated synthetic contracts, unknown/zero/known values, 2 historical revisions per contract, 10% tasks/reviews, 500 inert 64KiB PDFs; simultaneous reads/writes/login/download/export",
+    "source_hashes": {
+      "app\\main.py": "80fd6ed95a35385cc07755a78399b10b3d9a9e879855135593cd104c5e93a355",
+      "app\\models.py": "cbf09f9cb5ceb7bace9aa9336bbc9807312b74572efc8c4bc2528e441686211f",
+      "app\\financial.py": "587881a526c034a711778494e6f2c863b883cd546f98e27a79993fdc9ff02052",
+      "alembic\\versions\\0022_read_admission.py": "05c8ad39d1fb868d69afcfaf4f888e8a9a7fa7a6a1b511ad41a5ddcd4177204d",
+      "alembic\\versions\\0024_history_materialization.py": "e3f90f7e183f3a771ecca243cdc0ecb03b14d6ce87941e53dc158d8ef1c53a12",
+      "alembic\\sql\\0025_history_series.sql": "047358715e1c5247d9f765bd46673174a8f739be91b26c1bff98581ee31a6d7b",
+      "alembic\\sql\\0026_history_projection.sql": "a14b68c5912f44ca43b8e5aa1f14bc2dc9daeb5cd976ee3d22f7249d3bc0e681",
+      "alembic\\versions\\0027_child_read_admission.py": "d758bbb6c770586ac9f03fac3e888f010fe39793854e431347534f8257dbf389",
+      "scripts\\synthetic_workload.py": "aac82a899a4c0b5970d4c76ba5ffa91fb169866c8669ffe5890309bb64bbdb2e",
+      "scripts\\benchmark_phase9.py": "3bce01ed7c363e9c928c134235d2e20003d08c67581fac306914999ec8e4824a"
+    },
+    "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+    "targets": {
+      "page_p95_seconds": 2,
+      "export_seconds": 15
+    },
+    "selections": [
+      {
+        "operation": "dashboard",
+        "requests": 50,
+        "p95_seconds": 0.9724300999951083,
+        "max_seconds": 1.0919753999914974,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "reports",
+        "requests": 50,
+        "p95_seconds": 1.8658992999990005,
+        "max_seconds": 1.9795566000102554,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "history_detail",
+        "requests": 90,
+        "p95_seconds": 0.8921793000190519,
+        "max_seconds": 0.9582429000001866,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 90
+        },
+        "passed": true
+      },
+      {
+        "operation": "bounded_export",
+        "requests": 50,
+        "p95_seconds": 0.9261996999848634,
+        "max_seconds": 0.9850524000066798,
+        "target_seconds": 15,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "upload_scan",
+        "requests": 50,
+        "p95_seconds": 3.0947629000002053,
+        "max_seconds": 3.4537688000127673,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "task_create",
+        "requests": 50,
+        "p95_seconds": 2.7141737999918405,
+        "max_seconds": 3.319137199985562,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "review_create",
+        "requests": 50,
+        "p95_seconds": 2.6312436000152957,
+        "max_seconds": 2.669729199988069,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "login",
+        "requests": 10,
+        "p95_seconds": 1.193929200002458,
+        "max_seconds": 1.193929200002458,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 10
+        },
+        "passed": true
+      },
+      {
+        "operation": "download",
+        "requests": 50,
+        "p95_seconds": 0.9167671000177506,
+        "max_seconds": 1.0885913000092842,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      }
+    ],
+    "scanner": "synthetic deterministic scanner; no antivirus throughput claim",
+    "isolation_passed": true,
+    "passed": true
+  },
+  "mixed_workload_sha256": "34db9a9c0eb36cf647aaff6b3d4b47e6a339c025e1840d180620bb949eeda314",
+  "recovery": [
+    {
+      "case": "test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[small]",
+      "properties": {
+        "backup_seconds": "0.985",
+        "restore_seconds": "3.641",
+        "snapshot_age_seconds": "4.608",
+        "rto_target_seconds": "14400",
+        "rpo_target_seconds": "86400"
+      }
+    },
+    {
+      "case": "test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[10k-contracts-50k-documents]",
+      "properties": {
+        "synthetic_profile": "{\"history\": 20000, \"tasks\": 1000, \"reviews\": 1000, \"actual_files\": 500, \"file_bytes\": 32789000, \"statuses\": [\"draft\", \"in_progress\", \"terminated\", \"ended\"]}",
+        "backup_seconds": "4.672",
+        "restore_seconds": "10.915",
+        "snapshot_age_seconds": "15.628",
+        "rto_target_seconds": "14400",
+        "rpo_target_seconds": "86400"
+      }
+    }
+  ],
+  "source_artifact": {
+    "source_commit": "05648eda3ce6ddb9fe7e33082593e294522fbf24",
+    "migration_head": "0027_child_read_admission",
+    "file_count": 122,
+    "artifact_sha256": "99af0e49085406c03221b8a11c2107448ff4b7f1eb9cefee7728e80796bc9a08",
+    "bytes": 1014624
+  },
+  "packaged_runtime": {
+    "artifact_sha256": "99af0e49085406c03221b8a11c2107448ff4b7f1eb9cefee7728e80796bc9a08",
+    "database": "in-memory SQLite only",
+    "migration_head": "0027_child_read_admission",
+    "source_commit": "05648eda3ce6ddb9fe7e33082593e294522fbf24",
+    "status": "packaged-runtime-smoke-passed"
+  },
+  "pure_runtime_operator_imports": "passed; pytest/httpx/PyYAML absent in reused U021 locked-runtime venv; new security modules imported",
+  "pip_check": "passed",
+  "platform_inventory": "phase9-u022-platform.json",
+  "database_probe": {
+    "operation": "read-only-existing-cluster-probe",
+    "setup_run": false,
+    "acl_changed": false,
+    "reachable": true,
+    "identity_matches": true,
+    "control_attributes": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ],
+    "guarded_databases": 0,
+    "generated_roles": 0
+  },
+  "actual_database_outage": {
+    "format": "ohvr-health-v1",
+    "healthy": false,
+    "checked_at": "2026-10-21T23:22:33.573330+00:00",
+    "checks": {
+      "database": false,
+      "storage_capacity": true,
+      "job_scan-pending": false,
+      "job_purge-sessions": false,
+      "job_document-reconcile": false,
+      "job_integration-status": false,
+      "job_events-publish": false,
+      "job_backup-create": false,
+      "backup": false
+    },
+    "metrics": {
+      "storage_free_bytes": 255358287872
+    },
+    "external_delivery": false,
+    "exercise": "actual-libpq-unreachable-loopback; no database created or modified"
+  },
+  "browser": {
+    "status": "not-executed-on-current-source; prior-driver-start-blocked",
+    "last_attempt_source": "99b1fcd9f1e7655ebb0f4222fd3a7c4580b9d02a",
+    "raw_private_log_sha256": "af3bc42c80fecccaed8c545413402617be07d6252fd2f46ec4a2625d8fcc6c8a",
+    "local_wrapper": ".verification/Invoke-U022BrowserCheck.ps1",
+    "wrapper_powershell_syntax": "passed"
+  },
+  "actual_antivirus": "Not configured locally; real engine skipped. Mixed uploads use explicitly synthetic scanner.",
+  "native_security": "Observed 18.3 server/client in official affected ranges; production floors implemented, actual patched host/client verification pending. R43 open.",
+  "catalog_after": {
+    "operation": "read-only-post-verification-catalog",
+    "control_attributes": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ],
+    "guarded_databases": 0,
+    "generated_roles": 0,
+    "server_version": "18.3",
+    "cluster_left_running": true,
+    "acl_changed": false
+  },
+  "earlier_workload_evidence": [
+    "phase9-u022-mixed-before.json",
+    "phase9-u022-mixed-interim.json",
+    "phase9-u022-mixed-series-before.json",
+    "phase9-u022-mixed-projection-before.json",
+    "phase9-u022-mixed-child-before.json"
+  ],
+  "earlier_failures": [
+    "Runtime-only project venv lacked pytest; established workspace test interpreter used.",
+    "Monitoring fixture artifact name rejected by unchanged canonical receipt validation; corrected fixture selection then passed.",
+    "Direct backup TLS regression caught misplaced guard; corrected before output and rerun selection passed.",
+    "Native setup owner-only ACL operation denied; no bypass; user started existing cluster. Read-only access then succeeded.",
+    "Earlier packaged smoke attempted before asynchronous build completed; no archive used; subsequent completed build smoke passed.",
+    "Final artifact helper initially used a relative output path; strict builder rejected it before output; corrected to explicit absolute local path."
+  ],
+  "approvals": {
+    "development": "authorized",
+    "synthetic_technical_pilot": "scope approved; remaining environment/participant gates open",
+    "real_data_pilot": "not authorized",
+    "broader_production": "not approved"
+  },
+  "external_actions": {
+    "push": false,
+    "deployment": false,
+    "notifications": false,
+    "production_key_escrow": false,
+    "automated_disposal": false
+  },
+  "remaining": [
+    "STRATO product entitlement and native host/VPN/TLS/service/ACL/quota acceptance",
+    "Actual scanner and browser environment evidence; representative hardware/network/MFA-device throughput",
+    "Off-host scheduled recovery/custody and actual-host RPO/RTO; local task adoption and response",
+    "Written finance/deadline/records decisions and relevant municipal confirmation",
+    "Observed participant acceptance, independent security review and formal release authorizations"
+  ]
+}

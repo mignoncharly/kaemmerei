@@ -1,5 +1,7 @@
 # OPEN.HERZ Vertragsregister
 
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](docs/U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
 U022: [approved synthetic pilot decisions](docs/PILOT_DECISIONS.md),
 [pending versioned domain requirements](docs/DOMAIN_RULE_REQUIREMENTS.md),
 [STRATO investigation](docs/HOSTING_ASSESSMENT.md) and [release runbook](docs/RELEASE_RUNBOOK.md).

@@ -1,5 +1,7 @@
 # Arbeitsplan Vertragsregister
 
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
 U022: [pilot decisions](PILOT_DECISIONS.md) recorded; technical work continues on
 local monitoring/job evidence, bounded event publication, mixed workloads and
 representative encrypted recovery. Versioned pending [domain requirements](DOMAIN_RULE_REQUIREMENTS.md),

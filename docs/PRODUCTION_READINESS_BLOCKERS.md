@@ -1,5 +1,7 @@
 # Production readiness: blockers and product-owner inputs
 
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
 ## U022 decision update — 21 October 2026
 
 Pilot scope, provisional permissions, empty-register/synthetic-only data and
@@ -21,7 +23,7 @@ The remediation plan has **not yet reached full production acceptance**:
 - **Phase 9:** substantial implementation completed; operational verification and some engineering work remain.
 - **Phase 10:** acceptance preparation exists; business validation, independent review and rollout acceptance remain open.
 
-The latest documented PostgreSQL run passed **290 tests with two expected skips**, and **eight hosted CI jobs passed for the verified application revision** (`3442ad89d7dcc60e9adb5b38301bb79950d70f04`). These are recorded results, not checks rerun while writing this summary.
+Current local evidence: implementation `05648eda3ce6ddb9fe7e33082593e294522fbf24` passed 343 PostgreSQL tests with 2 explicit skips and 15 subtests; the representative mixed workload and encrypted restore passed. Eight hosted CI jobs belong only to prior `3442ad8`; no current-source hosted CI was dispatched. See the U022 report above.
 
 The original PostgreSQL startup problem and security defects R01, R04 and R10 are resolved. The remaining blockers concern production readiness and acceptance.
 

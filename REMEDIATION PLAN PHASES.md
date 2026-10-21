@@ -1,5 +1,7 @@
 # Remediation plan — 10 implementation phases
 
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](docs/U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
 Plan status: Phases 1-8 technically verified; Phase 9 in progress through U022; Phase 10 preparation continues. Approved synthetic pilot decisions are recorded in docs/PILOT_DECISIONS.md. Current-source evidence is in HANDOFF; real-data and production authorization remain separate and ungranted.\
