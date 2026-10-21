@@ -31,7 +31,7 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | PostgreSQL/migrations | Clean/populated upgrades and migrated application checks passed in Linux PostgreSQL CI. Windows initdb token error remains a local-host issue. Production grants/RLS unverified |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main published to https://github.com/mignoncharly/kaemmerei.git; source commit d9e39e520495928355dfe02b198c56150bf82077 passed CI run 39571113046; see U006 |
+| Source commit/branch | main published to https://github.com/mignoncharly/kaemmerei.git; native setup source b45b26d131e72df91d4e4f5b8a804541611ee2b1 passed all three jobs in run 39575414353; see U006/U008 |
 | Completed deliverables | Plan/handoff; Phase 1 harness, isolated storage/configuration, migration fixtures, stdlib runner, CI definitions, baseline/matrix docs, corrected German project status |
 | Application remediation | Document storage now per app instance; migrations accept explicit test connections. Business authorization/workflow findings remain open |
 
@@ -54,7 +54,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 
 | Phase | State | Implemented tasks | Verification | Owner | Next action |
 |---|---|---|---|---|---|
-| 1 — Baseline and verification | Verified / technically complete | P01-T01–T08 | Linux CI SQLite and PostgreSQL jobs success, including direct pytest; local SQLite 19 pass/3 expected failures | Engineering: Codex; no production acceptance | Begin Phase 2 when authorized; optional local Docker and branch protection pending |
+| 1 — Baseline and verification | Verified / technically complete | P01-T01–T08 | SQLite, PostgreSQL 18 and native PostgreSQL Linux jobs pass, including direct pytest; local safety checks pass | Engineering: Codex; no production acceptance | Begin Phase 2 when authorized; first native Windows initialization and branch protection pending |
 | 2 — Authorization and identities | Not started | None | Not run | Unassigned | Adopt capability matrix; then scope all derived queries |
 | 3 — Schema, roles, RLS, audit | Not started | None | Not run | Unassigned | Inventory schema differences; design context/bootstrap |
 | 4 — Workflow/archive/concurrency | Not started | None | Not run | Unassigned | Define material content revision and mutation protocol |
@@ -236,6 +236,16 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **CI:** Existing authoritative SQLite/PostgreSQL 18 jobs retained. Added a native-postgresql Ubuntu 24.04 job using the runner's installed PostgreSQL binaries (runner currently documents version 16), testing native startup, migrated application checks, direct pytest, and shutdown without Docker. Target-major PostgreSQL 18 coverage remains in the original service-container job. Actual run evidence will be appended after push.
 - **State:** Native implementation delivered; real Windows startup remains host-blocked. Phase 1's previously verified technical gate is preserved; no production acceptance and R01/R04/R10 remain open.
 - **Next action:** Publish source and inspect all three actual CI jobs. First local initialization is one prepared command in a normal authorized PowerShell; no Docker installation is required.
+
+### U008 — 2026-10-21 — Native PostgreSQL end-to-end CI passed
+
+- **Source/run:** b45b26d131e72df91d4e4f5b8a804541611ee2b1; https://github.com/mignoncharly/kaemmerei/actions/runs/39575414353, completed / success.
+- **Actual jobs:** native-postgresql (119139604720), sqlite (119139604849), and postgresql (119139604985), all success. The native job initialized the marked native cluster without Docker, provisioned the restricted account/passfiles, ran migrated application verification and direct pytest, and stopped its own server through the exit trap. The original PostgreSQL 18 job also remained green.
+- **Evidence:** docs/evidence/native-postgresql-ci-39575414353.json records final run/job/step conclusions and verification artifact metadata. Native, SQLite, and PostgreSQL artifact uploads succeeded; archives were not downloaded/parsed locally.
+- **Local checks:** Ten native-manager safety checks and all five PowerShell launcher syntax checks passed. Actual Windows first startup is still blocked by managed-session ACL permissions before credentials are written; no existing Windows service changed.
+- **State:** Native implementation is verified end-to-end on Linux CI and is the default local setup. Docker is optional on the PC. Windows first startup is a host-specific outstanding action, not an unrun PostgreSQL/pytest foundation gate. R01/R04/R10 and later remediation findings remain open; no production acceptance.
+- **Host command:** From normal authorized PowerShell in the project root, run `& .\scripts\Start-TestDatabase.ps1 -Python 'C:\kämmerei\.venv\Scripts\python.exe'` for the first native initialization. For full dependency/local-test setup, use Complete-Phase1Setup.ps1. No database password is requested or printed by either script.
+- **Next action:** Publish the evidence update; start Phase 2 only when authorized. Repository branch protection remains an owner/admin account setting.
 
 ### Update entry template — copy for the next update
 

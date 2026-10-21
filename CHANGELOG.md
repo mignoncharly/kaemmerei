@@ -5,6 +5,7 @@
 - Lokale Einrichtung standardmäßig auf native PostgreSQL-Binärdateien umgestellt; Docker bleibt optional.
 - Separate gekennzeichnete Testinstanz, private Passdateien, eingeschränktes Testkonto und Start-/Stoppbefehle ergänzt. Bestehender Windows-Dienst unverändert.
 - Zehn Sicherheitsprüfungen für den nativen Manager bestanden; neue native Linux-CI-Prüfung ergänzt. Windows-Start in der verwalteten Sitzung durch verweigerte Ordnerrechte blockiert; erste Einrichtung in normaler autorisierter PowerShell erforderlich.
+- CI-Lauf 39575414353 erfolgreich: native PostgreSQL-Einrichtung ohne Docker einschließlich Migrationen/pytest/Stopp sowie bisherige SQLite-/PostgreSQL-18-Jobs bestanden. Nachweis in HANDOFF U008 und docs/evidence/native-postgresql-ci-39575414353.json.
 
 ## 21. Oktober 2026 — Veröffentlichung und erfolgreicher Linux-CI-Nachweis
 
