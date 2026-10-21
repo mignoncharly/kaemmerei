@@ -1,6 +1,6 @@
 # Verification matrix and implementation boundaries
 
-Phase 8 U016: frontend/navigation corrections implemented; final verification in progress. [Behavior, browser constraints and evidence](PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
+Phase 8 U016: frontend/navigation technically verified for 6ebcaad: 178 collected; PG 176 passed + 2 local skips, SQLite 160 passed + 18; eight Phase 8 tests pass on both backends, all five hosted jobs including Chromium passed. [Behavior, browser constraints and evidence](PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
 
 Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel technically verified: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18; 15 subtests each. Phase 7 restricted PostgreSQL 19 passed; all four hosted jobs passed for 2fd1bf8. [Definitions, migration and verification](PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
 
@@ -136,3 +136,30 @@ legacy-token preservation and read-only status probes passed on both backends.
 [Local evidence](evidence/phase6-local.json),
 [hosted evidence](evidence/phase6-ci-39624468561.json). D07 and production adoption
 remain separate; legacy v1 consumers still need the announced v2 transition.
+
+## Phase 8 frontend/navigation (U016)
+
+[Behavior, recovery contracts and browser limitations](PHASE8_FRONTEND_NAVIGATION.md).
+Eight frontend tests exercise true boolean state, noncredential/escaped recovery,
+HTML vs API errors, 507 authorized rows beyond the prior cap, stable paging and
+export parity/capacity, distinct approval contract counts, stylesheet chart widths,
+assignment/revision/capability inbox scope, archive confirmation and readonly tax /
+new-activation UI restrictions. Server guards remain independently tested.
+
+Final implementation 6ebcaad has five successful hosted jobs in run 39635885108,
+including real Chromium CSP, keyboard/focus, persistent errors and 390/320 CSS-pixel
+reflow. Local browser launch is unverified due Windows named-pipe WinError 5; no
+permissions or security settings were weakened. Selected static contrast pairs
+pass; manual assistive-technology/WCAG/usability acceptance is not inferred.
+
+Local final SQLite: 178 collected, 160 passed + 18 explicit skips, 15 subtests.
+Final local PostgreSQL/counter evidence will be appended after execution.
+[Hosted metadata](evidence/phase8-ci-39635885108.json); screenshot archives have not
+been manually inspected. R21's broader loading/performance and R22 operations
+remain Phase 9; no production acceptance or deployment.
+
+Final Phase 8 source 6ebcaad: full PG 176 passed + two local skips; SQLite 160 + 18,
+178 collected and 15 passing subtests each. Phase 8 eight passing tests per backend;
+explicit PG 16 passed, 162 deselected. Five exact-source hosted jobs passed. Final
+catalog: zero harness databases/generated roles, unchanged restricted control role.
+[Local evidence](evidence/phase8-local.json). No production/usability acceptance.

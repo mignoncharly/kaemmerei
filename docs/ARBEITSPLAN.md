@@ -1,11 +1,11 @@
 # Arbeitsplan Vertragsregister
 
-Phase 8 U016: frontend/navigation corrections implemented; final verification in progress. [Behavior, browser constraints and evidence](PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
+Phase 8 U016: frontend/navigation technically verified for 6ebcaad: 178 collected; PG 176 passed + 2 local skips, SQLite 160 passed + 18; eight Phase 8 tests pass on both backends, all five hosted jobs including Chromium passed. [Behavior, browser constraints and evidence](PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
 
 Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel technically verified: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18; 15 subtests each. Phase 7 restricted PostgreSQL 19 passed; all four hosted jobs passed for 2fd1bf8. [Definitions, migration and verification](PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
 
 **Stand: 21. Oktober 2026**\
-**Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1–6 technisch geprüft, einschließlich eingeschränkter PostgreSQL-Logins, Dokumentwiederherstellung, zuverlässiger v2-Synchronisierung und erfolgreicher CI mit ClamAV. Produktivfreigabe und fachliche Entscheidungen offen.**
+**Projektstatus: F1-F15 als Prototyp vorhanden; Phasen 1-8 technisch geprüft, einschließlich eingeschränkter PostgreSQL-Logins, Dokumentwiederherstellung, API-v2-Synchronisierung, Finanzhistorie und realer Browser-CI. Produktivfreigabe, manuelle Bedien-/Screenreader-Abnahme und fachliche Entscheidungen offen.**
 
 ## Ziel
 
@@ -29,8 +29,9 @@ Der verbindliche technische Aufgabenbestand mit R01–R41, Aufgabenkennungen und
 | 4 | Versionsgebundene Freigaben, Archivschutz, Nebenläufigkeit | P04-T01–T08 technisch verifiziert: PostgreSQL 99 bestanden, SQLite 87 + 12 PG-Skips, 18 Workflow-/Rennprüfungen und drei CI-Jobs erfolgreich. D04 fachlich offen. [Phase 4](PHASE4_WORKFLOW.md) |
 | 5 | Dokumentensicherheit und Speicherlebenszyklus | P05-T01–T08 technisch verifiziert: PostgreSQL 128 bestanden + 2 lokale Skips, SQLite 116 + 14 Skips; CI 39613990793 erfolgreich mit echter ClamAV-Prüfung. [Phase 5](PHASE5_DOCUMENT_LIFECYCLE.md). D05/D06 und Produktivfreigabe offen. |
 | 6 | Zuverlässige API-Synchronisierung und Token-Verantwortung | P06-T01–T08 technisch verifiziert: PostgreSQL 149 + 2 lokale Skips, SQLite 134 + 17 Skips; 21 PG-Synchronisationsprüfungen und vier CI-Jobs erfolgreich. [Phase 6](PHASE6_INTEGRATION_SYNC.md). v1 bleibt verfügbar; D07 fachlich offen. |
-| 7 | Finanzhistorie, Datums- und Excel-Regeln | Nicht begonnen |
-| 8–9 | Bedienoberfläche, Verfügbarkeit und Betrieb | Nicht begonnen |
+| 7 | Finanzhistorie, Datums- und Excel-Regeln | P07-T02-T09 technisch geprüft, einschließlich historischer Fachbereichszuordnung, unbekannter Werte und atomarer Importidentität. P07-T01/D08-D10 fachlich offen. [Phase 7](PHASE7_FINANCE_DATES_EXCEL.md) |
+| 8 | Bedienoberfläche und Navigation | P08-T01-T09 technisch geprüft für 6ebcaad: PostgreSQL 176 + 2 lokale Skips, SQLite 160 + 18; acht Phase-8-Prüfungen je Backend und fünf CI-Jobs einschließlich Chromium erfolgreich. [Phase 8](PHASE8_FRONTEND_NAVIGATION.md). Manuelle Bedien-/Screenreader-Abnahme offen. |
+| 9 | Verfügbarkeit und Betrieb | Nicht begonnen; Phase-9-Ziele und Betriebsverantwortung festlegen |
 | 10 | Fachliche/technische Abnahme, Pilot und expliziter Integrationsumfang | Nicht begonnen |
 
 Die [Prüfmatrix](VERIFICATION_MATRIX.md) benennt Rollen, Direktzugriffe, Kindobjekte und noch fehlende Prüfungen. [PHASE1_BASELINE.md](PHASE1_BASELINE.md) hält Umgebung, Befehle, Ergebnisse und Einschränkungen fest. Fachbereichsfremde Filterwerte (R01), veränderbare archivierte Prüfvorgänge (R04) und Zugriff bei deaktiviertem Fachbereich (R10) sind korrigiert und auf SQLite sowie PostgreSQL geprüft. Weitere Befunde werden in den jeweiligen Phasen behoben und geprüft.

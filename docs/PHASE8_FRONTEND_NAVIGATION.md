@@ -46,8 +46,10 @@ verification and remaining usability/operational acceptance.
 ## Error and archive behavior
 
 Ordinary validation rerenders its existing form with safe values and a persistent
-error. A conflict or HTTP error provides read-only entered values and links to
-reload/reconcile or sign in. Reloading never automatically replays a mutation.
+error. A conflict or HTTP error provides allowlisted read-only values where the request
+has parsed them, plus links to reload/reconcile or sign in. Guest/expired-session
+requests retain the existing sign-in redirect; there is no unauthenticated draft
+storage, so unparsed values can require re-entry. Reloading never automatically replays a mutation.
 Credentials and uploads must be entered again. Fields are allowlisted and capped
 at 5,000 characters; the helper is shared with workflow conflicts and upload/token
 administration handlers. Responses retain status codes and relevant authentication
@@ -120,7 +122,7 @@ Hosted browser setup: `python -m pip install -r requirements-browser.txt`,
 `python scripts/verify_phase8_browser.py`. No Docker is required for local native
 PostgreSQL or browser verification.
 
-## Evidence state
+## Initial evidence state (superseded; retained history)
 
 Initial broad SQLite regression selection: 70 passed, one explicit PostgreSQL-only
 skip. Phase 8 initially 6/6 passed on both backends; a later export-capacity/action
@@ -140,3 +142,80 @@ CSRF, version/archive, credential redaction and strict CSP checks. Pagination/fi
 and explicit export-capacity behavior are user-visible compatibility changes and
 must be retained or deliberately reviewed. Phase 9 covers availability controls,
 deployment settings, maintenance, observability and operational recovery targets.
+
+### Intermediate verification progress (superseded)
+
+Final implementation source: `6ebcaad00e8dae84f41a5b0480c3793598541f5a`.
+The review also removed editable tax-assessment controls for department users,
+removed direct new-contract activation from UI choices, clarified reader versus
+explicit review capability, labelled notice/end deadlines accurately and clarified
+terminated end-date presentation. These are presentation changes; server authority
+and activation/tax/archive rules remain independently enforced. The targeted Phase 8
+selection now has eight items and passes on both backends. Earlier complete suites
+passed 159 SQLite + 18 explicit skips and 175 PostgreSQL + two local skips before
+these final presentation checks; they remain intermediate evidence, not final-source
+full-suite claims.
+
+The real hosted browser job passed for final source 6ebcaad in run 39635885108;
+complete final run conclusions are still pending. Earlier runs 39634529672 and
+39635125218 were superseded/cancelled by the workflow concurrency policy, although
+the first browser job succeeded. No cancelled overall run is classified as passed.
+
+Selected static palette contrasts against white were calculated: secondary text
+#405966 7.40:1, focus #005e78 7.31:1, overdue text #8a2929 8.64:1. This is a bounded
+palette check, not a full contrast or WCAG certification. The browser job exercises
+actual layout/CSP/focus/reflow; screenshot archive contents have not been manually
+inspected. Local browser failure and assistive-technology/manual acceptance remain
+explicitly separate. Failed local pip attempts left temporary tool setup files;
+no forced cleanup or permission workaround was performed. Ignored verification
+artifacts and tools are not application runtime dependencies or release content.
+
+### Final hosted evidence
+
+[Run 39635885108](https://github.com/mignoncharly/kaemmerei/actions/runs/39635885108)
+completed success for exact final implementation `6ebcaad00e8dae84f41a5b0480c3793598541f5a`.
+All five actual job conclusions and steps were inspected: frontend-browser, SQLite,
+PostgreSQL 18 service, native-postgresql and document-scanner. Dependencies,
+migrations, full Python suites, explicit PostgreSQL and Phase 4/5/6/7/8 regressions,
+real Chromium checks and actual ClamAV/current definitions passed. Five artifact
+metadata entries were inspected, including browser screenshots/result output;
+archive contents and screenshots were not downloaded or manually inspected.
+Metadata is preserved in `docs/evidence/phase8-ci-39635885108.json`.
+
+Final local SQLite: 178 collected, 160 passed, 18 explicit skips, 15 passing subtests
+(341.85s), no failures/errors/xfails. At that checkpoint final local PostgreSQL was still in progress; its actual
+completed result is recorded in the final engineering acceptance table below.
+
+## Final engineering acceptance
+
+Exact application/test source: `6ebcaad00e8dae84f41a5b0480c3793598541f5a`.
+
+| Gate | Actual result |
+|---|---|
+| Full SQLite | 178 collected; 160 passed, 18 explicit skips; 15 subtests; 341.85s |
+| Full native PostgreSQL 18.3 | 178 collected; 176 passed, two local skips; 15 subtests; 1019.38s |
+| Phase 8 SQLite / restricted PostgreSQL | Eight passed on each backend; no skips; 24.17s / 97.59s |
+| Explicit PostgreSQL selection | 16 passed, 162 deselected; no skips; 110.71s |
+| Migrations / actual roles / restore | Existing head 0020 clean, populated, repeated upgrades and restricted-role/restore regressions preserved |
+| Hosted | All five jobs passed for exact source; run 39635885108 |
+| Browser rendering | Hosted Chromium CSP, errors, checkbox state, keyboard/focus, semantics and 390/320 reflow passed |
+| Final catalog | Zero harness databases and zero generated runtime roles; control privileges unchanged |
+| Local browser / manual AT / full WCAG / municipal usability | Explicitly unverified, not inferred from hosted automation |
+| Production migration/deployment | Not performed; earlier owner decisions and operational release gates remain open |
+
+No failures, errors or xfails. Local PostgreSQL skips are the known missing actual
+ClamAV installation/configuration and Windows symlink permission; hosted jobs cover
+real scanning and Linux link behavior. SQLite additionally skips actual PostgreSQL
+checks. Starlette/AnyIO deprecation and managed pytest-cache ACL warnings remain
+unsuppressed. Verification durations include overlapping local runs and are not a
+capacity or response-time benchmark. Final metadata/hashes/contrast and catalog:
+`docs/evidence/phase8-local.json`; hosted jobs/steps/artifact metadata:
+`docs/evidence/phase8-ci-39635885108.json`. Archives/screenshots were not manually
+inspected. Earlier progress entries above are retained as history and superseded
+by this final table. Documentation-only updates do not change tested source.
+
+**Outcome:** Phase 8 is technically verified. R23-R28 and the planned R38 navigation
+scope are corrected; R21 pagination/export row bounds are corrected while broader
+unbounded dashboard/report loading, export bytes/time and workload controls remain
+Phase 9. Next technical action: P09-T01. No production readiness or owner acceptance
+is established by this report.

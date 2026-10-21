@@ -3,7 +3,7 @@
 Last updated: 2026-10-21\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
-Current stage: Phase 8 frontend implementation in verification. See U016 and docs/PHASE8_FRONTEND_NAVIGATION.md. Local browser blocked by Windows named-pipe permissions; hosted browser gate pending. Earlier owner decisions and production acceptance remain pending.\
+Current stage: Phase 8 technically verified locally and in all five hosted jobs. See U016 and docs/PHASE8_FRONTEND_NAVIGATION.md. Local browser is permission-limited; manual usability, earlier owner decisions and production acceptance remain pending.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
 ## 1. Start here
@@ -27,13 +27,13 @@ Do not put credentials, full API tokens, password hashes, document contents, or 
 | Latest migration observed | `0020_financial_reports`; synthetic isolated databases only |
 | Authorization | Shared application guards plus forced PostgreSQL RLS under separate actual web/integration LOGIN roles; SQLite remains application authorization only |
 | Existing safeguards | Argon2; hashed sessions/tokens; CSRF; escaped templates; protected document routes; contract edit version checks |
-| Tests | Phase 7: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18 skips; 15 subtests each. Phase 7 PG 19 passed; SQLite 18 + one PG-only skip; explicit PostgreSQL 16 passed. All four hosted jobs passed. |
-| PostgreSQL/migrations | Native Windows 18.3; clean/populated/repeated head 0020, legacy unknown basis/NULL reference preservation, restricted roles and actual restore pass in isolated databases. Native launcher/identity/passfiles preserved. Final catalog: zero harness databases/generated roles. No business migration/grants. |
+| Tests | Phase 8: 178 collected; PG 176 passed + 2 local skips; SQLite 160 passed + 18 explicit skips; 15 subtests each. Phase 8 8/8 on both backends; explicit PostgreSQL 16 passed. Five hosted jobs, including real browser, passed. |
+| PostgreSQL/migrations | Native Windows 18.3; no Phase 8 schema migration, head 0020 clean/populated/repeated upgrades, restricted roles and restore preserved. Final read-only catalog: zero harness databases/generated roles; control privileges unchanged. No business migration/grants or cluster change. |
 | Business database/documents | Not inspected, migrated, or changed; verification used synthetic disposable databases and instance-specific scratch storage |
 | Deployment | Not inspected; no deployment performed |
-| Source commit/branch | main; final Phase 7 implementation 2fd1bf85406895254d070453bbc1ced03fe7ff72 passed all four hosted jobs in run 39629880926. Four artifact metadata entries inspected; archives not downloaded. |
-| Completed deliverables | Plan/handoff; Phases 1-7 technical implementations, tests and evidence; owner/release acceptance remains separate. |
-| Application remediation | Phases 1-7 technically verified; P07-T01 finance agreement, frontend, operations, remaining adapters and owner acceptance remain open. |
+| Source commit/branch | main; final Phase 8 implementation 6ebcaad00e8dae84f41a5b0480c3793598541f5a passed all five jobs in run 39635885108. Five artifact metadata entries inspected; archives/screenshots not downloaded or manually inspected. |
+| Completed deliverables | Phases 1-8 technical implementations/tests/evidence; HTML/browser/navigation contracts included. Owner, usability and production acceptance remain separate. |
+| Application remediation | Phases 1-8 technically verified. P07-T01 finance agreement, availability/deployment/operations, remaining adapters and owner/usability acceptance remain open. |
 
 ## 3. Status definitions
 
@@ -61,7 +61,7 @@ Track task checkboxes in the plan as implementation progress. Use this file for 
 | 5 - Document lifecycle | Verified technically; D05/D06 owner acceptance pending | P05-T01-T08 | PostgreSQL 128 passed + 2 local skips; SQLite 116 + 14; real PG restore; successful hosted run including required real ClamAV | Engineering: Codex; security/records owners unassigned | Next technical phase P06-T01; production setup and owner decisions pending |
 | 6 - Integration synchronization | Verified technically; D07 owner acceptance pending | P06-T01-T08 | PG 149 + 2 local skips; SQLite 134 + 17; 21 actual PG integration regressions; all four CI jobs passed | Engineering: Codex; integration/security owners unassigned | Next P07-T01; D07 consumer profiles/transition and retention before production |
 | 7 - Reports/dates/Excel | Verified technically; D08-D10 unapproved | P07-T02-T09 technical defaults; T01 owner agreement pending | PG 168 + 2 local skips; SQLite 152 + 18; Phase 7 PG 19; explicit PG 16; four hosted jobs passed | Engineering: Codex; municipal owners unassigned | Next technical phase P08-T01; obtain D08-D10 before business deployment |
-| 8 - Frontend and navigation | Implemented, verification in progress | P08-T01-T08 implemented; T09 automated browser gate pending | Targeted SQLite/PG regressions pass; full suites running; local browser permission-limited | Engineering: Codex; usability owner unassigned | Finish exact-source local/hosted/browser evidence |
+| 8 - Frontend and navigation | Verified technically; manual usability/AT and production acceptance pending | P08-T01-T09 | PG 176 + 2 local skips; SQLite 160 + 18; Phase 8 eight on both; real browser and all five hosted jobs passed | Engineering: Codex; usability owner unassigned | Next P09-T01; establish operational targets and release acceptance owners |
 | 9 — Operations and availability | Not started | None | Not run | Unassigned | Define ingress limits, workload, and deployment targets |
 | 10 — Acceptance and release | Not started | None | Not run | Unassigned | Assign acceptance owners and release scope |
 
@@ -86,13 +86,16 @@ The plan contains the full finding descriptions and primary phase mapping. Split
 | R11, R12 — Concurrency and tax | Medium | Implemented and locally verified | U012; expected child versions, concurrent/archive races, restricted tax completion and cleared reopen metadata |
 | R15/R16 - Document trust/recovery | Medium | Corrected and technically verified; D05 production policy pending | U013; real restore, recovery, integrity/authorization and hosted actual scanner |
 | R17-R20 - Financial/date correctness | Medium | Corrected and technically verified; D08/D09 adoption pending | U015; unknown basis/direction/missing counts and anchored bounded calendar regressions |
-| R21–R22 — Capacity/operations | Medium | Open | None |
-| R23–R28 — Frontend correctness | Medium | Open | None |
+| R21 - Loading/export/truncation | Medium | Pagination and row-bounded export technically corrected; broader loading/byte/time/performance controls remain Phase 9 | U016; 507-record authorized navigation and export parity; no production capacity claim |
+| R22 - Operations | Medium | Open | Phase 9/10 |
+| R23-R28 - Frontend correctness | Medium | Corrected and technically verified | U016; final local suites, eight restricted-role/frontend regressions and hosted Chromium gate |
 | R31 — Contact/deputy identities | Scope gap | Maintained scoped catalog delivered; labels grant no access | U010; no implicit delegation; delegation requires a separate accepted policy |
 | R32 — Department lifecycle | Scope gap | Audited administration delivered | U010; rename/suspend/reactivate, stable IDs, session revocation and token suspension |
 | R34 — Account recovery/password/MFA | Scope gap | Password change and audited recovery delivered; MFA/SSO remains Phase 9 | U010; temporary passwords force replacement; session/CSRF rotation and rate limiting |
-| R29–R30, R35 — Other integration/lifecycle scope gaps | Scope decisions required | Open | Original phase assignments |
-| R37/R38/R40 - Maintainability/usability/token policy | Nice to fix/have | Backlog | Original phase assignments |
+| R29-R30 - Integration/reminder scope | Scope decisions required | Open | Original phase assignments |
+| R35 - Excel identity/update semantics | Scope gap | Explicit create-only identity technically verified; D10 adoption pending | U015; generated-number rejection, scoped references, atomic concurrent import and provenance |
+| R37/R40 - Maintainability/distribution | Nice to fix/have | Remaining backlog | Original phase assignments; shared list/export filter specification delivered U016 |
+| R38 - Navigation/order/inbox | Nice to fix/have | Implemented and technically verified | U016; stable paging, filter-preserving links, scoped actionable inbox; manual usability acceptance pending |
 | R39 - Document correction/supersession | Nice to fix/have | Implemented and technically verified | U013; retained predecessors, DMS correction, approval invalidation and hold preservation |
 | R33 - Retention/disposal | Scope gap | Design and non-destructive hold defaults implemented; D06 pending | U013; no destructive disposal |
 | R36 - API field coverage | Scope gap | Explicit v2 tax/task/decision/history fields technically verified; D07 pending | U014; no expansion of existing v1 tokens |
@@ -126,16 +129,16 @@ Append exact commands only after identifying the correct environment. Record dat
 | Documentation cross-reference/content review | Workspace Markdown | Phase 1 and Phase 2 implementation tracked separately; policy/release acceptance explicitly open | U010; historical U002/U004 preserved |
 | Python syntax/source snapshot | Workspace source | 31 Python files AST-parsed; 38 source/config inputs fingerprinted | U004; .verification/phase1-source-sha256.json |
 | Existing application tests | Migrated disposable SQLite | 10/10 passed through unittest adapter | U003; .verification/phase1-sqlite.log |
-| New regression tests | Migrated disposable SQLite / native PostgreSQL 18.3 | Final full PG 168 passed + 2 local skips; SQLite 152 + 18; 15 passing subtests each; no xfails | U015; docs/evidence/phase7-local.json |
+| New regression tests | Disposable SQLite / restricted native PostgreSQL | Full PG 176 + 2 local skips; SQLite 160 + 18; Phase 8 8/8 both; no failures/errors/xfails; 15 subtests each full suite | U016; docs/evidence/phase8-local.json |
 | Clean Alembic upgrade | Disposable SQLite / PostgreSQL | Head 0020, schema equality and repeated clean/populated upgrades pass | U015; full suites and migration/schema regressions |
 | Populated baseline upgrade | Disposable SQLite / PostgreSQL | Original fixtures plus invalid legacy abort, reviewed synthetic correction and historical audit outcome preservation pass | U010/U011; MigrationTests, tests/test_phase2.py, tests/test_phase3_schema.py |
-| Direct pytest | Local Windows SQLite / PostgreSQL | Full suites pass; explicit actual PostgreSQL 16 passed, no skips; four hosted jobs passed | U015; local JUnit and hosted exact-source evidence |
+| Direct pytest | Windows SQLite/native PostgreSQL | Final source 6ebcaad: full suites pass; explicit PostgreSQL 16 passed, 162 deselected; five hosted jobs pass | U016; exact JUnit hashes and hosted evidence |
 | RLS/application-role isolation | Actual separate PostgreSQL LOGIN roles | 11 Phase 3 tests passed; explicit selection also includes application lifecycle | U011; tests/test_phase3.py |
 | Concurrent archive/review/task writes | SQLite and actual restricted PostgreSQL logins | One winning decision/task update; nine paths race archive and reject every post-barrier mutation | U012; tests/test_phase4.py |
 | File scan/recovery fault cases | Isolated document storage / hosted actual ClamAV | Passed; two local capability skips documented; hosted scanner succeeds | U013/U015; full suites and hosted job evidence |
 | API synchronization replay/transfers | Synthetic consumers and actual restricted PG logins | Phase 6 regression preserved in final full local/hosted suites | U014/U015 |
 | Financial reconciliation/date fixtures | SQLite / actual restricted PostgreSQL roles | Phase 7 final PG 19 passed; SQLite 18 + one PG-only skip; full suites and hosted passed | U015; tests/test_phase7.py; docs/evidence/phase7-local.json |
-| Browser/CSP/accessibility | Local disposable app | Not run | None |
+| Browser/CSP/accessibility | Hosted real Chromium / synthetic app | CSP widths, keyboard/focus, persistent errors, checkbox recovery, 390/320 reflow pass. Selected palette contrast pass. Local browser blocked by WinError 5; manual AT/WCAG/usability unverified | U016; docs/evidence/phase8-ci-39635885108.json |
 | Load/resource limits | Agreed synthetic workload | Not run; targets unassigned | None |
 | Consistent backup restore | Isolated synthetic recovery environment | Actual PG dump/restore and restored authorization/hash tests pass; operational RPO/RTO acceptance remains open | U013/U015 |
 | Pilot/security/privacy acceptance | Named owners | Not performed | None |
@@ -359,6 +362,14 @@ Append entries chronologically with stable IDs (`U001`, `U002`, ...). Correct ea
 - **Local browser:** Browser service inventory empty. pip proxy/private temp ACL limitations; official PyPI wheel hashes checked and tools isolated in ignored workspace scratch. Playwright failed before browser start with Windows named-pipe WinError 5. No permissions/sandbox/security weakening. Required Linux browser CI job added; no local browser pass claimed. Not the historical PostgreSQL error 87.
 - **Boundaries:** No complete WCAG/assistive-technology or municipal usability certification, production workload target, owner acceptance or deployment inferred. Earlier D08-D10 and other decisions remain pending. Existing local ClamAV/symlink/production ACL and earlier retained synthetic filesystem residues unchanged.
 - **Docs/next:** docs/PHASE8_FRONTEND_NAVIGATION.md and existing project docs. Finish local full suites, explicit PostgreSQL/Phase 8, actual hosted browser/jobs and final read-only cleanup catalog; append exact source/counts/hashes/results.
+
+- **Hosted final:** Run 39635885108 completed success for 6ebcaad00e8dae84f41a5b0480c3793598541f5a. Actual job/step conclusions verified for all five jobs: browser, SQLite, PostgreSQL 18 service, native-postgresql and ClamAV. Five artifact metadata entries inspected; archives/screenshots not downloaded or manually inspected. Earlier runs 39634529672/39635125218 were superseded/cancelled, not passed overall. Evidence: docs/evidence/phase8-ci-39635885108.json.
+- **Local final progress:** 178 collected; SQLite 160 passed + 18 explicit skips, 15 passing subtests (341.85s). Phase 8 eight passing items on both backends, including tax/activation controls and independent role/capability presentation. Final full PostgreSQL and final catalog remain pending; earlier complete PostgreSQL 175 + two skips is intermediate evidence. Selected static palette contrast checks pass; no full WCAG/manual screen-reader acceptance inferred.
+
+- **Final implementation/evidence:** 6ebcaad00e8dae84f41a5b0480c3793598541f5a. No application/test source changes after this revision. Phase 8 eight items pass on both backends (SQLite 24.17s; PG 97.59s). Final full 178 collected: SQLite 160 passed + 18 explicit skips (341.85s); PostgreSQL 176 passed + two local skips (1019.38s); 15 passing subtests each. Explicit PG 16 passed, 162 deselected (110.71s). Zero failures/errors/xfails. Durations reflect overlapping local verification, not a production performance benchmark. Counts/hashes: docs/evidence/phase8-local.json.
+- **Final safety:** All local runs finished; read-only catalog reports zero harness databases and zero generated runtime roles. Native PostgreSQL 18.3 control role remains NOSUPERUSER CREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS. No cluster replacement/service stop, business data change or credential output. Existing launcher/Unicode/identity protections preserved.
+- **Final state:** P08-T01-T09 technically verified; five exact-source hosted jobs passed. Browser/scanner/Linux link checks have hosted coverage. Two local full-PG skips are existing ClamAV absence and Windows symlink permission. Starlette/AnyIO and managed pytest cache warnings remain unsuppressed. Local browser WinError 5, manual AT/WCAG/usability, earlier D08-D10/other owners, R21 broader workload controls and R22 operations remain explicit. No production deployment or owner acceptance inferred.
+- **Next:** P09-T01 under the existing plan. Obtain workload/deployment/security/recovery targets and owners; preserve all current authorization, workflow, document, synchronization and frontend safeguards.
 
 ### Update entry template — copy for the next update
 

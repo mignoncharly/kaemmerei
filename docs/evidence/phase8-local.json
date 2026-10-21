@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-21",
+  "implementation_source": "6ebcaad00e8dae84f41a5b0480c3793598541f5a",
+  "environment": {
+    "platform": "Windows",
+    "python": "3.14.3",
+    "pytest": "9.1.1",
+    "postgresql": "18.3 native on 127.0.0.1:55432"
+  },
+  "runs": {
+    "phase8-sqlite-release.xml": {
+      "collected_items": 178,
+      "passed_items": 160,
+      "skipped_items": 18,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 341.84,
+      "junit_testcase_count": 193,
+      "sha256": "2a713aa1818274a2430198e85c1ee4615473838c7b196213304ec2da28495b3d"
+    },
+    "phase8-sqlite-targeted-accepted.xml": {
+      "collected_items": 8,
+      "passed_items": 8,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 24.177,
+      "junit_testcase_count": 8,
+      "sha256": "2a6cc9b999981db390dea060c6792c0813ea2019f5957f74f1dfc0eee82bb258"
+    },
+    "phase8-postgres-targeted-accepted.xml": {
+      "collected_items": 8,
+      "passed_items": 8,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 97.595,
+      "junit_testcase_count": 8,
+      "sha256": "573beb54ec1dff6c82f575bc9b10515bf3d226c6acf64a603b3d334483d56af7"
+    },
+    "phase8-postgres-release.xml": {
+      "collected_items": 178,
+      "passed_items": 176,
+      "skipped_items": 2,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 1019.374,
+      "junit_testcase_count": 193,
+      "sha256": "3a6b1b8263c80aef6e049e5b74001c04c7ce4ed2954b515e2054580fb7318dac"
+    },
+    "phase8-postgres-explicit-release.xml": {
+      "collected_items": 16,
+      "passed_items": 16,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 110.718,
+      "junit_testcase_count": 16,
+      "sha256": "7a51061ec123f5902e7370b2ec51bc9725ee9853cf102ad7f6e2df4e2136e9cc"
+    }
+  },
+  "contrast": {
+    "scope": "selected static palette pairs; not complete WCAG audit",
+    "pairs": [
+      {
+        "foreground": "#405966",
+        "background": "#ffffff",
+        "contrast": 7.4,
+        "usage": "secondary text on white panels"
+      },
+      {
+        "foreground": "#005e78",
+        "background": "#ffffff",
+        "contrast": 7.31,
+        "usage": "keyboard focus on white"
+      },
+      {
+        "foreground": "#8a2929",
+        "background": "#ffffff",
+        "contrast": 8.64,
+        "usage": "overdue inbox text on white"
+      }
+    ]
+  },
+  "local_browser": {
+    "status": "unverified",
+    "reason": "Windows named-pipe PermissionError WinError 5 before browser launch",
+    "browser_service_inventory": "no browsers/apps",
+    "security_controls_weakened": false
+  },
+  "warnings": [
+    "Starlette/AnyIO BlockingPortal deprecation",
+    "managed pytest cache ACL"
+  ],
+  "production_deployment": false,
+  "schema_migration_added": false,
+  "final_read_only_catalog": {
+    "server_version": "18.3",
+    "harness_databases": 0,
+    "generated_runtime_roles": 0,
+    "control_role": {
+      "superuser": false,
+      "createdb": true,
+      "createrole": false,
+      "replication": false,
+      "bypassrls": false
+    }
+  }
+}

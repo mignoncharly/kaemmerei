@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phase 7 technical defaults verified locally and in all four hosted jobs (U015); Phase 8 implemented and in verification (U016); Phases 9-10 and owner/production acceptance remain pending.\
+Plan status: Phases 1-8 technically verified; final Phase 8 evidence in HANDOFF U016 and docs/PHASE8_FRONTEND_NAVIGATION.md. P07-T01 finance agreement, earlier owner decisions, manual usability and production acceptance remain pending. Next technical phase P09.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -307,7 +307,7 @@ Small independent work can proceed once its listed interface is stable. Keep the
 - [x] P08-T06: Add server-side pagination, total count, stable sort/tiebreaker, query bounds, and filter-preserving links. Remove unreachable records behind the 500-item cap. Ensure export uses the same authorized filter specification, with its own capacity limits.
 - [x] P08-T07: Add a personal task/review inbox based on actual assignment and capability. Include overdue review deadlines, not just contract dates/tasks. Avoid an inbox that grants broader contract visibility.
 - [x] P08-T08: Repair German encoding/text corruption. Review role labels, activation/approval messages, UTC/local-time presentation, archive statements, and financial descriptions against implemented behavior.
-- [ ] P08-T09: Perform keyboard, screen-reader structure, focus, contrast, responsive layout, long-content, and validation recovery checks. Add an archive confirmation/recovery policy appropriate to its effect; preserve CSRF and version checks.
+- [x] P08-T09: Perform keyboard, screen-reader structure, focus, contrast, responsive layout, long-content, and validation recovery checks. Add an archive confirmation/recovery policy appropriate to its effect; preserve CSRF and version checks.
 
 ### Verification and exit criteria
 
@@ -319,6 +319,8 @@ Small independent work can proceed once its listed interface is stable. Keep the
 
 **Recovery:** Keep service contracts stable; frontend rollback cannot remove server checks or weaken CSP.\
 **Handoff:** Record browser/accessibility evidence, pagination contract, and remaining usability limitations.
+
+**Phase 8 implementation note (U016):** P08-T01-T09 technically verified for source 6ebcaad. Final local 178 collected: PG 176 passed + 2 local skips; SQLite 160 + 18; 15 subtests each. Eight Phase 8 tests pass on both backends. All five hosted jobs, including real Chromium, passed. See [Phase 8 report](docs/PHASE8_FRONTEND_NAVIGATION.md). Local browser and manual AT/usability/production acceptance remain separate. R21 broader workload controls remain Phase 9.
 
 ## Phase 9 — Harden availability, deployment, and operations
 
