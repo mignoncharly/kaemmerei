@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-21",
+  "source": "92329b6f181f174f0212c429e3368383bcc027dc",
+  "migration_head": "0023_human_mfa",
+  "results": [
+    {
+      "selection": "postgresql",
+      "executed_items": 262,
+      "passed": 260,
+      "skipped": 2,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 578.157,
+      "backup_items": 17,
+      "backup_skipped": 0,
+      "junit_sha256": "ebd37dfd69fe79af80eb11ba0a8786b9b3f59e459f6515192ec66bf07a50a484"
+    },
+    {
+      "selection": "sqlite",
+      "executed_items": 262,
+      "passed": 236,
+      "skipped": 26,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 15,
+      "seconds": 160.246,
+      "backup_items": 17,
+      "backup_skipped": 1,
+      "junit_sha256": "633c8000a053eab046905c03182632edcd62916de85423f5de7d05dad926c93e"
+    },
+    {
+      "selection": "explicit-postgresql",
+      "executed_items": 24,
+      "passed": 24,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": 128.223,
+      "backup_items": 1,
+      "backup_skipped": 0,
+      "junit_sha256": "04da080bd96d2879036ef71d051b388e13d1d9b3bd82512f2215dee3e167ba95"
+    },
+    {
+      "selection": "targeted-backup-windows",
+      "executed_items": 29,
+      "passed": 29,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "passing_subtests": 0,
+      "seconds": 17.692,
+      "backup_items": 17,
+      "backup_skipped": 0,
+      "junit_sha256": "127c1ee472cd9b60962db19ff0a8826d406d059e8283b974866fc73367e0c0f3"
+    }
+  ],
+  "catalog": {
+    "guarded_databases": 0,
+    "generated_roles": 0,
+    "control_privileges_unchanged": true
+  },
+  "synthetic_recovery": {
+    "backup_seconds": 1.199,
+    "restore_seconds": 3.03,
+    "scope": "Two contracts, one stored synthetic PDF, one valid staged orphan; encrypted MFA seed, revision IDs, file hashes and restricted restored login verified; not a production RPO/RTO certificate"
+  },
+  "dependency_consistency": "pip check: no broken requirements",
+  "warnings": [
+    "Starlette TestClient httpx adapter deprecation",
+    "Windows pytest cache ACL/path warning; tests and JUnit unaffected"
+  ],
+  "initial_failure": "New test used nonexistent ContractHistory model; corrected to existing Revision; no schema/auth changes",
+  "scope": "Isolated UUID/OID/owner/comment guarded databases and synthetic private files/disposable keys only. No business database migration/import, source deletion, cluster reinitialization/service change, production task registration, key escrow or notifications. Phase 9 exit remains open."
+}

@@ -743,3 +743,14 @@ global tool installation. Official Windows asset and exact executable digests
 are recorded separately; Sigsum proof was not verified. References:
 [age 1.3.2 manual](https://github.com/FiloSottile/age/blob/v1.3.2/doc/age.1.html),
 [standard Ed25519 signatures](https://cryptography.io/en/50.0.2/hazmat/primitives/asymmetric/ed25519/).
+
+
+### U020 final technical verification - source 92329b6
+
+- 262 collected. Native PostgreSQL: 260 passed, 2 explicit local skips, 15 passing subtests, 578.16s. SQLite: 236 passed, 26 explicit skips, 15 passing subtests, 160.25s. Zero failures/errors/xfails.
+- Explicit PostgreSQL: 24 passed/238 deselected/zero skips, 128.22s. Reviewed backup/Windows selection: 29 passed/zero skips, 17.69s. All 17 backup cases executed in full PostgreSQL; SQLite skips only the real PostgreSQL backup among those cases.
+- Actual clean/populated/repeated migrations remain at 0023_human_mfa. Encrypted snapshot/native restore, restricted restored department access/downloads, IDs/hashes, revisions and encrypted MFA replay state passed. Tiny synthetic timings: backup 1.199s and preparation/import/verification 3.030s. Two contracts, one PDF and one staged orphan: this is not representative production recovery or RPO/RTO acceptance.
+- All FIVE exact-source hosted jobs passed: [run 39660619585](https://github.com/mignoncharly/kaemmerei/actions/runs/39660619585), source 92329b6f181f174f0212c429e3368383bcc027dc. Both PostgreSQL jobs required native encryption tools and actual backup tests. Run/jobs/steps and five artifact metadata entries inspected; archives not downloaded.
+- Final read-only catalog: zero guarded disposable databases, zero generated roles; dedicated control privileges unchanged. No business data/schema/cluster/service modification or production deployment. pip check clean. Warnings: existing Starlette/httpx TestClient deprecation and Windows pytest-cache ACL/path warning; no warning suppressed.
+- Evidence: [local JSON](evidence/phase9-u020-local.json), [hosted JSON](evidence/phase9-ci-39660619585.json), [native tool provenance](evidence/phase9-age-provenance.json). JUnit hashes bind the recorded local results.
+- Phase 9 remains open. Remaining work includes monitoring/backup-age alerts, representative mixed workload/recovery, remaining scheduled jobs, native TLS/service/ACL/capacity acceptance and reproducible release checks. Production ownership and custody are provisional, not development blockers. A static follow-up is explicit production TLS validation in the standalone DBA role-configuration script, which currently constructs development Settings; the application/operator CLI backup path already revalidates production TLS. Do not deploy via that script before resolving the follow-up. No production rollout is authorized.

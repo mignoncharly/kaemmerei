@@ -226,3 +226,13 @@ encryption; no silent skip permitted there. Windows disabled backup schedule and
 actual PowerShell parsing are covered in `test_windows_operations.py`. Latest
 reviewed targeted run 29 passed/zero skips; 262 collected overall. Full/CI pending.
 Synthetic timing, no production recovery/schedule/escrow acceptance.
+
+
+U020 final checkpoint 92329b6: 262 collected; native PG 260 passed/2 local skips,
+SQLite 236/26 explicit skips, 15 passing subtests each; explicit PG 24 passed;
+backup/Windows 29 passed. All 17 backup cases executed on PG. All five exact-
+source hosted jobs passed (39660619585). Final catalog 0 guarded DBs/0 generated
+roles, control privileges unchanged. Encrypted restore technically verified on
+tiny synthetic data; no production schedule/escrow/deployment or RPO/RTO
+acceptance. Phase 9 remains open. Details and remaining follow-ups: HANDOFF U020,
+docs/PHASE9_OPERATIONS.md and docs/evidence/phase9-u020-local.json.
