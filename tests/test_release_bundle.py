@@ -165,6 +165,8 @@ def test_hosted_release_workflow_parses_and_requires_both_platforms():
     assert release['strategy']['matrix']['os']==['ubuntu-24.04','windows-latest']
     installs=[step.get('run','') for step in release['steps']]
     assert any('--require-hashes --only-binary=:all: -r requirements.lock' in command for command in installs)
+    names=[step.get('name') for step in release['steps']]
+    assert names.index('Build twice and compare exact bytes')<names.index('Verify release and operator regressions')
     assert jobs['release-reproducibility']['needs']=='locked-release'
     # GitHub's Python shell writes a file outside the checkout. Execute its
     # actual import preamble from an isolated temporary script, not stdin.

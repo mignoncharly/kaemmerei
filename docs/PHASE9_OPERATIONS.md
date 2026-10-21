@@ -889,3 +889,15 @@ with ModuleNotFoundError for scripts. GitHub Python-shell temporary scripts need
 an explicit checkout import path. Added that path and an execution-layout
 regression; source application and migration guards unchanged. Corrected retry
 requires its own actual hosted evidence; earlier failures remain recorded.
+
+
+U021 final verification preparation: build/smoke is now ordered BEFORE any
+development-tool installation in both locked-release jobs, with a regression
+asserting that order. This prevents dev dependencies from masking a missing
+runtime dependency. The actual temporary-script preamble regression passes.
+A second full local PostgreSQL run passed 289/2 explicit local skips with 15
+passing subtests (291 collected, 718.11s). The earlier run had 286 passed/3 failed/
+2 skipped; all three were five-second control-connection timeouts before any test
+database creation. Dedicated Phase 1 diagnostic then passed 12 tests/11 subtests.
+No connect timeout, safety check or retry policy changed. Final 292-item serial
+PostgreSQL/current SQLite and exact-source hosted results follow after completion.
