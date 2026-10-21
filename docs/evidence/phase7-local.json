@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-21",
+  "implementation_source": "2fd1bf85406895254d070453bbc1ced03fe7ff72",
+  "environment": {
+    "platform": "Windows",
+    "python": "3.14.3",
+    "pytest": "9.1.1",
+    "postgresql": "18.3 native on 127.0.0.1:55432"
+  },
+  "runs": {
+    "phase7-sqlite-accepted.xml": {
+      "collected_items": 170,
+      "passed_items": 152,
+      "skipped_items": 18,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 129.164,
+      "junit_testcase_count": 185,
+      "sha256": "733d9f7ee99e052b9353d3a25b9482e05ec3cb2a7fef4ac7491e88c5464adbf6"
+    },
+    "phase7-sqlite-targeted-accepted.xml": {
+      "collected_items": 19,
+      "passed_items": 18,
+      "skipped_items": 1,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 7.387,
+      "junit_testcase_count": 19,
+      "sha256": "24afdf5c58a52a85cac88ff9cb700c85d42fd967e35db4ad5a5e7e7e7e918302"
+    },
+    "phase7-postgres-targeted-accepted.xml": {
+      "collected_items": 19,
+      "passed_items": 19,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 33.185,
+      "junit_testcase_count": 19,
+      "sha256": "be2d065758493f8b9bcc462e2d893c6d35983f9da18a0e1e99992c9e345b18c6"
+    },
+    "phase7-postgres-explicit.xml": {
+      "collected_items": 16,
+      "passed_items": 16,
+      "skipped_items": 0,
+      "subtests_passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 100.191,
+      "junit_testcase_count": 16,
+      "sha256": "b70d35ea5c4ef0b64ce80a61c43c6a3df6b1dbd8f886eed1e00677dae06829e2"
+    },
+    "phase7-postgres-accepted.xml": {
+      "collected_items": 170,
+      "passed_items": 168,
+      "skipped_items": 2,
+      "subtests_passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "xfailed": 0,
+      "seconds": 441.319,
+      "junit_testcase_count": 185,
+      "sha256": "9a47f94eb565c525accc22ff55d322185e487353728b790f3266b2f257972910"
+    }
+  },
+  "local_warnings": [
+    "Starlette/AnyIO BlockingPortal deprecation",
+    "Managed Windows pytest-cache ACL warning"
+  ],
+  "production_migration": false,
+  "production_deployment": false,
+  "owner_decisions": {
+    "D08": "unapproved",
+    "D09": "unapproved",
+    "D10": "unapproved"
+  },
+  "final_read_only_catalog": {
+    "server_version": "18.3",
+    "harness_databases": 0,
+    "generated_runtime_roles": 0,
+    "control_role": {
+      "superuser": false,
+      "createdb": true,
+      "createrole": false,
+      "replication": false,
+      "bypassrls": false
+    }
+  }
+}

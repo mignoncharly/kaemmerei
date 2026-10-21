@@ -1,6 +1,6 @@
 # Arbeitsplan Vertragsregister
 
-Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel implemented; full verification in progress. [Definitions, migration and verification](PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
+Phase 7 U015: financial inventory/history, calendar estimates and create-only Excel technically verified: 170 collected; PG 168 passed + 2 local skips; SQLite 152 passed + 18; 15 subtests each. Phase 7 restricted PostgreSQL 19 passed; all four hosted jobs passed for 2fd1bf8. [Definitions, migration and verification](PHASE7_FINANCE_DATES_EXCEL.md). D08-D10 and production acceptance remain pending.
 
 **Stand: 21. Oktober 2026**\
 **Projektstatus: F1–F15 als Prototyp vorhanden; Phasen 1–6 technisch geprüft, einschließlich eingeschränkter PostgreSQL-Logins, Dokumentwiederherstellung, zuverlässiger v2-Synchronisierung und erfolgreicher CI mit ClamAV. Produktivfreigabe und fachliche Entscheidungen offen.**

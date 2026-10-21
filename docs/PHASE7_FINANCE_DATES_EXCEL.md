@@ -170,10 +170,9 @@ uniquely named, positively identified disposable databases and synthetic records
 
 ## Verification state
 
-Targeted Phase 7: native PostgreSQL 18/18 passed, SQLite 17 passed and one explicitly
+Targeted Phase 7 on final source 2fd1bf8: native PostgreSQL 19/19 passed, SQLite 18 passed and one explicitly
 PostgreSQL-only authorization skip. Broader schema/application security selections
-also passed on both backends. Full final suite, exact source revision, JUnit hashes
-and hosted execution evidence will be appended after the runs finish. Initial
+also passed on both backends. Final exact-source outcomes and evidence are recorded below. Initial
 failures (test fixture keyword override, missing export columns, missing-amount
 rendering) were corrected and rerun; no xfail or warning suppression was introduced.
 
@@ -181,3 +180,65 @@ Hosted workflow explicitly selects Phase 7 on both service and native PostgreSQL
 addition to the full suites. YAML inspection is not a hosted pass. D08–D10, production
 rollout, browser accessibility/CSP work in Phase 8 and operational acceptance remain
 open regardless of successful engineering tests.
+
+### Intermediate verification progress (superseded by final results below)
+
+Implementation source: `2fd1bf85406895254d070453bbc1ced03fe7ff72` (main).
+Final full SQLite: 170 items collected, 152 passed, 18 explicit skips, 15 passing
+subtests, zero failures/errors/xfails (129.17s). Phase 7 PostgreSQL: 19 passed
+(33.18s); SQLite: 18 passed and one PostgreSQL-only skip (7.39s). Explicit
+PostgreSQL selection: 16 passed, 154 deselected (100.19s). JUnit hashes and
+counts are recorded in `docs/evidence/phase7-local.json`. Final full PostgreSQL
+and the complete hosted run are still pending; intermediate full PostgreSQL
+167 passed + 2 skips is retained as earlier evidence, not exact final-source proof.
+
+The import identity guard now precedes row ownership/tax validation, closing a
+membership-change race during workbook parsing on both backends. The regression
+changes membership after parsing begins and proves ownership uses the refreshed
+membership. Legacy upgrade assertions preserve unknown basis and NULL references.
+
+### Hosted verification
+
+[Run 39629880926](https://github.com/mignoncharly/kaemmerei/actions/runs/39629880926)
+completed successfully for exact implementation source `2fd1bf8`. Direct GitHub
+run/job API evidence confirms all four jobs: SQLite, PostgreSQL 18 service, native
+PostgreSQL without Docker and real ClamAV/current definitions. Dependency setup,
+migrations, complete suites, explicit PostgreSQL security selections and explicit
+Phase 7 selections on both PostgreSQL environments passed. Four artifact metadata
+entries were inspected; artifact archives were not downloaded. Job/step conclusions
+are retained in `docs/evidence/phase7-ci-39629880926.json`.
+
+## Final acceptance checklist and outcome
+
+Exact application/test source: `2fd1bf85406895254d070453bbc1ced03fe7ff72`.
+
+| Check | Actual result |
+|---|---|
+| Full SQLite | 170 collected; 152 passed, 18 explicit skips, 15 subtests; 129.17s |
+| Full native PostgreSQL 18.3 | 170 collected; 168 passed, 2 local skips, 15 subtests; 441.32s |
+| Phase 7 restricted PostgreSQL | 19 passed, no skips; 33.18s |
+| Phase 7 SQLite | 18 passed, one PostgreSQL-only skip; 7.39s |
+| Explicit PostgreSQL security/lifecycle | 16 passed, 154 deselected; 100.19s |
+| Clean/populated/repeated Alembic head 0020 | Passed, including preserved legacy unknown basis/NULL references and schema equality |
+| Historical archive/transfer reconciliation | Passed through actual HTTP/report and restricted PostgreSQL roles |
+| Concurrent/atomic import and membership change | Passed on both backends |
+| Hosted CI | Four jobs completed success for 2fd1bf8; run 39629880926 |
+| Final read-only safety catalog | Zero harness databases, zero generated runtime roles; control role privileges unchanged |
+| Municipal D08-D10 adoption | Unapproved; P07-T01 remains open |
+| Production migration/deployment | Not performed or authorized by this evidence |
+
+No test failures, errors or xfails. Local PostgreSQL's two skips are actual ClamAV
+not installed/configured and Windows symlink creation not permitted for this identity;
+ClamAV and Linux link checks have hosted coverage. SQLite's other skips explicitly
+require PostgreSQL. Starlette/AnyIO BlockingPortal deprecation and managed pytest
+cache ACL warnings remain unsuppressed. Earlier Phase 5 retained synthetic filesystem
+residues and production scanner/private ACL limits are unchanged; no cleanup bypass.
+
+JUnit hashes/counts and final catalog: `docs/evidence/phase7-local.json`. Hosted
+run/job/step/artifact metadata: `docs/evidence/phase7-ci-39629880926.json`. No artifact
+archive contents were inspected. Documentation-only commits after 2fd1bf8 do not
+change the tested application or tests.
+
+**Engineering outcome:** Phase 7 is technically verified. Owner acceptance and
+production readiness remain open. Next technical task: P08-T01 (CSP-compatible
+frontend chart behavior), preserving all existing access and transaction safeguards.

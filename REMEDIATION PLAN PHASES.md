@@ -2,7 +2,7 @@
 
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phase 7 technical defaults implemented and in verification (U015); Phases 8-10 and owner/production acceptance remain pending.\
+Plan status: Phases 1-6 technically verified; final Phase 6 evidence in HANDOFF U014 and docs/PHASE6_INTEGRATION_SYNC.md. Phase 7 technical defaults verified locally and in all four hosted jobs (U015); Phases 8-10 and owner/production acceptance remain pending.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -291,7 +291,7 @@ Small independent work can proceed once its listed interface is stable. Keep the
 **Recovery:** Preserve existing financial values and raw import provenance; publish report-definition changes. Version revised report semantics where users depend on prior exports.\
 **Handoff:** Attach finance-approved definitions, known history gaps, reconciliation evidence, and Excel compatibility decisions.
 
-**Phase 7 implementation note (U015):** P07-T02-T09 use explicit proposed technical defaults in [Phase 7 report](docs/PHASE7_FINANCE_DATES_EXCEL.md). P07-T01 remains unchecked because finance agreement has not been obtained. Full verification and hosted results are tracked separately from owner acceptance.
+**Phase 7 implementation note (U015):** P07-T02-T09 use explicit proposed technical defaults in [Phase 7 report](docs/PHASE7_FINANCE_DATES_EXCEL.md). P07-T01 remains unchecked because finance agreement has not been obtained. Final evidence: 170 collected; PG 168 passed + 2 local skips; SQLite 152 + 18; Phase 7 PG 19/19; all four hosted jobs passed for 2fd1bf8. See HANDOFF U015. Technical verification is separate from owner acceptance.
 
 ## Phase 8 — Repair frontend behavior and navigation
 
