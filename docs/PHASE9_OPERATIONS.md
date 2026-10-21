@@ -2,6 +2,23 @@
 
 ## U022 local maintenance and monitoring
 
+The first full mixed run at `99b1fcd` is retained in
+[failed workload evidence](evidence/phase9-u022-mixed-before.json). Reports missed
+the 2s target (5.747s p95). Its repeated 60 logins from one IP correctly exceeded
+the unchanged 32/IP budget, then invalidated later page/export/download samples.
+The corrected ordinary workload uses initial login plus one timed reauthentication
+per user, retains authenticated-content checks and never weakens throttling.
+
+Forward migration `0024_history_materialization` makes only the existing history
+CTE materialized. Repeated JSON projection caused the historical-report cost;
+population, cutoffs, unknown/zero behavior, principal guards, owner and ACL remain
+unchanged. A real catalog upgrade regression verifies owner/ACL/security/function
+body preservation and repeatability; existing historical transfer/archive and
+restricted-role tests verify behavior. PostgreSQL documents the evaluation-once
+control in [18 §7.8.3](https://www.postgresql.org/docs/18/queries-with.html#QUERIES-WITH-CTE-MATERIALIZATION).
+Final workload and revision-bound regression results are recorded in HANDOFF;
+neither implementation nor a smaller workload substitutes for passing measurements.
+
 Current scope/status: [PILOT_DECISIONS](PILOT_DECISIONS.md). Earlier sections below
 are retained history; their evidence does not cover new source.
 

@@ -33,7 +33,8 @@ def benchmark(*, contracts=10000, documents=50000, users=10, rounds=5, mixed=Fal
                   profile='Undated draft contracts, no revision history/tasks/reviews, external-link metadata without files; initial read-load baseline only',
                   source_hashes={str(p):sha256(p.read_bytes()).hexdigest() for p in
                     (Path('app/main.py'),Path('app/models.py'),Path('app/financial.py'),
-                     Path('alembic/versions/0022_read_admission.py'),Path('scripts/benchmark_phase9.py'))},
+                     Path('alembic/versions/0022_read_admission.py'),Path('alembic/versions/0024_history_materialization.py'),
+                     Path('scripts/synthetic_workload.py'),Path('scripts/benchmark_phase9.py'))},
                   scope='In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput',
                   targets=dict(page_p95_seconds=2,export_seconds=15), selections=[])
     if mixed:
@@ -95,6 +96,7 @@ def benchmark(*, contracts=10000, documents=50000, users=10, rounds=5, mixed=Fal
                 from tests.support import csrf_from, workflow_payload
                 operations=('dashboard','reports','history_detail','bounded_export','upload_scan','task_create','review_create','login','download')
                 samples={name:[] for name in operations}
+                timed_login=[False]*users
                 def mixed_request(item):
                     index,client,kind=item
                     cid=ids[index%len(department_ids)]
@@ -119,12 +121,24 @@ def benchmark(*, contracts=10000, documents=50000, users=10, rounds=5, mixed=Fal
                             expected=-1
                         if kind=='download' and not response.content.startswith(b'%PDF-'):
                             expected=-1
+                        if kind!='login' and (response.url.path=='/login' or response.headers.get('location','').startswith('/login')):
+                            expected=-1
                         return kind,dict(seconds=monotonic()-started,status=response.status_code,expected=expected,bytes=len(response.content))
                     except Exception:
                         return kind,dict(seconds=monotonic()-started,status=0,expected=200,bytes=0)
                 with ThreadPoolExecutor(max_workers=users) as pool:
                     for wave in range(rounds*len(operations)):
-                        batch=[(i,c,operations[(wave+i)%len(operations)]) for i,c in enumerate(clients)]
+                        batch=[]
+                        for i,c in enumerate(clients):
+                            kind=operations[(wave+i)%len(operations)]
+                            if kind=='login':
+                                # Ordinary pilot use: initial login plus one
+                                # timed reauthentication per user. Repeated
+                                # spraying from one IP is a separate negative
+                                # security test, not successful ordinary load.
+                                if timed_login[i]:kind='history_detail'
+                                else:timed_login[i]=True
+                            batch.append((i,c,kind))
                         for kind,sample in pool.map(mixed_request,batch):samples[kind].append(sample)
                 for kind,values in samples.items():
                     p95=percentile([s['seconds'] for s in values],.95)
