@@ -1,0 +1,41 @@
+{
+  "source": "8ced41b41172d10cd1220b7449cd18119025db35",
+  "scope": "One restricted department HTTP report; guarded synthetic 10k contracts/50k documents only",
+  "dataset": {
+    "history": 20000,
+    "tasks": 1000,
+    "reviews": 1000,
+    "actual_files": 500,
+    "file_bytes": 32789000
+  },
+  "request_seconds": 4.658380599983502,
+  "response_bytes": 9894,
+  "database_total_seconds": 4.391793999995571,
+  "operations": {
+    "identity_and_other": {
+      "queries": 7,
+      "seconds": 0.012633500009542331,
+      "max_seconds": 0.004261599999153987
+    },
+    "contract_population": {
+      "queries": 3,
+      "seconds": 0.17122940003173426,
+      "max_seconds": 0.14365510002244264
+    },
+    "tasks": {
+      "queries": 1,
+      "seconds": 0.30336230000830255,
+      "max_seconds": 0.30336230000830255
+    },
+    "reviews": {
+      "queries": 1,
+      "seconds": 0.30238720000488684,
+      "max_seconds": 0.30238720000488684
+    },
+    "historical_aggregation": {
+      "queries": 5,
+      "seconds": 3.6021815999411047,
+      "max_seconds": 1.4778393999731634
+    }
+  }
+}

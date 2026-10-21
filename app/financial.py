@@ -63,9 +63,19 @@ def historical_groups(db, user, cutoff):
 def inventory_trend(db, user, today):
     now = now_utc()
     trend = []
-    for year in range(max(1, today.year - 4), today.year + 1):
-        cutoff = min(datetime(year,12,31,23,59,59,999999), now)
-        groups = historical_groups(db,user,cutoff)
+    points = [(year,min(datetime(year,12,31,23,59,59,999999),now))
+              for year in range(max(1,today.year-4),today.year+1)]
+    series = None
+    if db.info.get('enforce_rls'):
+        series = defaultdict(list)
+        rows = db.execute(text('SELECT * FROM ohvr_security.financial_history_series(CAST(:cutoffs AS timestamp[]))'),
+                          {'cutoffs':[cutoff for _,cutoff in points]}).mappings()
+        for row in rows:
+            group = dict(row)
+            cutoff = group.pop('observed_at')
+            series[cutoff].append(group)
+    for year,cutoff in points:
+        groups = series[cutoff] if series is not None else historical_groups(db,user,cutoff)
         totals = {d:sum((g['annual'] or Decimal('0') for g in groups if g['direction']==d),Decimal('0'))
                   for d in ('expense','income','unknown')}
         trend.append(dict(year=year,expenses=totals['expense'],income=totals['income'],

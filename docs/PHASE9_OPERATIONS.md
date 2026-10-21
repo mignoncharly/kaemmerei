@@ -10,7 +10,7 @@ The corrected ordinary workload uses initial login plus one timed reauthenticati
 per user, retains authenticated-content checks and never weakens throttling.
 
 Forward migration `0024_history_materialization` makes only the existing history
-CTE materialized. Repeated JSON projection caused the historical-report cost;
+CTE materialized. This candidate optimization alone did not resolve the cost;
 population, cutoffs, unknown/zero behavior, principal guards, owner and ACL remain
 unchanged. A real catalog upgrade regression verifies owner/ACL/security/function
 body preservation and repeatability; existing historical transfer/archive and
@@ -18,6 +18,29 @@ restricted-role tests verify behavior. PostgreSQL documents the evaluation-once
 control in [18 §7.8.3](https://www.postgresql.org/docs/18/queries-with.html#QUERIES-WITH-CTE-MATERIALIZATION).
 Final workload and revision-bound regression results are recorded in HANDOFF;
 neither implementation nor a smaller workload substitutes for passing measurements.
+
+The corrected full run at `8ced41b` passed authentication, isolation and eight
+operations, but reports still took 5.690s p95. Retained evidence:
+[interim workload](evidence/phase9-u022-mixed-interim.json). A restricted-department
+[profile](evidence/phase9-u022-report-profile.json) measured 4.658s request time,
+4.392s DB time and 3.602s in five historical queries. The scalar materialization
+was insufficient; this observation supersedes the earlier bottleneck hypothesis.
+
+`0025_history_series` adds a bounded one-to-five-cutoff scoped aggregation that
+parses qualifying history once and selects latest state separately per cutoff
+before applying historical department/archive scope. No raw states or arbitrary
+principal argument are exposed. Future/null/empty/oversized cutoff arrays are
+denied. The same web-only, active-human, non-forced principal conditions apply;
+integration/audit roles cannot execute it. Explicit role configuration must be
+reapplied after migration to grant the web function; no runtime role is inferred
+or created by migration. `inventory_trend` uses one SQL call for the five-year
+series; SQLite keeps its existing internal implementation.
+
+Actual-role regressions compare series output with the scalar function for
+transfer/archive/unknown/zero examples, require exactly one series query and
+verify input/permission denial. `scripts/profile_phase9_report.py` is an opt-in
+guarded 10k/50k profile with fixed operation labels and durations only; it emits
+no SQL text, parameters, credentials or business records.
 
 Current scope/status: [PILOT_DECISIONS](PILOT_DECISIONS.md). Earlier sections below
 are retained history; their evidence does not cover new source.
