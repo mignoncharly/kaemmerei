@@ -1,6 +1,6 @@
 """Phase 2 regressions, executed with migrated SQLite and real PostgreSQL."""
 from concurrent.futures import ThreadPoolExecutor
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
 from sqlalchemy import func, select, text
@@ -445,3 +445,36 @@ def test_admin_can_suspend_user_in_inactive_department_without_moving_identity(e
     with app.state.session_factory() as db:
         account = db.get(User, user_id)
         assert not account.is_active and account.department_id == 1
+
+
+def test_inflight_login_is_serialized_with_password_change_and_cannot_restore_revoked_session(environment, monkeypatch):
+    from fastapi.testclient import TestClient
+    from app import main
+    client, app = environment
+    login(client, 'kultur')
+    entered, release, changing = Event(), Event(), Event()
+    actual_verify = main.verify_password
+    def held_verify(password, user):
+        entered.set()
+        assert release.wait(timeout=15)
+        return actual_verify(password, user)
+    monkeypatch.setattr(main, 'verify_password', held_verify)
+    # The account-password route has its own verifier reference; only login is held.
+    values = dict(csrf_token=csrf(client, '/account/password'), current_password=PASSWORD,
+                  new_password='Inflight-Login-New-Password-2026', confirm_password='Inflight-Login-New-Password-2026')
+    with TestClient(app) as concurrent_login, ThreadPoolExecutor(max_workers=2) as pool:
+        login_future = pool.submit(login, concurrent_login, 'kultur')
+        assert entered.wait(timeout=15)
+        def change():
+            changing.set()
+            return client.post('/account/password', data=values, follow_redirects=False)
+        change_future = pool.submit(change)
+        assert changing.wait(timeout=15)
+        release.set()
+        assert login_future.result(timeout=20).status_code == 303
+        assert change_future.result(timeout=20).status_code == 303
+        assert concurrent_login.get('/', follow_redirects=False).status_code == 303
+        assert client.get('/').status_code == 200
+        with app.state.session_factory() as db:
+            user_id = db.scalar(select(User.id).where(User.username == 'kultur'))
+            assert db.scalar(select(func.count()).select_from(LoginSession).where(LoginSession.user_id == user_id)) == 1

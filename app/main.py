@@ -28,7 +28,7 @@ from app.db import make_engine, make_session_factory
 from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, read_xlsx
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
-                        IntegrationToken, LoginSession, RecipientTeam, Revision, User, now_utc)
+                        IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
 from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
                          PAYMENT_INTERVALS, REVIEW_RECIPIENTS, CONTRACT_REVIEW_STATUSES,
                          TASK_KINDS, TASK_STATUSES, TAX_REVIEW_STATUSES)
@@ -561,7 +561,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/login", response_class=HTMLResponse)
     async def login(request: Request, db: Session = Depends(get_db)):
-        form = await request.form()
+        form = await request.form(max_files=0, max_fields=3)
+        # Serialize credential verification/session creation with password reset
+        # and permission changes; no commit may release this lock in between.
+        lock_identities(db)
         guest = require_csrf(request, db, str(form.get("csrf_token", "")))
         username = str(form.get("username", "")).strip().casefold()
         password = str(form.get("password", ""))
@@ -575,7 +578,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             record_failure(db, key)
             return html(request, "login.html", {"csrf_token": guest.csrf_token,
                          "error": "Benutzername oder Passwort ungültig."}, 401)
-        clear_failures(db, key)
+        db.execute(delete(LoginAttempt).where(LoginAttempt.key_hash == key))
         db.delete(guest)
         db.flush()
         new_login, token = new_session(db, settings.session_hours, user.id)
@@ -1493,8 +1496,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/contracts/{contract_id}/reviews/{review_id}")
     async def update_contract_review(request: Request, contract_id: int, review_id: int,
                                      db: Session = Depends(get_db)):
+        # Consume bounded form input before taking shared identity/parent locks.
+        form = await request.form(max_files=0, max_fields=4)
         lock_identities(db)
         user, _csrf = user_csrf(request, db)
+        require_csrf(request, db, str(form.get("csrf_token", "")))
         # Serialize review changes with contract archival on PostgreSQL.
         contract = load_contract(db, user, contract_id, lock=True)
         if contract is None:
@@ -1509,8 +1515,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Prüfvorgang nicht gefunden")
         if not can_decide_review(db, user, contract, review):
             raise HTTPException(status_code=403, detail="Explizite Freigabeberechtigung und Zuweisung erforderlich")
-        form = await request.form(max_fields=4)
-        require_csrf(request, db, str(form.get("csrf_token", "")))
         status = str(form.get("status", "")).strip()
         result_text = str(form.get("result_text", "")).strip()
         if status not in CONTRACT_REVIEW_STATUS_LABELS:
