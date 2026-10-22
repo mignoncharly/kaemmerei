@@ -40,6 +40,29 @@
     region.tabIndex = 0; region.setAttribute('role', 'region');
     region.setAttribute('aria-label', 'Datentabelle – bei Bedarf horizontal scrollen');
   });
+  const filterForm = document.querySelector('#contract-filter-form');
+  if (filterForm) {
+    const disclosure = document.querySelector('#advanced-filter-disclosure');
+    const filterToggle = document.querySelector('#filter-toggle');
+    const syncFilters = () => filterToggle.setAttribute('aria-expanded', String(disclosure.open));
+    filterToggle.hidden = false;
+    filterForm.classList.add('toolbar-enhanced');
+    filterToggle.addEventListener('click', () => {
+      disclosure.open = !disclosure.open;
+      syncFilters();
+    });
+    disclosure.addEventListener('toggle', syncFilters);
+    // Reveal invalid controls before the browser tries to focus them.
+    filterForm.addEventListener('invalid', event => {
+      if (disclosure.contains(event.target)) { disclosure.open = true; syncFilters(); }
+    }, true);
+    if (disclosure.querySelector('[aria-invalid="true"], [role="alert"]')) disclosure.open = true;
+    syncFilters();
+    window.addEventListener('pageshow', syncFilters);
+    // Removal links reload the server result and return focus to a stable control.
+    if (location.hash === '#contract-toolbar') filterToggle.focus({preventScroll: true});
+    if (location.hash === '#q') document.querySelector('#q').focus({preventScroll: true});
+  }
   document.querySelectorAll('input,select,textarea').forEach(input => {
     const hint = input.parentElement.querySelector('.hint,.field-hint');
     if (hint && input.id && !input.hasAttribute('aria-describedby')) {

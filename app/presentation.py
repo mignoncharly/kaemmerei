@@ -40,3 +40,30 @@ def review_options(user, contract, review, permitted, statuses):
     independent=(review.assigned_user_id==user.id and review.team_id is not None
                  and user.id not in (contract.created_by_id,contract.material_actor_id))
     return [(code,label) for code,label in statuses if code!='approved' or independent]
+
+
+def listing_toolbar(filters, page_size, user, departments, focus_labels):
+    """Presentation URLs from the existing normalized query; no filtering here."""
+    from urllib.parse import urlencode
+    from app.options import CONTRACT_STATUSES, TAX_REVIEW_STATUSES
+    applied = {key: value for key, value in filters.items() if value}
+    if user.role == 'department':
+        applied.pop('department', None)  # Ignored by the server for this role.
+    paging = {'page_size': page_size} if page_size != 50 else {}
+    labels = dict(department='Fachbereich', contract_type='Vertragsart',
+                  contact_person='Zuständig', deputy_contact_person='Vertretung',
+                  status='Status', tax_review_status='§ 2b UStG', focus='Fokus')
+    names = {
+        'department': {str(dept.id): dept.name for dept in departments},
+        'status': {**dict(CONTRACT_STATUSES), 'archived': 'Archiviert'},
+        'tax_review_status': dict(TAX_REVIEW_STATUSES), 'focus': focus_labels,
+    }
+    def url(values, fragment='contract-toolbar'):
+        query = urlencode({**values, **paging})
+        return ('/?' + query if query else '/') + '#' + fragment
+    chips = [dict(key=key, label=labels[key] + ': ' + names.get(key, {}).get(value, value),
+                  remove_url=url({k: v for k, v in applied.items() if k != key}))
+             for key, value in applied.items() if key in labels]
+    return dict(chips=chips, reset_url=url({'q': applied['q']} if applied.get('q') else {}),
+                clear_search_url=url({k: v for k, v in applied.items() if k != 'q'}, 'q'),
+                export_url='/contracts/export.xlsx' + ('?' + urlencode(applied) if applied else ''))

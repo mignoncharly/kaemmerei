@@ -26,7 +26,7 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
-from app.presentation import safe_values, review_options, FIELD_LABELS
+from app.presentation import safe_values, review_options, listing_toolbar, FIELD_LABELS
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
 from app.documents import ensure_storage, stage_upload, new_document, process_document, download_response, audit_denied, ClamAVScanner, MEDIA
@@ -1371,6 +1371,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         contract_types = list(CONTRACT_TYPES) + sorted(stored_types - set(CONTRACT_TYPES))
         contact_persons = list(CONTACT_PERSONS) + sorted(stored_people - set(CONTACT_PERSONS))
         return html(request, 'dashboard.html' if dashboard_view else 'list.html', {**base_context(request, user, csrf),
+                    "toolbar": listing_toolbar(filters, page_size, user, departments, focus_labels),
                     "contracts": items, "total_count": total_count, "page":page, "page_size":page_size,
                     "page_count":page_count, "previous_page_url":page_url(page-1) if page>1 else None,
                     "next_page_url":page_url(page+1) if page<page_count else None,

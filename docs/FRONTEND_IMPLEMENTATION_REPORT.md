@@ -1,5 +1,10 @@
 # OPEN.HERZ Vertragsregister – Frontend-Redesign
 
+Nachtrag zur Vertragsübersicht: [Kompakte Toolbar und Filter](CONTRACT_TOOLBAR_IMPLEMENTATION.md)
+dokumentiert die gezielte Weiterentwicklung einschließlich eigener Regression
+und noch ausstehender Browserabnahme. Die nachfolgenden Ergebnisse beziehen
+sich auf den ursprünglichen Gesamtredesign-Stand.
+
 Stand: 22.10.2026. **Implementierung und lokale funktionale Regression sind
 abgeschlossen; die visuelle und interaktive Browserabnahme ist umgebungsbedingt
 offen. Das Gesamtvorhaben ist damit noch nicht vollständig abgenommen.**
