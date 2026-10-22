@@ -34,9 +34,11 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'source_dirty' }
     # This invokes only the existing synthetic SQLite browser exercise.
     # No PostgreSQL setup, credentials, ACL, service, download or deployment.
-    & $Python -u scripts/verify_phase8_browser.py --channel $Channel --output (Join-Path $run 'browser') *> (Join-Path $run 'private-browser.log')
+    # Python captures child stdout/stderr directly, preserving warnings without
+    # PowerShell 5 treating ordinary Python stderr as a terminating native error.
+    & $Python -m scripts.run_pilot_verification --expected-source $source --selection browser --channel $Channel --output (Join-Path $run 'execution') *> (Join-Path $run 'private-wrapper.log')
     $report.exit_code = $LASTEXITCODE
-    $result = Join-Path $run 'browser\result.json'
+    $result = Join-Path $run 'execution\browser\result.json'
     if ($report.exit_code -eq 0 -and (Test-Path -LiteralPath $result)) {
         $item = Get-Item -LiteralPath $result
         if ($item.LastWriteTimeUtc -lt $started) { throw 'stale_result' }

@@ -205,8 +205,10 @@ locked-release Windows and Linux; cross-OS release reproducibility; real fronten
 browser; real scanner; native PostgreSQL; SQLite; PostgreSQL service. **All eight
 must run against the final candidate commit** after explicit external authorization.
 Retain job/run IDs, source SHA, artifacts, test/skips and failure classifications.
-Current workflow additionally repeats selected phases/backup tests and verifies
-native-manager safety. No old hosted success is inherited. No hosted run is
+Current workflow additionally repeats selected phases/backup tests, verifies
+native-manager safety, enforces matching native patch floors on both PostgreSQL
+jobs, runs the real scanner HTTP check with restricted PostgreSQL logins, and
+runs the representative mixed workload separately within the service job. No old hosted success is inherited. No hosted run is
 dispatched by this work.
 
 Candidate evidence inventory must bind exact code source, source artifact SHA-256,

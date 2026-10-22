@@ -16,6 +16,8 @@ ROOT=Path(__file__).resolve().parents[1]
 
 
 def source_identity(expected=None):
+    top=Path(subprocess.check_output(['git','rev-parse','--show-toplevel'],cwd=ROOT,encoding='utf-8').strip())
+    if top.resolve()!=ROOT.resolve():raise ValueError('Verification requires the actual repository root')
     source=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     if expected and source!=expected:raise ValueError('Source mismatch')
     # Preserve the user's unrelated launcher whitespace without admitting code drift.

@@ -114,3 +114,11 @@ def test_native_attestation_requires_matching_patched_tool_family(monkeypatch,re
         report=native_report(Path(directory),True)
     assert report['baseline_passed'] is passed and report['client_server_major_match'] is passed
     assert not report['r43_closed'] and not report['installation_changed']
+
+
+def test_extracted_artifact_cannot_claim_parent_repository_revision(monkeypatch):
+    import scripts.pilot_verification as evidence
+    from tests.support import scratch_directory
+    with scratch_directory('ohvr-parent-git-') as directory:
+        monkeypatch.setattr(evidence,'ROOT',Path(directory))
+        with pytest.raises(ValueError,match='actual repository root'):evidence.source_identity()

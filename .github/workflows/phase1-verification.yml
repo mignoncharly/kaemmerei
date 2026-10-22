@@ -90,6 +90,21 @@ jobs:
           path: .verification/phase8-browser/
   document-scanner:
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_POSTGRES_ADMIN_URL: postgresql+psycopg://ohvr_verify:synthetic-ci-only@127.0.0.1:5432/postgres
+      TEST_POSTGRES_BOOTSTRAP_URL: postgresql+psycopg://postgres:synthetic-ci-only@127.0.0.1:5432/postgres
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -107,10 +122,17 @@ jobs:
           sudo freshclam --stdout --datadir="$AV_DB" --log="$AV_DB/update.log"
           echo "CLAMAV_EXECUTABLE=$(command -v clamscan)" >> "$GITHUB_ENV"
           echo "CLAMAV_DATABASE_DIR=$AV_DB" >> "$GITHUB_ENV"
-      - name: Verify actual clean and infected scans with freshness enforcement
+      - name: Create restricted scanner verification role on disposable CI service
+        run: |
+          python - <<'PY'
+          import psycopg
+          with psycopg.connect("postgresql://postgres:synthetic-ci-only@127.0.0.1:5432/postgres", autocommit=True) as connection:
+              connection.execute("CREATE ROLE ohvr_verify LOGIN CREATEDB NOSUPERUSER NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD 'synthetic-ci-only'")
+          PY
+      - name: Verify actual clean and infected scans and HTTP gates with restricted PostgreSQL logins
         env:
           REQUIRE_REAL_CLAMAV: '1'
-        run: python -m pytest tests/test_phase5.py -q -k real_clamav --junitxml=.verification/phase5-scanner.xml
+        run: python -m pytest tests/test_phase5.py -q -k real_clamav --database postgresql --junitxml=.verification/phase5-scanner.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -141,6 +163,7 @@ jobs:
           python scripts/native_test_database.py start --bin "$PG_BIN" > .verification/native-connection.json
           export TEST_POSTGRES_ADMIN_URL="$(python -c 'import json; print(json.load(open(".verification/native-connection.json"))["url"])')"
           export PGPASSFILE="$(python -c 'import json; print(json.load(open(".verification/native-connection.json"))["passfile"])')"
+          python -m scripts.pilot_verification --expected-source "$GITHUB_SHA" --output .verification/native-security-gate.json native --bin "$PG_BIN" --server
           python scripts/verify_phase1.py --database postgresql
           python -m pytest -q --database postgresql --junitxml=.verification/native-postgresql-pytest.xml
           python -m pytest -q -m postgresql --database postgresql
@@ -163,6 +186,7 @@ jobs:
             .verification/phase8-native.xml
             .verification/phase9-native.xml
             .verification/phase9-backup-native.xml
+            .verification/native-security-gate.json
   sqlite:
     runs-on: ubuntu-latest
     steps:
@@ -226,6 +250,8 @@ jobs:
           PY
       - name: Provision hash-pinned native backup encryption tools for required verification
         run: python -m scripts.provision_test_age
+      - name: Require patched matching native server and client tools
+        run: python -m scripts.pilot_verification --expected-source "$GITHUB_SHA" --output .verification/service-native-security-gate.json native --bin /usr/lib/postgresql/18/bin --server
       - run: python scripts/verify_phase1.py --database postgresql
       - run: python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml
       - run: python -m pytest -q -m postgresql --database postgresql
@@ -243,6 +269,8 @@ jobs:
         run: python -m pytest -q tests/test_phase8.py --database postgresql --junitxml=.verification/phase8-postgresql.xml
       - name: Phase 9 ingress and shared availability controls
         run: python -m pytest -q tests/test_phase9.py tests/test_phase9_operations.py tests/test_phase9_queries.py tests/test_windows_operations.py tests/test_phase9_mfa.py tests/test_mfa_codec.py --database postgresql --junitxml=.verification/phase9-postgresql.xml
+      - name: Revision-bound representative mixed workload without competing local suites
+        run: python -m scripts.run_pilot_verification --expected-source "$GITHUB_SHA" --selection mixed --output .verification/ci-mixed
       - name: Publish safe failed-test classifications
         if: failure()
         run: |
@@ -276,3 +304,6 @@ jobs:
             .verification/phase8-postgresql.xml
             .verification/phase9-postgresql.xml
             .verification/phase9-backup-postgresql.xml
+            .verification/service-native-security-gate.json
+            .verification/ci-mixed/sanitized-report.json
+            .verification/ci-mixed/workload.json
