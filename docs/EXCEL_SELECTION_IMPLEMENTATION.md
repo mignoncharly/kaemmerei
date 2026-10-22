@@ -1,5 +1,65 @@
 # Excel-Auswahl-Export und verständlicher Import
 
+## Layoutkorrektur: ein gemeinsames Aktionsraster
+
+Nachtrag vom 22.10.2026, Implementierung
+`d250a03ac896df29dd3accdcc1bce2319271773b`:
+
+- Vorlagenlink, Dateiauswahl und Importknopf liegen im selben dreispaltigen Grid
+  mit einheitlich 48 px Höhe. Bis 700 px werden sie gleich breit gestapelt.
+  Keine kompensierenden Abstände oder Transformationen für die Ausrichtung.
+- Die native Dateiauswahl bleibt als vollständig beschriftetes, fokussierbares
+  Dateifeld erhalten und liegt innerhalb einer gleich hohen Picker-Schaltfläche.
+  Der Fokus wird am gesamten Bedienelement sichtbar markiert.
+- Formathinweis, Dateiname und Fehler stehen außerhalb der drei Grid-Zellen
+  unter der Aktionszeile. Die Erklärung ist eine kompakte nummerierte Schrittfolge.
+- Mit JavaScript bleibt der Importknopf deaktiviert, bis eine nicht leere
+  `.xlsx`-Datei bis einschließlich 10 MiB ausgewählt ist. Entfernen oder eine
+  ungültige Auswahl deaktiviert ihn erneut. Diese lokale Vorprüfung bestätigt
+  keine Arbeitsmappeninhalte; sämtliche Backendprüfungen bleiben unverändert.
+  Ohne JavaScript bleibt ein nativer Submit-Fallback mit Pflicht-Dateifeld erhalten.
+- Keine Backend-, Berechtigungs-, Export- oder sonstigen Seitenänderungen.
+
+Geänderte Implementierungsdateien: `app/templates/list.html`,
+`app/static/site.css`, `app/static/interface.js`,
+`scripts/verify_excel_selection.py`; dazu dieser Bericht.
+
+Verifikation: **31 Tests bestanden, keine Skips, 19,38 s**
+(`test_excel_selection.py`, `test_frontend_redesign.py`), JS-Syntax,
+Python-Kompilierung und `git diff --check` bestanden. Eine bestehende Starlette-
+Deprecation-Warnung bleibt. Protokolle:
+`.verification/import-grid-tests.txt` und `import-grid-tests.xml`.
+
+Der aktualisierte Browserprüfer kontrolliert bei 390/768/1280/1440 px die
+48-px-Höhen, gleiche obere Kanten auf Desktop/Tablet, gleiche Breiten und
+vertikale Reihenfolge mobil, Dateifokus, deaktivierten Ausgangszustand,
+falsche Endungen, leere/zu große Dateien, gültige Auswahl und erneutes Leeren.
+Die Rollenprüfung und tatsächlichen Import-/Export-Journeys bleiben erhalten.
+
+**Nicht ausgeführt:** Browsermessungen, Sichtprüfung und Screenshots.
+Der synthetische Server startete; der Playwright-Treiber scheiterte erneut mit
+`PermissionError / WinError 5`, bevor ein Browser gestartet wurde. Der Browser-
+Connector meldete ebenfalls keine Instanz. Evidenz:
+`.verification/import-grid-browser/result.json`, Quellstand wie oben,
+`screenshots: []`, `visual_inspection: NOT_PERFORMED`.
+Es wird keine gemessene pixelgenaue Ausrichtung behauptet.
+
+Lokal in einer für Browserprozesse autorisierten PowerShell nachprüfen:
+
+```powershell
+Set-Location 'C:\kämmerei\OPEN_HERZ_Vertragsregister_Redesign'
+$gridRun = Get-Date -Format 'yyyyMMdd-HHmmss'
+python scripts\verify_excel_selection.py --channel msedge --output ".verification\import-grid-$gridRun"
+```
+
+Anschließend die tatsächlichen `{Rolle}-import-{Breite}.png`-Aufnahmen ansehen.
+Die Nutzerreferenz `docs/korrekt.png` blieb ebenso wie die früheren Referenzbilder
+unverändert und unversioniert. Kein Push, Merge oder Deployment.
+
+---
+
+Der folgende Bericht beschreibt die zuvor implementierte Export-/Importfunktion.
+
 Stand: 22.10.2026. Worktree `OPEN_HERZ_Vertragsregister_Redesign`, Branch
 `redesign/frontend-dashboard`. Implementierung:
 `352b705cd3c0aa5cb07038876e1b7173556b29ae`.
