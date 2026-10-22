@@ -1,5 +1,13 @@
 # STRATO suitability investigation — read-only, U022
 
+U023: [the acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) adds a non-secret
+product/host evidence template and a read-only Windows inventory script. Public
+Windows product capability was rechecked; it still establishes no account
+entitlement. SFTP access does not prove administrator privileges, native database
+installation, persistent ASGI hosting, task registration or VPN/TLS capability.
+No account-specific STRATO connector or authorized host endpoint is available;
+no secret configuration or website content was inspected or changed.
+
 Conclusion: **the existing account's product and suitability remain unverified**.
 No deployment, site/account login, credentials, purchase, DNS/service change or
 real municipal data transfer was performed. Windows/PostgreSQL remains the agreed

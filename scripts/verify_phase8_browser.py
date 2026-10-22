@@ -21,9 +21,16 @@ from app.models import ContactIdentity
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--channel',choices=('chrome','msedge','chromium'),default=None)
+    parser.add_argument('--output',type=Path,default=ROOT/'.verification/phase8-browser')
     args=parser.parse_args()
-    output=ROOT/'.verification/phase8-browser';output.mkdir(parents=True,exist_ok=True)
-    results={'checks':[],'synthetic_only':True,'screen_reader_manual_test':False}
+    from scripts.pilot_verification import source_identity
+    from app.documents import reject_links
+    source=source_identity()
+    output=args.output.absolute();reject_links(output);output=output.resolve()
+    if not output.is_relative_to(ROOT/'.verification'):raise ValueError('Local verification output required')
+    output.mkdir(parents=True,exist_ok=False)
+    results={'format':'ohvr-browser-verification-v2','source':source,'checks':[],'synthetic_only':True,
+             'backend':'sqlite','scanner':'synthetic','screen_reader_manual_test':False}
     def check(name,condition):
         if not condition:raise AssertionError(name)
         results['checks'].append(name)
@@ -91,10 +98,13 @@ def main():
                     page.screenshot(path=str(output/f'reports-{width}.png'),full_page=True)
                 check('no_csp_violations',not violations)
                 results['csp_violations']=violations
+                from scripts.pilot_browser_checks import journeys
+                journeys(browser,address,client,app,check)
                 browser.close()
         finally:
             server.should_exit=True;thread.join(timeout=15);sock.close()
             if thread.is_alive():raise RuntimeError('Synthetic browser server did not stop')
+    check('source_unchanged',source_identity(source)==source)
     results['status']='passed'
     (output/'result.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(results))

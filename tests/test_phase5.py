@@ -332,7 +332,7 @@ def test_consistent_metadata_and_blob_restore_retains_hash_and_authorization(doc
         finally:restored.state.engine.dispose()
 
 
-def test_real_clamav_engine_with_current_official_database():
+def test_real_clamav_engine_with_current_official_database(documents):
     executable=os.getenv('CLAMAV_EXECUTABLE')
     if not executable:
         if os.getenv('REQUIRE_REAL_CLAMAV')=='1':pytest.fail('Real ClamAV scanner is required')
@@ -344,6 +344,24 @@ def test_real_clamav_engine_with_current_official_database():
     detected=scanner.scan(sample)
     assert clean.outcome=='clean',clean
     assert detected.outcome=='infected',detected
-    report={'clean':clean.outcome,'infected':detected.outcome,'scanner_version':clean.version,'database_freshness_enforced':True}
+    record,doc,_=upload(documents,scanner)
+    client,app,owner=documents
+    assert client.get(f'/contracts/{record}/documents/{doc}').status_code==200
+    path=f'/contracts/{record}/documents'
+    response=client.post(path,data=workflow_payload(client,path,{'csrf_token':csrf_from(client.get('/').text)}),
+        files={'documents':('synthetic-eicar.txt',sample,'text/plain')},follow_redirects=False)
+    assert response.status_code==303
+    with owner.state.session_factory() as db:
+        infected=db.scalar(select(ContractDocument).where(ContractDocument.contract_id==record,
+            ContractDocument.original_filename=='synthetic-eicar.txt'))
+        assert infected.state=='rejected'
+        infected_id=infected.id
+    response=client.get(f'/contracts/{record}/documents/{infected_id}',headers={'Range':'bytes=0-4'})
+    assert response.status_code==409 and sample not in response.content
+    import subprocess
+    report={'source':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+        'synthetic_only':True,'clean':clean.outcome,'infected':detected.outcome,'scanner_version':clean.version,
+        'database_freshness_enforced':True,'official_signatures_only':True,
+        'actual_http_clean_download':True,'actual_http_infected_download_denied':True}
     Path('.verification').mkdir(exist_ok=True)
     Path('.verification/phase5-scanner.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')

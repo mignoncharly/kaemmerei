@@ -248,7 +248,7 @@ class ClamAVScanner:
             age=datetime.now(timezone.utc)-stamp
             if age<timedelta(hours=-2) or age>timedelta(hours=self.settings.scanner_max_age_hours):
                 return ScanResult('stale_database',version[:200])
-            result=subprocess.run(command+['--no-summary','--alert-encrypted=yes','--alert-exceeds-max=yes','--alert-macros=yes',
+            result=subprocess.run(command+['--no-summary','--official-db-only=yes','--heuristic-alerts=yes','--alert-encrypted=yes','--alert-exceeds-max=yes','--alert-macros=yes',
                 '--max-filesize=30M','--max-scansize=100M','-'],input=data,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                 env=environment,timeout=self.settings.scanner_timeout,check=False)
             return ScanResult({0:'clean',1:'infected'}.get(result.returncode,'error'),version[:200])

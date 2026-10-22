@@ -1,5 +1,12 @@
 # Native component security review — U022, 22 October 2026
 
+U023: exact R43 remediation/attestation and source-bound verification commands are
+in [the synthetic acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md). Native tools
+are observed separately from psycopg's loaded libpq; the read-only attestor records
+both. Strict full client-output parsing and official-signature scanner enforcement
+are code-side controls, not native patching or gate closure. All three original
+official advisories were rechecked on 22 October 2026; no exploit attempted.
+
 The local [inventory](evidence/phase9-u022-platform.json) observes PostgreSQL
 server/client tooling 18.3. It is the dedicated loopback synthetic test platform,
 not a STRATO or municipal production host. No installed binaries, cluster data,

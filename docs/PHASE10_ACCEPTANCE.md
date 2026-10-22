@@ -1,5 +1,7 @@
 # Phase 10 — acceptance and release preparation
 
+U023: [synthetic pilot acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.
+
 U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
 
 Date: 2026-10-21. Plan: [ten-phase remediation plan](../REMEDIATION%20PLAN%20PHASES.md).

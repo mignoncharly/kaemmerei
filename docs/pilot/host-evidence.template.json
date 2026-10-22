@@ -1,0 +1,18 @@
+{
+  "format": "ohvr-nonsecret-host-evidence-v1",
+  "observed_at": null,
+  "product_tariff_name": null,
+  "product_category": null,
+  "os_family_build": null,
+  "evidence_reference": null,
+  "sftp_available": null,
+  "windows_admin_authority_verified": null,
+  "persistent_python_service_supported": null,
+  "postgresql_installation_supported": null,
+  "private_storage_and_quotas_verified": null,
+  "internal_vpn_firewall_verified": null,
+  "tls_proxy_and_database_verified": null,
+  "isolated_from_existing_website": null,
+  "backup_destination_and_restore_access_verified": null,
+  "notes": "Read-only evidence only. No credentials/account numbers/customer records. SFTP or website access does not imply administrative/service capability."
+}

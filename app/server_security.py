@@ -19,11 +19,20 @@ def validate_server_version(number):
 
 
 def validate_pg_dump_version(output):
+    return validate_client_version(output,'pg_dump')
+
+
+def validate_client_version(output,tool):
+    if tool not in ('pg_dump','pg_restore','psql'):
+        raise ValueError('Unverified PostgreSQL client tool')
     if not isinstance(output,bytes) or len(output)>4096:
         raise ValueError('Unverified PostgreSQL backup client version')
-    match=re.search(rb'^pg_dump \(PostgreSQL\) ([0-9]+)\.([0-9]+)(?:\s|$)',output)
+    match=re.fullmatch(tool.encode()+rb' \(PostgreSQL\) ([0-9]+)\.([0-9]+)(?: \([^\r\n]*\))?\r?\n?',output)
     if not match:raise ValueError('Unverified PostgreSQL backup client version')
-    validate_server_version(int(match[1])*10000+int(match[2]))
+    major,minor=int(match[1]),int(match[2])
+    if minor>=10000:raise ValueError('Invalid PostgreSQL minor version')
+    validate_server_version(major*10000+minor)
+    return major*10000+minor
 
 
 def validate_server_security(engine):
