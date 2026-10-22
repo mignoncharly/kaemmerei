@@ -62,7 +62,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         _, token = new_session(db, app.state.config.session_hours, user.id, mfa_verified=verified_mfa)
         audit(db, user.id, 'password_changed', f'user:{user.id}', sessions_revoked=True)
         db.commit()
-        return cookie_response(RedirectResponse('/', status_code=303), token,
+        return cookie_response(RedirectResponse('/?notice=password_updated', status_code=303), token,
                                production=app.state.config.production, hours=app.state.config.session_hours)
 
     @app.get('/admin/identities')
@@ -129,7 +129,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         except (ValueError, IntegrityError):
             db.rollback()
             raise HTTPException(422, 'Ungültige oder bereits vorhandene Identität; keine Änderung gespeichert') from None
-        return RedirectResponse('/admin/identities', status_code=303)
+        return RedirectResponse('/admin/identities?notice=identity_updated', status_code=303)
 
     @app.post('/admin/recipient-memberships')
     def membership(request: Request, db: Session = Depends(get_db)):
@@ -154,7 +154,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         except ValueError:
             db.rollback()
             raise HTTPException(422, 'Ungültige Teamzuordnung') from None
-        return RedirectResponse('/admin/identities', status_code=303)
+        return RedirectResponse('/admin/identities?notice=identity_updated', status_code=303)
 
     @app.post('/contracts/{contract_id}/reviews/{review_id}/assignment')
     def assign_review(request: Request, contract_id: int, review_id: int, db: Session = Depends(get_db)):
@@ -196,7 +196,7 @@ def install_identity_routes(app, *, get_db, html, base_context, user_csrf, check
         except ValueError:
             db.rollback()
             raise HTTPException(422, 'Zuweisung ohne Berechtigung oder gültige Teammitgliedschaft abgelehnt') from None
-        return RedirectResponse(f'/contracts/{contract.id}', status_code=303)
+        return RedirectResponse(f'/contracts/{contract.id}?notice=assignment_updated', status_code=303)
 
     @app.get('/reviews')
     def review_inbox(request: Request, db: Session = Depends(get_db)):

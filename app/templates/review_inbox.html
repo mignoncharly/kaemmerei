@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Zugewiesene Prüfungen{% endblock %}
 {% block content %}
-<h1>Mein Arbeitskorb</h1>
+<div class="page-head"><div><div class="eyebrow">PERSÖNLICHER ARBEITSPLATZ</div><h1>Mein Arbeitskorb</h1><p>Ihre nächsten Aufgaben und ausstehenden Prüfungen.</p></div><a class="button subtle" href="/">Zum Vertragsbestand</a></div>
 <p>Persönlich zugewiesene offene Aufgaben und aktuell entscheidbare Prüfungen zur aktuellen Inhaltsrevision. Bestehende Vertragsrechte bleiben erforderlich. Dies ist keine vollständige Administrationsliste.</p>
-<section class="panel inbox-section"><h2>Meine Prüfungen ({{ reviews|length }})</h2>
+<div class="report-deadline-grid"><section class="panel inbox-section"><div class="panel-heading"><h2>Meine Prüfungen</h2><span class="tag">{{ reviews|length }} offen</span></div>
 <ul>{% for review in reviews %}<li><a href="/contracts/{{ review.contract_id }}">{{ review.subject }}</a> · {{ contract_review_status_labels.get(review.status,review.status) }}{% if review.due_date %} · <span {% if review.due_date < today %}class="inbox-overdue"{% endif %}>{{ review.due_date.strftime('%d.%m.%Y') }}{% if review.due_date < today %} · Überfällig{% endif %}</span>{% endif %}</li>{% else %}<li>Keine zugewiesenen entscheidbaren Prüfungen.</li>{% endfor %}</ul></section>
-<section class="panel inbox-section"><h2>Meine Aufgaben ({{ tasks|length }})</h2>
+<section class="panel inbox-section"><div class="panel-heading"><h2>Meine Aufgaben</h2><span class="tag">{{ tasks|length }} offen</span></div>
 <ul>{% for task in tasks %}<li><a href="/contracts/{{ task.contract_id }}">{{ task.title }}</a>{% if task.due_date %} · <span {% if task.due_date < today %}class="inbox-overdue"{% endif %}>{{ task.due_date.strftime('%d.%m.%Y') }}{% if task.due_date < today %} · Überfällig{% endif %}</span>{% endif %}</li>{% else %}<li>Keine offenen zugewiesenen Aufgaben.</li>{% endfor %}</ul></section>
+</div>
 {% endblock %}

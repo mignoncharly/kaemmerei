@@ -2,7 +2,7 @@
 {% block title %}Mehrfaktor-Anmeldung{% endblock %}
 {% block content %}
 <section class="panel login-card">
- <h1>{% if enrolling %}Authentifikator einrichten{% else %}Anmeldecode eingeben{% endif %}</h1>
+ <div class="eyebrow">SICHERE ANMELDUNG · ZWEITER FAKTOR</div><h1>{% if enrolling %}Authentifikator einrichten{% else %}Anmeldecode eingeben{% endif %}</h1>
  <p>Konto: {{ username }}. Die Anmeldung ist erst nach erfolgreicher Codeprüfung abgeschlossen.</p>
  {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
  {% if enrolling and not seed %}

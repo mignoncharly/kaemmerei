@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from 'components.html' import icon, empty %}
+{% block title %}Übersicht{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">IHR ARBEITSPLATZ</div><h1>Alles Wichtige im Überblick.</h1><p>{% if user.role == 'department' %}Verträge, Fristen und Vorgänge für {{ user.department.name }}.{% else %}Vertragsbestand, anstehende Fristen und Ihre nächsten Aufgaben.{% endif %}</p></div>{% if can_create %}<a href="/contracts/new" class="button primary">+ Vertrag erfassen</a>{% endif %}</div>
+{% include 'partials/metrics.html' %}
+{% include 'partials/reminders.html' %}
+<div class="dashboard-layout">
+<section class="panel"><div class="panel-heading"><div><h2>Zuletzt erfasste Verträge</h2><p class="history-subtitle">Nicht archivierter Bestand in Ihrem Zugriffsbereich</p></div><a href="/" class="count">Alle anzeigen →</a></div>
+{% if contracts %}<div class="table-scroll"><table><thead><tr><th scope="col">Vertrag</th><th scope="col">Fachbereich</th><th scope="col">Status</th></tr></thead><tbody>{% for contract in contracts[:6] %}<tr><td><a class="record-link" href="/contracts/{{ contract.id }}">{{ contract.designation }}</a><small class="contract-id">{{ contract.contract_number }}</small></td><td>{{ contract.department.name }}</td><td><span class="tag">{{ status_labels.get(contract.status,contract.status) }}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}{{ empty('Ihr Vertragsregister ist bereit.', 'Sobald Verträge in Ihrem Zugriffsbereich erfasst sind, sehen Sie hier die aktuellen Einträge.') }}{% endif %}</section>
+<section class="panel"><div class="panel-heading"><h2>Direkt zum nächsten Schritt</h2></div><div class="panel-body quick-links">
+<a href="/reviews">{{ icon('tasks') }}<span><strong>Mein Arbeitskorb</strong><small>Zugewiesene Aufgaben und Prüfungen bearbeiten</small></span></a>
+<a href="/">{{ icon('contracts') }}<span><strong>Verträge finden</strong><small>Bestand durchsuchen und Unterlagen aufrufen</small></span></a>
+<a href="/reports">{{ icon('reports') }}<span><strong>Auswertungen öffnen</strong><small>Erfasste Werte und Fristen prüfen</small></span></a>
+</div></section></div>
+{% endblock %}

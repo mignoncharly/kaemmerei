@@ -8,20 +8,22 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   {% if mode == 'edit' %}<input type="hidden" name="version" value="{{ contract.version }}">{% endif %}
   <input type="hidden" name="date_description" value="{{ values.get('date_description', '') }}">
-  <div class="form-grid">
+  <fieldset class="form-section"><legend>01 · Allgemeine Vertragsdaten</legend><div class="form-grid">
    <div><label for="external_reference">Externe Referenz (optional, eindeutig im Fachbereich)</label><input id="external_reference" name="external_reference" maxlength="120" value="{{ values.get('external_reference') or '' }}"></div>
-   <div><label for="value_basis">Wertbasis (EUR)</label><select id="value_basis" name="value_basis">{% for code,label in (('unknown','Unbekannt'),('net','Netto'),('gross','Brutto')) %}<option value="{{ code }}" {% if values.get('value_basis', 'unknown') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
    <div class="wide"><label for="designation">Bezeichnung *</label><input id="designation" name="designation" maxlength="200" required value="{{ values.get('designation', '') }}" placeholder="Eindeutige Bezeichnung des Vertrags"></div>
    <div><label for="contract_type">Vertragsart *</label><select id="contract_type" name="contract_type" required><option value="">Bitte auswählen</option>
     {% for kind in contract_types %}<option value="{{ kind }}" {% if values.get('contract_type', '') == kind %}selected{% endif %}>{{ kind }}</option>{% endfor %}
     {% set current_type = values.get('contract_type', '') %}{% if current_type and current_type not in contract_types %}<option value="{{ current_type }}" selected>{{ current_type }}</option>{% endif %}
    </select></div>
    <div><label for="contract_partner">Vertragspartner</label><input id="contract_partner" name="contract_partner" maxlength="200" value="{{ values.get('contract_partner', '') }}" placeholder="Name des Unternehmens oder Vertragspartners"></div>
+  </div></fieldset><fieldset class="form-section"><legend>02 · Vertragslaufzeit & Kündigung</legend><div class="form-grid">
    <div><label for="relevant_date">Vertragsbeginn *</label><input id="relevant_date" name="relevant_date" type="date" required value="{{ values.get('relevant_date', '') }}"></div>
    <div><label for="end_date">Vertragsende</label><input id="end_date" name="end_date" type="date" value="{{ values.get('end_date', '') }}"></div>
    <div><label for="notice_period_months">Kündigungsfrist (Monate)</label><input id="notice_period_months" name="notice_period_months" type="number" min="0" max="120" step="1" value="{{ values.get('notice_period_months', '') }}" placeholder="z. B. 3"></div>
    <div class="wide"><input type="hidden" name="automatic_renewal" value="0"><label class="check-label"><input type="checkbox" name="automatic_renewal" value="1" {% if values.get('automatic_renewal') %}checked{% endif %}> Vertrag verlängert sich automatisch</label></div>
    <div><label for="renewal_period_months">Verlängerungszeitraum (Monate)</label><input id="renewal_period_months" name="renewal_period_months" type="number" min="1" max="120" step="1" value="{{ values.get('renewal_period_months', '') }}" placeholder="z. B. 12"><small class="hint">Bei automatischer Verlängerung erforderlich.</small></div>
+  </div></fieldset><fieldset class="form-section"><legend>03 · Finanzielle Angaben</legend><div class="form-grid">
+   <div><label for="value_basis">Wertbasis (EUR)</label><select id="value_basis" name="value_basis">{% for code,label in (('unknown','Unbekannt'),('net','Netto'),('gross','Brutto')) %}<option value="{{ code }}" {% if values.get('value_basis', 'unknown') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
    <div><label for="annual_value">Jahreswert (€)</label><input id="annual_value" name="annual_value" type="number" min="0" max="9999999999.99" step="0.01" value="{{ values.get('annual_value', '') }}" placeholder="z. B. 12000,00"><small class="hint">Optionaler Netto- oder Bruttowert gemäß Vertrag</small></div>
    <div><label for="contract_value">Gesamtvertragswert (€)</label><input id="contract_value" name="contract_value" type="number" min="0" max="9999999999.99" step="0.01" value="{{ values.get('contract_value', '') }}" placeholder="z. B. 48000,00"></div>
    <div><label for="financial_direction">Einnahme oder Ausgabe</label><select id="financial_direction" name="financial_direction"><option value="">Nicht festgelegt</option>{% for code, label in financial_directions %}<option value="{{ code }}" {% if values.get('financial_direction', '') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
@@ -31,8 +33,10 @@
     {% for assignment in budget_choices %}<option value="{{ assignment }}" {% if values.get('budget_assignment', '') == assignment %}selected{% endif %}>{{ assignment }}</option>{% endfor %}
     {% set current_assignment = values.get('budget_assignment', '') %}{% if current_assignment and current_assignment not in budget_choices %}<option value="{{ current_assignment }}" selected>{{ current_assignment }}</option>{% endif %}
    </select></div>
+  </div></fieldset><fieldset class="form-section"><legend>04 · Steuerliche Prüfung</legend><div class="form-grid">
    <div><label for="tax_review_status">§ 2b UStG-Prüfstatus</label><select id="tax_review_status" name="tax_review_status" {% if user.role != 'admin' %}disabled{% endif %}>{% for code, label in tax_review_statuses %}<option value="{{ code }}" {% if values.get('tax_review_status', 'not_checked') == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>{% if user.role != 'admin' %}<input type="hidden" name="tax_review_status" value="{{ values.get('tax_review_status','not_checked') }}"><small>Die steuerliche Bewertung ist der Administration vorbehalten.</small>{% endif %}</div>
    <div class="wide"><label for="tax_review_result">Prüfergebnis / Begründung</label><textarea id="tax_review_result" name="tax_review_result" {% if user.role != 'admin' %}readonly{% endif %} maxlength="3000" rows="4" placeholder="Ergebnis, Begründung und ggf. nächste Schritte dokumentieren">{{ values.get('tax_review_result', '') }}</textarea><small class="hint">Bei Status „Abgeschlossen“ ist ein dokumentiertes Ergebnis erforderlich. Beim Abschluss werden prüfende Person und Zeitpunkt automatisch festgehalten.</small></div>
+  </div></fieldset><fieldset class="form-section"><legend>05 · Zuständigkeit & Bearbeitung</legend><div class="form-grid">
    <div><label for="contact_person">Zuständige Person *</label><select id="contact_person" name="contact_person" required><option value="">Bitte auswählen</option>
     {% for person in contact_persons %}<option value="{{ person }}" {% if values.get('contact_person', '') == person %}selected{% endif %}>{{ person }}</option>{% endfor %}
     {% set current_person = values.get('contact_person', '') %}{% if current_person and current_person not in contact_persons %}<option value="{{ current_person }}" selected>{{ current_person }}</option>{% endif %}
@@ -45,9 +49,9 @@
    <div class="wide"><label for="department_id">Zuständiger Fachbereich *</label>
    {% if user.role == 'admin' %}
    <select id="department_id" name="department_id" required><option value="">Bitte auswählen</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if values.get('department_id', '')|string == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select>
-   {% else %}<div class="read-only">{{ user.department.name }}</div><p class="hint">Ihr Fachbereich wird automatisch übernommen.</p>{% endif %}</div>
+   {% else %}<div class="read-only" id="department_id" role="textbox" aria-readonly="true" aria-label="Zuständiger Fachbereich">{{ user.department.name }}</div><p class="hint">Ihr Fachbereich wird automatisch übernommen.</p>{% endif %}</div>
    {% if mode == 'new' %}<div class="wide"><label for="documents">Vertragsunterlagen (optional)</label><input id="documents" name="documents" type="file" accept=".pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.csv,.png,.jpg,.jpeg,.gif" multiple><small class="hint">Bis zu 5 Dateien, jeweils maximal 25 MB. Weitere Dateien und DMS-Verknüpfungen können später am Vertrag ergänzt werden.</small></div>{% endif %}
-  </div>
+  </div></fieldset>
   <div class="form-actions"><a class="button subtle" href="{{ '/' if mode == 'new' else '/contracts/' ~ contract.id }}">Abbrechen</a><button type="submit" class="button primary">{{ 'Vertrag speichern' if mode == 'new' else 'Änderungen speichern' }}</button></div>
  </form>
 </section>
