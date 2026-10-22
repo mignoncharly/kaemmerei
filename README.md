@@ -1,5 +1,7 @@
 # OPEN.HERZ Vertragsregister
 
+Current integrated application: `OPEN_HERZ_Vertragsregister_Phase`, branch `release/redesign-integration`. Separate redesign development is retired. [Integration, exact verification limits and blocked deployment](docs/INTEGRATED_RELEASE.md). The historical evidence below applies only to its stated commits.
+
 U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](docs/U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
 
 U023: [synthetic pilot acceptance package](docs/SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.

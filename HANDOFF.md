@@ -1,5 +1,7 @@
 # Implementation handoff and current state
 
+Current integrated application: `OPEN_HERZ_Vertragsregister_Phase`, branch `release/redesign-integration`. Separate redesign development is retired. [Integration, exact verification limits and blocked deployment](docs/INTEGRATED_RELEASE.md). The historical evidence below applies only to its stated commits.
+
 Last updated: 2026-10-22\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
