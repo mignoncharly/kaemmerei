@@ -101,6 +101,50 @@
       else if (location.hash === '#contract-toolbar' || location.hash === '#q') filterToggle.focus({preventScroll: true});
     });
   }
+  const selectionForm = document.querySelector('#selection-export-form');
+  if (selectionForm) {
+    const boxes = [...document.querySelectorAll('.select-contract')];
+    const all = document.querySelector('#select-page');
+    const exportButton = document.querySelector('#export-selection');
+    const ids = document.querySelector('#selected-contract-ids');
+    const count = document.querySelector('#selection-count');
+    function syncSelection() {
+      const selected = boxes.filter(box => box.checked);
+      ids.value = selected.map(box => box.value).join(',');
+      all.checked = selected.length === boxes.length;
+      all.indeterminate = selected.length > 0 && selected.length < boxes.length;
+      selectionForm.hidden = selected.length === 0;
+      exportButton.disabled = selected.length === 0;
+      count.textContent = selected.length === 1 ? '1 Vertrag ausgewählt'
+        : selected.length === boxes.length ? `Alle ${selected.length} Verträge auf dieser Seite ausgewählt`
+        : `${selected.length} Verträge ausgewählt`;
+      boxes.forEach(box => box.closest('tr').classList.toggle('export-selected', box.checked));
+    }
+    function clearSelection() { boxes.forEach(box => { box.checked = false; }); syncSelection(); }
+    document.querySelectorAll('[data-selection-cell]').forEach(cell => { cell.hidden = false; });
+    boxes.forEach(box => box.addEventListener('change', syncSelection));
+    all.addEventListener('change', () => { boxes.forEach(box => { box.checked = all.checked; }); syncSelection(); });
+    document.querySelector('#clear-selection').addEventListener('click', () => { clearSelection(); all.focus(); });
+    selectionForm.addEventListener('submit', event => {
+      syncSelection();
+      if (exportButton.disabled) event.preventDefault();
+      // Native POST/download: backend errors remain visible; no speculative success toast.
+    });
+    filterForm?.addEventListener('input', clearSelection);
+    filterForm?.addEventListener('change', clearSelection);
+    window.addEventListener('pagehide', clearSelection);
+    window.addEventListener('pageshow', clearSelection); // Includes restored back/forward pages.
+    clearSelection();
+  }
+  const excelFile = document.querySelector('#excel-file');
+  if (excelFile) {
+    const filename = document.createElement('span');
+    filename.className = 'excel-filename'; filename.setAttribute('role', 'status');
+    excelFile.after(filename);
+    excelFile.addEventListener('change', () => {
+      filename.textContent = excelFile.files.length ? 'Ausgewählt: ' + excelFile.files[0].name : '';
+    });
+  }
   document.querySelectorAll('input,select,textarea').forEach(input => {
     const hint = input.parentElement.querySelector('.hint,.field-hint');
     if (hint && input.id && !input.hasAttribute('aria-describedby')) {
@@ -124,6 +168,7 @@
   const alert = document.querySelector('main .alert[role="alert"]');
   if (alert) { alert.tabIndex = -1; alert.focus(); }
   document.querySelectorAll('form[method="post"]').forEach(form => {
+    if (form === selectionForm) return; // A native file download does not navigate the page.
     form.addEventListener('submit', () => {
       if (form.dataset.submitted) return;
       form.dataset.submitted = 'true';

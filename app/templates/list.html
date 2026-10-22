@@ -49,10 +49,17 @@
  <a class="reset-filters" href="{{ toolbar.reset_url }}">Alle Filter zurücksetzen</a>
 </div>{% endif %}
 <section class="panel table-panel">
- <div class="panel-heading contract-list-heading"><div><h2>{% if focus_label %}{{ focus_label }}{% elif selected_status == 'archived' %}Archivierte Verträge{% else %}Nicht archivierte Verträge{% endif %} <span class="contract-result-count">({{ total_count }})</span></h2><span class="count">{{ contracts|length }} auf dieser Seite</span></div><div class="contract-export"><a href="{{ toolbar.export_url }}" aria-describedby="export-limit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5"/></svg> Excel exportieren</a><small id="export-limit">Alle Treffer · max. 5.000</small></div></div>
+ <div class="panel-heading contract-list-heading"><div><h2>{% if focus_label %}{{ focus_label }}{% elif selected_status == 'archived' %}Archivierte Verträge{% else %}Nicht archivierte Verträge{% endif %} <span class="contract-result-count">({{ total_count }})</span></h2><span class="count">{{ contracts|length }} auf dieser Seite</span></div>{% if can_export %}<div class="contract-export"><a href="{{ toolbar.export_url }}" aria-describedby="export-limit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5"/></svg> Alle Treffer exportieren</a><small id="export-limit">Alle gefilterten Treffer · max. 5.000</small></div>{% endif %}</div>
  {% if contracts %}
- <div class="table-scroll"><table><thead><tr><th scope="col">Bezeichnung / Nummer</th><th scope="col">Vertragsart</th><th scope="col">Vertragsstatus</th><th scope="col">§ 2b UStG-Prüfung</th><th scope="col">Beginn</th><th scope="col">Fachbereich</th><th scope="col">Verantwortlich / Vertretung</th><th scope="col"><span class="visually-hidden">Aktionen</span></th></tr></thead>
- <tbody>{% for contract in contracts %}<tr><td><a class="record-link" href="/contracts/{{ contract.id }}">{{ contract.designation }}</a><small class="contract-id">{{ contract.contract_number }}</small></td><td>{{ contract.contract_type }}</td><td>{% if contract.archived_at %}Archiviert{% else %}{{ status_labels.get(contract.status, contract.status) }}{% endif %}</td><td><span class="tax-review-tag tax-review-{{ contract.tax_review_status }}">{{ tax_review_labels.get(contract.tax_review_status, contract.tax_review_status) }}</span></td><td class="nowrap">{{ contract.relevant_date.strftime('%d.%m.%Y') }}</td><td>{{ contract.department.name }}</td><td>{{ contract.contact_person or '–' }}{% if contract.deputy_contact_person %}<small class="contract-id">Vertretung: {{ contract.deputy_contact_person }}</small>{% endif %}</td><td class="nowrap"><a href="/contracts/{{ contract.id }}">Ansehen ›</a></td></tr>{% endfor %}</tbody></table></div>
+ {% if can_export %}
+ <form id="selection-export-form" class="selection-export" method="post" action="/contracts/export-selected.xlsx" hidden>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="contract_ids" id="selected-contract-ids" value="">
+  <strong id="selection-count" role="status" aria-live="polite"></strong>
+  <div><button class="button primary" type="submit" id="export-selection" disabled>Ausgewählte Verträge exportieren</button><button class="button subtle" type="button" id="clear-selection">Auswahl aufheben</button></div>
+ </form>
+ {% endif %}
+ <div class="table-scroll"><table><thead><tr>{% if can_export %}<th class="selection-cell" scope="col" data-selection-cell hidden><input type="checkbox" id="select-page" aria-label="Alle Verträge auf dieser Seite für den Export auswählen"></th>{% endif %}<th scope="col">Bezeichnung / Nummer</th><th scope="col">Vertragsart</th><th scope="col">Vertragsstatus</th><th scope="col">§ 2b UStG-Prüfung</th><th scope="col">Beginn</th><th scope="col">Fachbereich</th><th scope="col">Verantwortlich / Vertretung</th><th scope="col"><span class="visually-hidden">Aktionen</span></th></tr></thead>
+ <tbody>{% for contract in contracts %}<tr>{% if can_export %}<td class="selection-cell" data-selection-cell hidden><input type="checkbox" class="select-contract" value="{{ contract.id }}" aria-label="{{ contract.contract_number }} – {{ contract.designation }} für den Export auswählen"></td>{% endif %}<td><a class="record-link" href="/contracts/{{ contract.id }}">{{ contract.designation }}</a><small class="contract-id">{{ contract.contract_number }}</small></td><td>{{ contract.contract_type }}</td><td>{% if contract.archived_at %}Archiviert{% else %}{{ status_labels.get(contract.status, contract.status) }}{% endif %}</td><td><span class="tax-review-tag tax-review-{{ contract.tax_review_status }}">{{ tax_review_labels.get(contract.tax_review_status, contract.tax_review_status) }}</span></td><td class="nowrap">{{ contract.relevant_date.strftime('%d.%m.%Y') }}</td><td>{{ contract.department.name }}</td><td>{{ contract.contact_person or '–' }}{% if contract.deputy_contact_person %}<small class="contract-id">Vertretung: {{ contract.deputy_contact_person }}</small>{% endif %}</td><td class="nowrap"><a href="/contracts/{{ contract.id }}">Ansehen ›</a></td></tr>{% endfor %}</tbody></table></div>
  {% else %}<div class="empty"><p>Keine passenden Verträge gefunden.</p>{% if can_create and not archived %}<a href="/contracts/new">Ersten Vertrag erfassen</a>{% endif %}</div>{% endif %}
 </section>
 <nav class="pagination" aria-label="Ergebnisseiten">
@@ -60,6 +67,33 @@
 <span>Seite {{ page }} von {{ page_count }} ({{ total_count }} Treffer)</span>
 {% if next_page_url %}<a rel="next" href="{{ next_page_url }}">Nächste Seite</a>{% endif %}
 </nav>
-{% if can_create %}<details class="panel excel-import-panel"><summary>Excel-Import · mehrere Verträge erfassen</summary><p>Nur Neuanlage: Die automatisch erzeugte Vertragsnummer muss beim Import leer bleiben. Eine optionale externe Referenz ist innerhalb eines Fachbereichs eindeutig, auch im Archiv; Groß-/Kleinschreibung wird unterschieden. Gleiche Bezeichnungen sind möglich. Ohne externe Referenz erzeugt ein wiederholter Import neue Verträge. Formeln und Arbeitsmappen im Datumssystem 1904 sind nicht zulässig. Excel sichert weder Dokumente noch Historie.</p><div><h2>Vertragsliste importieren</h2><p class="history-subtitle">Excel-Vorlage laden, ausfüllen und bis zu 500 Verträge auf einmal übernehmen.</p><small class="hint">Pflicht: Bezeichnung, Vertragsart, Vertragsbeginn, zuständige Person; Admins zusätzlich Fachbereich. Datum als JJJJ-MM-TT. Nur .xlsx bis 10 MB; bei Fehlern wird nichts importiert.</small></div><div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a><form method="post" action="/contracts/import" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="visually-hidden" for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required><button class="button primary" type="submit">Import starten</button></form></div></details>{% endif %}
+{% if can_create %}
+<section class="panel excel-import-panel" aria-labelledby="excel-import-title">
+ <h2 id="excel-import-title">Verträge aus Excel importieren</h2>
+ <p>Mehrere neue Verträge gleichzeitig erfassen. Bis zu 500 Verträge pro Datei.</p>
+ <ol class="excel-import-steps"><li>Excel-Vorlage herunterladen.</li><li>Vertragsdaten in der Vorlage ausfüllen.</li><li>Excel-Datei auswählen und Import starten.</li></ol>
+ <div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a>
+  <form method="post" action="/contracts/import" enctype="multipart/form-data" id="excel-import-form">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <div class="excel-file-control"><label for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required aria-describedby="excel-file-hint"><small id="excel-file-hint">Nur .xlsx bis 10 MB. Der gewählte Dateiname erscheint im Dateifeld.</small></div>
+   <button class="button secondary" type="submit">Import starten</button>
+  </form>
+ </div>
+ <p class="hint">Nur neue Verträge, keine Aktualisierung vorhandener Datensätze.</p>
+ <details class="excel-import-notes"><summary>Hinweise zum Excel-Import</summary>
+  <ul>
+   <li><strong>Pflichtfelder:</strong> Bezeichnung, Vertragsart, Vertragsbeginn und zuständige Person; als Administrator zusätzlich ein aktiver Fachbereich. Fachbereichsnutzer importieren in ihren eigenen Fachbereich.</li>
+   <li><strong>Datei:</strong> .xlsx bis 10 MB, höchstens 500 Vertragszeilen. Es wird das erste Tabellenblatt verarbeitet. Verwenden Sie die vorgegebenen Spalten; unbekannte oder doppelte Spalten werden abgelehnt.</li>
+   <li><strong>Datum:</strong> JJJJ-MM-TT oder gültige Excel-Datumswerte im 1900-Datumssystem. Das 1904-Datumssystem wird nicht unterstützt.</li>
+   <li><strong>Neuanlage:</strong> Die Vertragsnummer muss leer bleiben und wird automatisch erzeugt. Vorhandene Verträge werden nicht aktualisiert oder überschrieben. Status „Aktiv“ kann nicht ohne belegte Freigabe importiert werden; verwenden Sie „Entwurf“. Fachliche Pflicht- und Berechtigungsprüfungen gelten weiterhin.</li>
+   <li><strong>Externe Referenz:</strong> Optional, aber innerhalb eines Fachbereichs eindeutig, auch im Archiv. Groß- und Kleinschreibung werden unterschieden. Bereits vorhandene oder in der Datei wiederholte Referenzen führen zur Ablehnung.</li>
+   <li><strong>Duplikate:</strong> Gleiche Bezeichnungen sind möglich. Ohne externe Referenz legt ein wiederholter Import neue Verträge an. Übereinstimmende Stammdaten werden zur manuellen Prüfung gemeldet und nicht automatisch zusammengeführt.</li>
+   <li><strong>Excel-Inhalte:</strong> Nur Werte verwenden; Formel- und Excel-Fehlerzellen werden abgelehnt. Formelergebnisse vorher als Werte einfügen.</li>
+   <li><strong>Fehler:</strong> Bei fehlerhaften Zeilen wird kein Vertrag aus der Datei übernommen. Korrigieren Sie die gemeldeten Zeilen und starten Sie den Import erneut.</li>
+   <li>Excel-Dateien sichern keine Vertragsdokumente, Anhänge oder Änderungshistorie.</li>
+  </ul>
+ </details>
+</section>
+{% endif %}
 </div>
 {% endblock %}

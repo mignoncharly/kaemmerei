@@ -97,7 +97,7 @@ def test_compact_overview_search_chip_and_scoped_summary(environment):
     start=response.text.index('id="advanced-filter-disclosure"')
     end=response.text.index('</details>',start)
     assert start < response.text.index('id="q"') < end
-    assert response.text.index('contract-list-heading') < response.text.index('Excel exportieren')
+    assert response.text.index('contract-list-heading') < response.text.index('Alle Treffer exportieren')
     search=client.get('/?q=Synthetic&page_size=25')
     assert [c['key'] for c in search.context['toolbar']['chips']]==['q']
     assert 'Suche &amp; Filter (1)' in search.text

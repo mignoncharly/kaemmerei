@@ -67,3 +67,27 @@ def listing_toolbar(filters, page_size, user, departments, focus_labels):
     return dict(chips=chips, reset_url=url({}),
                 clear_search_url=url({k: v for k, v in applied.items() if k != 'q'}),
                 export_url='/contracts/export.xlsx' + ('?' + urlencode(applied) if applied else ''))
+
+
+def import_error_message(message):
+    """Translate controlled parser diagnostics for the UI; keep row/cell context."""
+    import re
+    message = re.sub(r'\bRow (\d+)', r'Zeile \1', str(message))
+    translations = {
+        'Formula cells are not supported; paste literal values first.': 'Formeln sind nicht zulässig. Bitte die Ergebnisse als feste Werte einfügen.',
+        'Excel error cell; replace with a literal value.': 'Die Excel-Zelle enthält einen Fehler. Bitte durch einen gültigen Wert ersetzen.',
+        'Too many ZIP members or duplicate ZIP paths.': 'Die Arbeitsmappe enthält zu viele oder doppelte Dateibestandteile. Bitte eine neue Datei mit der Vorlage erstellen.',
+        '1904 workbook date system is not supported; use ISO date strings in a 1900 workbook.': 'Das 1904-Datumssystem wird nicht unterstützt. Bitte JJJJ-MM-TT in einer Arbeitsmappe mit 1900-Datumssystem verwenden.',
+        'Invalid worksheet relationship target.': 'Die Verknüpfung zum Tabellenblatt ist ungültig. Bitte die Excel-Vorlage verwenden.',
+        'Invalid worksheet row number.': 'Ungültige Zeilennummer im Tabellenblatt.',
+        'Invalid or repeated worksheet row number.': 'Ungültige oder wiederholte Zeilennummer im Tabellenblatt.',
+        'invalid cell reference': 'ungültiger Zellverweis',
+        'duplicate or out-of-range column.': 'doppelte Spalte oder Spalte außerhalb des zulässigen Bereichs.',
+        'Unsupported column:': 'Nicht unterstützte Spalte:',
+        '. Remove it explicitly before importing.': '. Bitte diese Spalte vor dem Import entfernen.',
+        'Duplicate column:': 'Doppelte Spalte:',
+        'Invalid Excel date: use a whole supported day serial or ISO date; serial 60 is fictitious.': 'Ungültiges Excel-Datum. Bitte JJJJ-MM-TT oder einen gültigen ganzzahligen Datumswert verwenden; der Excel-Datumswert 60 ist nicht zulässig.',
+    }
+    for original, translated in translations.items():
+        message = message.replace(original, translated)
+    return message

@@ -121,7 +121,7 @@ def execute(args, output, result):
                     check(role+'_active_filter_count','Suche & Filter (4)' in page.locator('#filter-toggle').inner_text())
                     page.get_by_role('link',name='Nächste Seite',exact=True).click();page.wait_for_load_state('networkidle')
                     check(role+'_pagination',page.locator('.table-panel tbody tr').count()==expected-25)
-                    with page.expect_download() as event:page.get_by_role('link',name='Excel exportieren',exact=True).click()
+                    with page.expect_download() as event:page.get_by_role('link',name='Alle Treffer exportieren',exact=True).click()
                     download=event.value
                     with ZipFile(BytesIO(Path(download.path()).read_bytes())) as book:
                         sheet=ET.fromstring(book.read('xl/worksheets/sheet1.xml'))

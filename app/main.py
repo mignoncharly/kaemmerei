@@ -26,7 +26,7 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
-from app.presentation import safe_values, review_options, listing_toolbar, FIELD_LABELS
+from app.presentation import safe_values, review_options, listing_toolbar, import_error_message, FIELD_LABELS
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
 from app.documents import ensure_storage, stage_upload, new_document, process_document, download_response, audit_denied, ClamAVScanner, MEDIA
@@ -39,7 +39,7 @@ from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, re
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.dates import add_months, calculate_notice_deadline, calculate_next_end_date, contract_dates
 from app.financial import current_groups, inventory_trend
-from app.listing import normalize_filters, filtered_contracts, EXPORT_MAX_ROWS
+from app.listing import normalize_filters, filtered_contracts, selected_export_ids, EXPORT_MAX_ROWS
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
 from app.options import (BUDGET_ASSIGNMENTS, CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
@@ -56,6 +56,7 @@ REMINDER_WINDOW_DAYS = 90
 DOCUMENT_TYPES = MEDIA
 TEMPLATES = Jinja2Templates(directory=str(BASE / "templates"))
 TEMPLATES.env.globals['recovery_labels']=FIELD_LABELS
+TEMPLATES.env.filters['import_error_message']=import_error_message
 TEMPLATES.env.globals['new_request_id']=lambda: str(uuid4())
 TEMPLATES.env.filters["euro"] = lambda amount: format_euro(amount)
 SUCCESS_NOTICES = {
@@ -120,7 +121,7 @@ def html(request: Request, template: str, context: dict, status_code: int = 200)
         if request.query_params.get("notice") == "imported" and request.query_params.get("imported_count", "").isdigit():
             notice += f" {request.query_params.get('imported_count')} Verträge wurden übernommen."
             if ambiguity.isdigit() and 0 < int(ambiguity[:4]) <= MAX_IMPORT_ROWS:
-                context['import_warning'] = f'{int(ambiguity[:4])} rows match existing descriptions; review the new records. Descriptions are not unique identities.'
+                context['import_warning'] = f'{int(ambiguity[:4])} Zeilen haben übereinstimmende Stammdaten. Bitte prüfen Sie die neu angelegten Verträge. Bezeichnungen allein sind keine eindeutigen Identifikatoren.'
         context = {**context, "notice": notice}
     return TEMPLATES.TemplateResponse(request, template, context, status_code=status_code)
 
@@ -995,6 +996,36 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, _csrf = user_csrf(request, db)
         _filters, stmt = listing_spec(db, user, locals())
         contracts_to_export = db.scalars(stmt.options(joinedload(Contract.department)).limit(EXPORT_MAX_ROWS+1)).all()
+        return export_response(contracts_to_export)
+
+    @app.post('/contracts/export-selected.xlsx')
+    def export_selected_contracts(request: Request, db: Session = Depends(get_db)):
+        user, _csrf = user_csrf(request, db)
+        form = parsed_form(request, max_files=0, max_fields=2)
+        require_csrf(request, db, str(form.get('csrf_token', '')))
+        if len(form.getlist('contract_ids')) != 1 or len(form.getlist('csrf_token')) != 1:
+            raise HTTPException(422, 'Bitte eine eindeutige Vertragsauswahl übermitteln.')
+        try:
+            ids = selected_export_ids(form.get('contract_ids'), EXPORT_MAX_ROWS)
+        except OverflowError as exc:
+            raise HTTPException(413, str(exc)) from None
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+        # Includes archive records, with exactly the same effective read scope as XLSX.
+        # One scoped query; no per-ID existence checks disclosing foreign records.
+        records = db.scalars(contract_query(user).where(Contract.id.in_(ids))
+            .options(joinedload(Contract.department))
+            .order_by(Contract.updated_at.desc(), Contract.id.desc()).limit(EXPORT_MAX_ROWS+1)).all()
+        if len(records) != len(ids):
+            raise HTTPException(404, 'Die Auswahl enthält nicht verfügbare Verträge. Es wurde keine Datei erstellt. Bitte die Liste neu laden und erneut auswählen.')
+        response = export_response(records)
+        audit(db, user.id, 'contract_selection_export_prepared', 'contracts',
+              record_count=len(records), contract_ids=[record.id for record in records])
+        db.commit()
+        return response
+
+    def export_response(contracts_to_export):
+        # Shared serialization and budgets for both complete-filter and explicit-ID exports.
         if len(contracts_to_export) > EXPORT_MAX_ROWS:
             raise HTTPException(413, 'Der Export ist auf 5000 Verträge begrenzt. Bitte die Filter eingrenzen.')
         payment_labels = dict(PAYMENT_INTERVALS)
@@ -1222,7 +1253,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 errors.append(f'Row {row_number}: {exc}')
                 continue
             if row.get('contract_number'):
-                errors.append(f'Row {row_number}: create-only import generates contract numbers. Remove Vertragsnummer; use external_reference for source identity.')
+                errors.append(f'Zeile {row_number}: Die Vertragsnummer wird bei der Neuanlage erzeugt und muss leer bleiben. Verwenden Sie bei Bedarf eine externe Referenz.')
                 continue
             for key in ("notice_period_months", "renewal_period_months"):
                 raw = row.get(key, "")
@@ -1262,7 +1293,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             try:
                 values = validate_data(row, user, db)
                 if values["status"]=="active":
-                    raise ValidationError("Imported active status has no verifiable approval; import as draft")
+                    raise ValidationError('Status „Aktiv“ hat keine belegte Freigabe. Bitte als Entwurf importieren.')
                 tax_values(user,None,values)
             except ValidationError as exc:
                 errors.append(f"Zeile {row_number}: {exc}")
@@ -1287,7 +1318,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if reference:
                 key = (values['department_id'], reference)
                 if key in existing_keys or key in imported_keys:
-                    errors.append(f'Row {row_number}: external reference already exists in this department or workbook.')
+                    errors.append(f'Zeile {row_number}: Die externe Referenz ist in diesem Fachbereich oder in der Datei bereits vorhanden.')
                 imported_keys.add(key)
         if errors:
             return html(request, "import_result.html", {**base_context(request, user, csrf),
@@ -1372,6 +1403,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         contact_persons = list(CONTACT_PERSONS) + sorted(stored_people - set(CONTACT_PERSONS))
         return html(request, 'dashboard.html' if dashboard_view else 'list.html', {**base_context(request, user, csrf),
                     "toolbar": listing_toolbar(filters, page_size, user, departments, focus_labels),
+                    "can_export": active_access(user),
                     "contracts": items, "total_count": total_count, "page":page, "page_size":page_size,
                     "page_count":page_count, "previous_page_url":page_url(page-1) if page>1 else None,
                     "next_page_url":page_url(page+1) if page<page_count else None,
