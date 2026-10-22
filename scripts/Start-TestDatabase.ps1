@@ -4,7 +4,7 @@
     [string]$PostgresBin = "C:\Program Files\PostgreSQL\18\bin",
     [ValidateRange(1024,65535)][int]$Port = 55432
 )
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop" 
 switch ($Backend) {
     "Native" {
         & (Join-Path $PSScriptRoot "Start-NativeTestDatabase.ps1") -Python $Python -PostgresBin $PostgresBin -Port $Port

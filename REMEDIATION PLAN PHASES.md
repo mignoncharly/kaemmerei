@@ -1,5 +1,7 @@
 # Remediation plan — 10 implementation phases
 
+U026 hosted CI execution **and local artifact preservation VERIFIED** at exact commit `3d4a180297db801293e4b86e42e9f60a55fbca86`: 10/10 jobs in [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267); nine original ZIP/member checks, native-link cases and identical nested releases validated. [Integrity evidence](docs/evidence/u026-artifacts-verified.json), [next operator steps](docs/U026_NEXT_ACTIONS.md). Intended-host R43/scanner/TLS and all twelve participant/municipal gates remain separate and open; no merge, rerun or deployment.
+
 U025: local Microsoft Edge U024 is **VERIFIED**, 32 checks, synthetic only, source
 `d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`, result SHA-256
 `2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.

@@ -1,10 +1,12 @@
 # U026 operator handoff — prepared, unpublished
 
+U026 hosted CI execution and local artifact preservation are both **VERIFIED** for exact commit `3d4a180297db801293e4b86e42e9f60a55fbca86`, [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267). All ten jobs passed; all nine saved ZIPs match published SHA-256/CRC/member hashes; required Windows/Linux native-link cases and identical nested releases are validated. [Original report/integrity receipt](evidence/u026-artifacts-verified.json), [verified execution scope](U026_HOSTED_CI_EXECUTION.md), [next operator steps](U026_NEXT_ACTIONS.md). Intended-host R43/TLS, approved host scanner/configuration, twelve NOT_RUN participant scenarios and municipal authorizations remain open. No rerun, artifact recreation, merge or deployment.
+
 Repository: `https://github.com/mignoncharly/kaemmerei`, remote `origin`.
 Local review branch: `review/u026-synthetic-pilot`.
 Workflow: `.github/workflows/phase1-verification.yml` (`Phase 1 verification foundation`).
 The final local review manifest records the exact commit and committed workflow SHA-256.
-No push, PR, workflow dispatch or hosted execution has been performed or authorized.
+Publication and all ten hosted executions subsequently completed successfully at 3d4a180. No main merge or deployment is authorized. The prepared manifest remains historical; final evidence is linked above.
 
 ## Publication and ten final-source checks
 
@@ -22,7 +24,7 @@ evidence linked from the U026 remaining-gates record. It identifies these ten ru
 | sqlite | ubuntu-latest |
 | postgresql | ubuntu-24.04 |
 
-All hosted outcomes are NOT_RUN. Local YAML checks are not hosted results. Publishing
+All ten hosted jobs are now independently confirmed successful at 3d4a180. No new publication/rerun is required. The following was the prepared publication procedure: publishing
 this branch triggers the workflow's existing push event automatically; publication
 approval must account for the hosted jobs, dependency downloads and disposable CI
 services. Do not push merely to find out whether CI works. After explicit approval,

@@ -1,11 +1,14 @@
 # U026 review preparation and remaining gates
 
+U026 hosted CI execution and local artifact preservation are both **VERIFIED** for exact commit `3d4a180297db801293e4b86e42e9f60a55fbca86`, [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267). All ten jobs passed; all nine saved ZIPs match published SHA-256/CRC/member hashes; required Windows/Linux native-link cases and identical nested releases are validated. [Original report/integrity receipt](evidence/u026-artifacts-verified.json), [verified execution scope](U026_HOSTED_CI_EXECUTION.md), [next operator steps](U026_NEXT_ACTIONS.md). Intended-host R43/TLS, approved host scanner/configuration, twelve NOT_RUN participant scenarios and municipal authorizations remain open. No rerun, artifact recreation, merge or deployment.
+
 Verified engineering source: `adca68bfb9f56ae20d39e51b6c54873b758b1de4`.
 [Machine evidence](evidence/u026-engineering.json), [operator handoff](U026_OPERATOR_HANDOFF.md),
 [PostgreSQL maintenance proposal](U026_POSTGRESQL_PATCH_PROCEDURE.md).
-Later documentation changes retain these executed-test identities. The final review
-target is recorded separately in `.verification/u026-review.json` after documentation
-freeze; it is not a claim of hosted CI success on that target.
+Later documentation changes retain these executed-test identities. The approved review
+source in `.verification/u026-review.json` is 3d4a180; hosted success and preserved
+artifacts are now verified for that exact commit. Working-tree documentation updates
+do not imply CI verification of a new code revision.
 
 ## Verified engineering and preserved evidence
 
@@ -13,15 +16,17 @@ freeze; it is not a claim of hosted CI success on that target.
   engineering source above: CI/release preparation, maintained-scanner policy,
   document protections, native gate, package provenance/integrity and native links.
   Explicit skips: actual ClamAV unavailable; OS denies actual symbolic-link creation.
-  Actual Windows junction rejection passes; U025's strict symbolic-link failure remains
-  an unfulfilled environment gate, with no privilege changes.
+  Actual Windows junction rejection passes. U025's strict symbolic-link failure remains
+  a historical managed-identity limitation; Windows/Linux hosted native-link gates
+  subsequently passed. No local privilege changes were needed.
 - Local branch `review/u026-synthetic-pilot` prepared against configured remote `origin`,
   repository `https://github.com/mignoncharly/kaemmerei`. `main` remains at U025
-  `223eec99bcfaafdece2d2501c4866c0cfdbdfc56`. No fetch/push/PR/dispatch or hosted run.
-  Remote branch existence is not claimed. A future non-force push must target the
-  exact approved local manifest commit and account for automatic push-triggered CI.
+  `223eec99bcfaafdece2d2501c4866c0cfdbdfc56`. The authorized normal-session publication
+  of 3d4a180 and run 39791514267 are now independently confirmed. No main merge,
+  additional publication, rerun or deployment occurred in this documentation update.
 - All ten final-source hosted executions are enumerated by the executable local review
-  manifest tool. YAML/matrix/required-gate regressions pass. The manifest records the
+  manifest tool and now independently confirmed successful at 3d4a180.
+  YAML/matrix/required-gate regressions pass. The manifest records the
   committed workflow SHA-256 separately from local working-tree bytes/line endings.
 - Original U025 archive revalidated: SHA-256
   `ffab0034f7b7d0e924501b625a0e318b830402aec8917ac20024796327acc57f`, source
@@ -53,18 +58,21 @@ Distribution backports need explicit technical review; signature-download availa
 alone is insufficient. New CI preflight inventories real executable/definition hashes
 before actual-engine tests. Successful inventory would still not establish signature
 authenticity, freshness or detection until actual scans execute. Real integration test
-changes are **IMPLEMENTED BUT UNVERIFIED with an actual engine**: clean/EICAR, exact
-clean HTTP bytes and rejected infected/ranged access. Mocked regressions do not close it.
+changes are **VERIFIED in hosted CI with ClamAV 1.5.4**: clean/EICAR, exact
+clean HTTP bytes and rejected infected/ranged access. Intended-host execution remains
+**IMPLEMENTED BUT UNVERIFIED** until approved provisioning and actual checks there.
+Mocked regressions and hosted results do not close the intended-host gate.
 
 ## Remaining owner actions by category
 
 | Category / status | Exact remaining action | Owner |
 |---|---|---|
 | Technical implementation: VERIFIED locally | Review manifest, maintained-engine gate and acceptance checks implemented/tested; package/upgrade instructions delivered. This is not an approval to operate. | Engineering preparation complete |
-| Environment verification: EXTERNALLY BLOCKED | Explicitly authorize publication of the exact review commit and its automatic CI execution, or supply an approved equivalent runner. Run all ten jobs and retain exact-source job/artifact evidence. | Product owner, then engineering |
+| Hosted CI: VERIFIED | VERIFIED for exact commit 3d4a180: all ten jobs passed in run 39791514267. Job URLs and all nine original ZIPs are preserved and independently integrity-verified; no rerun or new collection required. | Product owner, then engineering |
 | Environment verification: EXTERNALLY BLOCKED | Approve identified patched synthetic host or scoped native maintenance, trusted installer/provenance, backup/rollback window; execute operator-reviewed 18.6 update and post-upgrade tests. No update without separate approval. | Product owner and authorized PostgreSQL/host operator |
 | Environment verification: EXTERNALLY BLOCKED | Provision approved maintained ClamAV and official current signatures; run preflight then actual clean/EICAR/HTTP tests, intended-host heuristics/throughput and lifecycle acceptance. | Authorized scanner/host operator, then engineering |
-| Environment verification: EXTERNALLY BLOCKED | Execute actual symbolic-link rejection using an already permitted Windows/Linux CI identity; verify intended host service/TLS/VPN/storage/monitoring/recovery. STRATO suitability still needs non-secret product/OS/capability evidence. | Authorized host operator and engineering |
+| Native-link CI: VERIFIED | Both required Windows/Linux native-link steps succeeded at 3d4a180; required missing-privilege paths fail rather than silently skip. Required symlink/junction JUnit cases have been inspected and passed; preserve the receipts without rerunning CI. | Engineering artifact validation |
+| Intended-host verification: EXTERNALLY BLOCKED | Verify intended host service/TLS/VPN/storage/monitoring/recovery. STRATO suitability still needs non-secret product/OS/capability evidence. | Authorized host operator and engineering |
 | Participant acceptance: PREPARED, NOT COMPLETE | Responsible Kämmerei representative, selected Kämmerei/Fachbereich users and product owner/operator execute twelve scenarios on an agreed recorded synthetic candidate; collect observations/issues and separate formal signoff. | Named participant roles; no fabricated results |
 | Municipal authorization: EXTERNALLY BLOCKED | Written finance/deadline/records decisions, independent security review, and distinct real-data/production approval. Keep manual foundations, unvalidated-calculation notices, preservation and disposal off. | Municipality and independent reviewers |
 

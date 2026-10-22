@@ -43,6 +43,24 @@ def test_boolean_validation_recovery_and_no_secret_echo(frontend):
     assert safe_values({'password':'secret','csrf_token':'secret','TOKEN':'secret','designation':'Safe','automatic_renewal':'0'})['automatic_renewal'] is False
 
 
+def test_budget_dropdown_has_choices_when_running_server_has_old_context(frontend, monkeypatch):
+    import app.main as main
+    client, app, owner = frontend
+    original_context = main.base_context
+    def previous_context(*args, **kwargs):
+        context = original_context(*args, **kwargs)
+        context.pop('budget_assignments', None)
+        return context
+    # A running worker can see the updated template before reimporting Python.
+    monkeypatch.setattr(main, 'base_context', previous_context)
+    login(client, 'admin')
+    page = client.get('/contracts/new')
+    assert page.status_code == 200
+    field = re.search(r'<select id="budget_assignment".*?</select>', page.text, re.S).group()
+    for choice in ('Produktkonto', 'Kontostelle', 'Sachkonto'):
+        assert f'<option value="{choice}"' in field
+
+
 def test_html_errors_json_api_and_conflict_recovery(frontend):
     client,app,owner=frontend;login(client,'admin');cid=create_contract(client)
     response=client.get('/contracts/999999')

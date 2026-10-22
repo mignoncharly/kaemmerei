@@ -136,3 +136,12 @@ CONTACT_PERSONS = (
     "Simone Wittig",
     "Sven Ziehe",
 )
+
+BUDGET_ASSIGNMENTS = (
+    "Produktkonto",
+    "Kontostelle",
+    "Sachkonto",
+    "Kostenstelle",
+    "Kostenträger",
+    "Haushaltsstelle",
+)

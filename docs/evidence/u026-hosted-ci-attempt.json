@@ -1,0 +1,160 @@
+{
+  "format": "ohvr-u026-hosted-ci-attempt-v1",
+  "authorized_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+  "repository": "https://github.com/mignoncharly/kaemmerei",
+  "branch": "review/u026-synthetic-pilot",
+  "workflow": ".github/workflows/phase1-verification.yml",
+  "workflow_sha256": "e535b4fc846684965fbd883b38a856f0df0216cdff024c042d69769bc630c6ae",
+  "publication_authorized": true,
+  "authorization_scope": "isolated review branch and CI only; corrections/reruns after observed failures",
+  "prepush_audit": {
+    "status": "VERIFIED_LOCAL_STATIC_REVIEW",
+    "token_permissions": "contents: read",
+    "workflow_count": 1,
+    "deployment_steps_found": false,
+    "production_endpoints_found": false,
+    "repository_secret_references_found": false,
+    "artifact_connection_files_or_keys_included": false
+  },
+  "publication": {
+    "attempted": true,
+    "git_exit_code": 1,
+    "pushed_by_this_attempt": false,
+    "remote_ref_observed": false,
+    "error_code": "execution_environment_outbound_proxy_unreachable",
+    "proxy_configuration_changed": false
+  },
+  "api_observation": {
+    "format": "ohvr-u026-hosted-ci-v1",
+    "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+    "branch": "review/u026-synthetic-pilot",
+    "repository": "https://github.com/mignoncharly/kaemmerei",
+    "workflow": ".github/workflows/phase1-verification.yml",
+    "workflow_sha256": "e535b4fc846684965fbd883b38a856f0df0216cdff024c042d69769bc630c6ae",
+    "publication_authorized": true,
+    "push_succeeded": false,
+    "formal_pilot_acceptance_complete": false,
+    "status": "NOT_VERIFIED",
+    "error_code": "local_network_or_api_execution_failed",
+    "hosted": null,
+    "local_launcher_preserved": true,
+    "local_main_preserved": true,
+    "finished_at": "2026-10-22T13:07:33.581081+00:00"
+  },
+  "required_checks": [
+    {
+      "job": "locked-release",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "locked-release",
+      "platform": "windows-latest",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "release-reproducibility",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "native-storage-links",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "native-storage-links",
+      "platform": "windows-latest",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "frontend-browser",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "document-scanner",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "native-postgresql",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "sqlite",
+      "platform": "ubuntu-latest",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    },
+    {
+      "job": "postgresql",
+      "platform": "ubuntu-24.04",
+      "required_source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "tested_source": null,
+      "result": "NOT_OBSERVED",
+      "run_url": null,
+      "job_url": null
+    }
+  ],
+  "helper_regressions": {
+    "passed": 7,
+    "failed": 0,
+    "hosted_checks_executed": false
+  },
+  "helper_files": {
+    "run.py": {
+      "sha256": "7d6014ccec89f5e819ff978f7b5a77bd72445eaa188d8dc044b3e5e6aa076422"
+    },
+    "Invoke-U026.ps1": {
+      "sha256": "9312d9e3599ead418410b59d04b01cf849f2fda6b378adb1c4d779c5401466c3"
+    },
+    "test_runner.py": {
+      "sha256": "b6302c3b205291cf5a410f447592d2edfcb52ceb0c1d79b14cfe23c6e57c2d55"
+    }
+  },
+  "preservation": {
+    "launcher_unchanged": true,
+    "main_unchanged": true,
+    "approved_candidate_head_unchanged": true
+  },
+  "formal_pilot_acceptance_complete": false,
+  "real_data_authorized": false,
+  "production_deployed": false
+}
