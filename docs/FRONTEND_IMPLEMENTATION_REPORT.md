@@ -1,5 +1,8 @@
 # OPEN.HERZ Vertragsregister – Frontend-Redesign
 
+Ergänzung: [Excel-Auswahl-Export und Importführung](EXCEL_SELECTION_IMPLEMENTATION.md)
+mit serverseitiger Prüfung, Regressionsergebnissen und offener Browserabnahme.
+
 Aktuelle Layoutkorrektur: [„Suche & Filter“ als Popover / Drawer](CONTRACT_FILTER_POPOVER_IMPLEMENTATION.md).
 Die permanente Suchleiste entfällt; Kennzahlen und Tabellenkopf sind kompakt.
 
