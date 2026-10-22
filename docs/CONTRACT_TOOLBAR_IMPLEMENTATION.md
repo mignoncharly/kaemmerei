@@ -52,7 +52,7 @@ Darstellungswerte und Links aus bereits normalisierten Parametern.
 | Laufender synthetischer Uvicorn-Preview | **15 HTTP-Prüfungen bestanden**: drei Ansichten und zwei Assets je Rolle |
 | JavaScript / Python / Diff | `node --check`, `compileall`, `git diff --check` bestanden |
 | Browser vor Änderung | Blockiert bei `automation_driver`, `PermissionError`, `WinError 5`; Browserstart nicht erreicht |
-| Browser nach Änderung | Ergebnis im ergänzten Evidenzabschnitt |
+| Browser nach Änderung | Ebenfalls blockiert bei `automation_driver`, `PermissionError`, `WinError 5`; kein Browser gestartet |
 | 390/768/1280/1440 px, Tastatur, Back/Forward, reduzierte Bewegung, visuelle Höhenmessung | **Offen**, im lokalen Browser nachzuprüfen |
 | Vorher/Nachher-Screenshots | **Keine erzeugt oder inspiziert**, solange Browserstart blockiert ist |
 
@@ -62,6 +62,14 @@ Protokolle: `.verification/toolbar-tests.txt`, `toolbar-tests.xml`,
 Die früheren Gesamttest-/U026-Nachweise bleiben unverändert; sie werden hier
 nicht als neuer Gesamtlauf ausgegeben. PostgreSQL und Lastziele wurden für
 diese Darstellungsänderung nicht erneut gemessen.
+
+Implementierungscommit: `8fd11806d5065da8a4a6e140b69b7957f475088c`.
+Der erneute Browserlauf gegen diesen sauberen Quellstand startete die
+synthetische Anwendung, scheiterte aber bereits beim Start des Playwright-
+Treibers. `.verification/toolbar-after-browser/result.json` enthält keine
+Screenshots und ausdrücklich `visual_inspection: NOT_PERFORMED`.
+[Sanitisierte Toolbar-Evidenz](evidence/contract-toolbar.json) hält beide
+Browserblockaden und die tatsächlich bestandenen Prüfungen fest.
 
 ## Lokale Windows-Verifikation
 
