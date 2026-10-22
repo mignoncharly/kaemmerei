@@ -8,7 +8,7 @@ import pyotp
 from tests.support import PASSWORD,create_contract
 
 
-def journeys(browser,address,fixture_client,app,check):
+def journeys(browser,address,fixture_client,app,check,stage=lambda value:None):
     foreign=create_contract(fixture_client,department_id='2',designation='SYNTHETIC foreign department')
     context=browser.new_context(locale='de-DE')
     page=context.new_page()
@@ -34,13 +34,22 @@ def journeys(browser,address,fixture_client,app,check):
         page.get_by_role('button',name='Änderungen speichern',exact=True).click()
         page.wait_for_url(re.compile(re.escape(address)+r'/contracts/'+str(cid)+r'(?:\?.*)?$'))
         check('pilot_edit_history',page.locator('.history').inner_text().find('revised')>=0)
+        stage('document_upload')
         upload=page.locator('form.document-upload')
         upload.locator('input[type=file]').set_input_files({'name':'synthetic.txt','mimeType':'text/plain','buffer':b'Synthetic contract attachment'})
-        upload.locator('button[type=submit]').click();page.wait_for_load_state('networkidle')
-        check('pilot_clean_document_listed',page.get_by_text('synthetic.txt',exact=True).count()>0)
-        download=page.get_by_role('link',name='Herunterladen',exact=True).first
+        with page.expect_response(lambda response:response.request.method=='POST' and response.url==address+f'/contracts/{cid}/documents') as sent:
+            upload.locator('button[type=submit]').click()
+        check('pilot_document_upload_accepted',sent.value.status==303)
+        page.wait_for_load_state('networkidle')
+        # The visible filename includes a decorative icon. Match the filename
+        # suffix within document metadata, then scope download to that row.
+        document=page.locator('.document-list li').filter(has=page.locator('.document-meta strong').filter(has_text=re.compile(r'(?:^|\s)synthetic\.txt$')))
+        check('pilot_clean_document_listed',document.count()==1)
+        stage('document_download')
+        download=document.get_by_role('link',name='Herunterladen',exact=True)
         with page.expect_download() as event:download.click()
         check('pilot_download',event.value.failure() is None)
+        stage('review_request')
         form=page.locator(f'form[action="/contracts/{cid}/reviews"]')
         form.locator('[name=subject]').fill('SYNTHETIC completeness review')
         form.locator('[name=request_text]').fill('Check the synthetic attachment; no financial/legal interpretation.')
@@ -53,6 +62,7 @@ def journeys(browser,address,fixture_client,app,check):
             p.get_by_role('button',name='Anmelden',exact=True).click();p.wait_for_url(address+'/?notice=login')
             check('pilot_other_department_cannot_read_created_contract',p.goto(address+f'/contracts/{cid}').status==404)
         finally:other.close()
+        stage('archive')
         page.goto(address+f'/contracts/{cid}')
         page.get_by_text('Archivierung prüfen',exact=True).click()
         page.locator('[name=confirm_archive]').check()
@@ -60,6 +70,7 @@ def journeys(browser,address,fixture_client,app,check):
         check('pilot_archive_preserves_history',page.get_by_role('heading',name='Archivierter Vertrag',exact=True).count()==1 and page.locator('.history').count()==1)
         check('pilot_archived_edit_denied',page.goto(address+f'/contracts/{cid}/edit').status==409)
     finally:context.close()
+    stage('mfa')
     # Enable MFA only inside this already-isolated fixture; never change a real account.
     from app.mfa_codec import SeedCipher
     from app.mfa_service import authorize_enrollment,enforce_policy

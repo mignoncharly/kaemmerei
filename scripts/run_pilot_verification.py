@@ -32,13 +32,21 @@ def main():
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     from app.documents import reject_links
-    source=source_identity(args.expected_source)
+    source=args.expected_source
     output=args.output.absolute();reject_links(output);output=output.resolve()
     if not output.is_relative_to(ROOT/'.verification'):raise SystemExit('Local verification output required')
     output.mkdir(parents=True,exist_ok=False)
     report={'format':'ohvr-revision-verification-v1','source':source,'selection':args.selection,
             'started_at':datetime.now(timezone.utc).isoformat(),'synthetic_only':True,
             'status':'IMPLEMENTED BUT UNVERIFIED','executed':False,'setup_or_installation_changed':False}
+    try:source_identity(source)
+    except Exception:
+        from scripts.browser_diagnostics import diagnostic
+        report.update(diagnostic('source_validation_failed','source_validation'))
+        report['finished_at']=datetime.now(timezone.utc).isoformat()
+        write_report(output/'sanitized-report.json',report)
+        print(json.dumps(report))
+        raise SystemExit(2)
     env=dict(os.environ)
     if args.selection in ('sqlite','postgresql','scanner'):
         command=[sys.executable,'-u','-m','pytest','-q','--database',args.selection if args.selection!='scanner' else 'sqlite',
@@ -55,16 +63,33 @@ def main():
     if args.selection=='scanner' and not env.get('CLAMAV_EXECUTABLE'):
         report.update(status='EXTERNALLY_BLOCKED',reason='actual_clamav_not_configured')
     else:
-        with (output/'private.log').open('xb') as log:
-            result=subprocess.run(command,cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT)
+        try:
+            with (output/'private.log').open('xb') as log:
+                result=subprocess.run(command,cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT)
+        except OSError:
+            from scripts.browser_diagnostics import diagnostic
+            report.update(diagnostic('verification_launcher_failed','child_execution'))
+            report['finished_at']=datetime.now(timezone.utc).isoformat()
+            write_report(output/'sanitized-report.json',report)
+            print(json.dumps(report))
+            raise SystemExit(2)
         report.update(executed=True,exit_code=result.returncode)
         report['status']='VERIFIED' if result.returncode==0 else 'IMPLEMENTED BUT UNVERIFIED'
+        if args.selection=='browser':
+            from scripts.browser_diagnostics import browser_result
+            passed,details=browser_result(output/'browser/result.json',source,report['started_at'],result.returncode)
+            report.update(details)
+            report['status']='VERIFIED' if passed else 'IMPLEMENTED BUT UNVERIFIED'
         if (output/'junit.xml').is_file():report['tests']=junit_summary(output/'junit.xml')
         for filename in ('workload.json','browser/result.json'):
             path=output/filename
             if path.is_file():report['result_sha256']=sha256(path.read_bytes()).hexdigest()
     try:source_identity(source)
-    except Exception:report.update(status='IMPLEMENTED BUT UNVERIFIED',reason='source_changed_during_run')
+    except Exception:
+        report.update(status='IMPLEMENTED BUT UNVERIFIED',reason='source_changed_during_run')
+        if args.selection=='browser':
+            from scripts.browser_diagnostics import diagnostic
+            report.update(diagnostic('source_validation_failed','source_validation'))
     report['finished_at']=datetime.now(timezone.utc).isoformat()
     write_report(output/'sanitized-report.json',report)
     print(json.dumps(report))
