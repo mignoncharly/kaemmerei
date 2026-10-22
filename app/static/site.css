@@ -161,16 +161,20 @@ summary{cursor:pointer;font-size:13px;color:var(--accent);padding:4px 0}details>
 .selection-export button:disabled{opacity:.5;cursor:not-allowed}
 .contract-overview .excel-import-panel h2{font-size:17px;margin:4px 0 6px}
 .contract-overview .excel-import-panel>p{margin:0 0 12px;font-size:12px;color:var(--muted)}
-.excel-import-steps{padding-left:22px;font-size:12px;margin:12px 0}
-.excel-import-steps li{padding:3px 0}
-.contract-overview .excel-import-actions{align-items:flex-start;margin:12px 0}
-.contract-overview .excel-import-actions form{align-items:flex-start}
-.excel-file-control{min-width:0;max-width:360px}
-.excel-file-control label{font-size:12px}
-.excel-file-control input[type=file]{max-width:100%;width:100%;font-size:12px}
-.excel-file-control small,.excel-filename{display:block;margin-top:5px;font-size:11px;overflow-wrap:anywhere}
+/* Labels and feedback live outside the three equal grid cells. */
+.excel-import-steps{display:flex;flex-wrap:wrap;gap:6px 24px;padding-left:18px;font-size:12px;margin:12px 0 18px;color:var(--muted)}
+.excel-import-steps li{padding:0}
+.excel-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}
+.excel-action-row>.button,.excel-submit-control>.button,.excel-submit-control>noscript>.button{width:100%;height:48px;min-height:48px;margin:0;padding:8px;font-size:12px;line-height:1.3}
+.excel-submit-control{min-width:0}
+.excel-file-picker{position:relative;overflow:hidden}
+.excel-action-row .excel-file-picker input[type=file]{position:absolute;inset:0;width:100%;height:100%;max-width:none;margin:0;padding:0;opacity:0;cursor:pointer}
+.excel-file-picker:focus-within{outline:3px solid var(--focus);outline-offset:3px}
+#excel-import-submit:disabled{background:var(--subtle);border-color:var(--border);color:var(--muted);cursor:not-allowed}
+#excel-import-form>.hint,.excel-filename,#excel-file-error{margin:8px 0 0;font-size:12px;overflow-wrap:anywhere}
+@media(max-width:700px){.excel-action-row{grid-template-columns:1fr}.excel-import-steps{gap:6px 24px}}
 .excel-import-notes{font-size:12px;margin-top:12px}
 .excel-import-notes summary{cursor:pointer;font-weight:650;padding:8px 0}
 .excel-import-notes ul{padding-left:20px;color:var(--muted)}
 .excel-import-notes li{margin-bottom:8px}
-@media(max-width:700px){.selection-cell{padding:8px;min-width:44px;height:44px}.selection-cell input{width:24px;height:24px}.selection-export>div{width:100%}.selection-export .button{min-height:44px}.excel-file-control{width:100%;max-width:none}.contract-overview .excel-import-actions .button{min-height:44px}}
+@media(max-width:700px){.selection-cell{padding:8px;min-width:44px;height:44px}.selection-cell input{width:24px;height:24px}.selection-export>div{width:100%}.selection-export .button{min-height:44px}}

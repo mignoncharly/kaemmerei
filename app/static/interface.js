@@ -138,14 +138,30 @@
   }
   const excelFile = document.querySelector('#excel-file');
   if (excelFile) {
-    const filename = document.createElement('span');
-    filename.className = 'excel-filename'; filename.setAttribute('role', 'status');
-    excelFile.after(filename);
-    excelFile.addEventListener('change', () => {
-      filename.textContent = excelFile.files.length ? 'Ausgewählt: ' + excelFile.files[0].name : '';
-    });
+    const filename = document.querySelector('#excel-filename');
+    const error = document.querySelector('#excel-file-error');
+    const submit = document.querySelector('#excel-import-submit');
+    submit.hidden = false;
+    function syncExcelFile() {
+      const file = excelFile.files[0];
+      const message = !file ? '' : !file.name.toLowerCase().endsWith('.xlsx')
+        ? 'Bitte eine .xlsx-Datei auswählen.' : file.size === 0
+        ? 'Die ausgewählte Datei ist leer.' : file.size > 10 * 1024 * 1024
+        ? 'Die Excel-Datei darf höchstens 10 MB groß sein.' : '';
+      filename.textContent = file ? 'Ausgewählt: ' + file.name : '';
+      filename.hidden = !file;
+      error.textContent = message; error.hidden = !message;
+      excelFile.setCustomValidity(message);
+      if (message) excelFile.setAttribute('aria-invalid', 'true');
+      else excelFile.removeAttribute('aria-invalid');
+      submit.disabled = !file || !!message;
+    }
+    excelFile.addEventListener('change', syncExcelFile);
+    window.addEventListener('pageshow', syncExcelFile);
+    syncExcelFile(); // Filename/size preflight only; the server validates the workbook.
   }
   document.querySelectorAll('input,select,textarea').forEach(input => {
+    if (input === excelFile) return; // File preflight owns its persistent feedback nodes.
     const hint = input.parentElement.querySelector('.hint,.field-hint');
     if (hint && input.id && !input.hasAttribute('aria-describedby')) {
       hint.id ||= input.id + '-hint'; input.setAttribute('aria-describedby', hint.id);

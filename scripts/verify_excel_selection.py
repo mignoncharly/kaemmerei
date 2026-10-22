@@ -73,9 +73,26 @@ def execute(args,output,result):
                         check(f'{role}_clear_{width}',not page.locator('#selection-export-form').is_visible() and all_box.evaluate('(e)=>document.activeElement===e'))
                         if role!='pruefer':
                             check(f'{role}_import_notes_closed_{width}',not page.locator('.excel-import-notes').evaluate('(e)=>e.open'))
+                            submit=page.locator('#excel-import-submit')
+                            check(f'{role}_import_initial_disabled_{width}',submit.is_disabled())
+                            controls=[page.locator('.excel-action-row>a'),page.locator('.excel-file-picker'),submit]
+                            bounds=[control.bounding_box() for control in controls]
+                            check(f'{role}_control_heights_{width}',all(abs(b['height']-48)<1 for b in bounds))
+                            if width>700:
+                                check(f'{role}_controls_aligned_{width}',max(b['y'] for b in bounds)-min(b['y'] for b in bounds)<1)
+                            else:
+                                check(f'{role}_controls_stacked_{width}',bounds[0]['y']+48<=bounds[1]['y'] and bounds[1]['y']+48<=bounds[2]['y'] and max(b['width'] for b in bounds)-min(b['width'] for b in bounds)<1)
+                            page.locator('#excel-file').focus()
+                            check(f'{role}_file_keyboard_focus_{width}',page.locator('.excel-file-picker').evaluate('(e)=>e.matches(":focus-within")'))
+                            for name,data in [('falsch.csv',b'data'),('leer.xlsx',b''),('gross.xlsx',b'x'*(10*1024*1024+1))]:
+                                page.locator('#excel-file').set_input_files({'name':name,'mimeType':'application/octet-stream','buffer':data})
+                                check(f'{role}_invalid_file_{width}_{name.split(".")[0]}',submit.is_disabled() and page.locator('#excel-file-error').is_visible())
                             page.locator('#excel-file').set_input_files({'name':'synthetischer-import.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':workbook()})
                             check(f'{role}_filename_{width}','synthetischer-import.xlsx' in page.locator('.excel-filename').inner_text())
+                            check(f'{role}_valid_file_enabled_{width}',submit.is_enabled() and not page.locator('#excel-file-error').is_visible())
                             page.locator('#excel-import-title').scroll_into_view_if_needed();capture(f'import-{width}')
+                            page.locator('#excel-file').set_input_files([])
+                            check(f'{role}_file_clear_disabled_{width}',submit.is_disabled() and not page.locator('#excel-filename').is_visible())
                     page.goto(address+'/?page_size=1');page.locator('.select-contract').first.check()
                     page.get_by_role('link',name='Nächste Seite',exact=True).click();page.wait_for_load_state('networkidle')
                     check(role+'_pagination_resets',page.locator('.select-contract:checked').count()==0)

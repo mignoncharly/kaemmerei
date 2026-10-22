@@ -71,15 +71,18 @@
 <section class="panel excel-import-panel" aria-labelledby="excel-import-title">
  <h2 id="excel-import-title">Verträge aus Excel importieren</h2>
  <p>Mehrere neue Verträge gleichzeitig erfassen. Bis zu 500 Verträge pro Datei.</p>
- <ol class="excel-import-steps"><li>Excel-Vorlage herunterladen.</li><li>Vertragsdaten in der Vorlage ausfüllen.</li><li>Excel-Datei auswählen und Import starten.</li></ol>
- <div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a>
-  <form method="post" action="/contracts/import" enctype="multipart/form-data" id="excel-import-form">
+ <ol class="excel-import-steps"><li>Vorlage herunterladen</li><li>Daten ausfüllen</li><li>Datei importieren</li></ol>
+ <form method="post" action="/contracts/import" enctype="multipart/form-data" id="excel-import-form">
    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-   <div class="excel-file-control"><label for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required aria-describedby="excel-file-hint"><small id="excel-file-hint">Nur .xlsx bis 10 MB. Der gewählte Dateiname erscheint im Dateifeld.</small></div>
-   <button class="button secondary" type="submit">Import starten</button>
-  </form>
- </div>
- <p class="hint">Nur neue Verträge, keine Aktualisierung vorhandener Datensätze.</p>
+   <div class="excel-action-row">
+    <a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a>
+    <label class="button subtle excel-file-picker" for="excel-file"><span>Excel-Datei auswählen</span><input id="excel-file" type="file" name="file" accept=".xlsx" required aria-describedby="excel-file-hint excel-filename excel-file-error"></label>
+    <div class="excel-submit-control"><button class="button secondary" id="excel-import-submit" type="submit" disabled hidden>Import starten</button><noscript><button class="button secondary" type="submit">Import starten</button></noscript></div>
+   </div>
+   <p class="hint" id="excel-file-hint">.xlsx, maximal 10 MB. Nur neue Verträge, keine Aktualisierung vorhandener Einträge.</p>
+   <p class="excel-filename" id="excel-filename" role="status" hidden></p>
+   <p class="field-error" id="excel-file-error" role="alert" hidden></p>
+ </form>
  <details class="excel-import-notes"><summary>Hinweise zum Excel-Import</summary>
   <ul>
    <li><strong>Pflichtfelder:</strong> Bezeichnung, Vertragsart, Vertragsbeginn und zuständige Person; als Administrator zusätzlich ein aktiver Fachbereich. Fachbereichsnutzer importieren in ihren eigenen Fachbereich.</li>
