@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}Fachbereiche und Identitäten{% endblock %}
 {% block content %}
-<h1>Fachbereiche und Identitäten</h1>
+<div class="page-head"><div><div class="eyebrow">VERWALTUNG</div><h1>Fachbereiche &amp; Identitäten</h1><p>Organisation, Kontakte und Empfängerteams pflegen.</p></div></div>
 <p>Identitäten bleiben erhalten. Deaktivierung löscht keine Verträge oder historischen Anzeigenamen. Kontakte und Teambezeichnungen erteilen keine Zugriffsrechte.</p>
 {% for entity, label, records in [('departments','Fachbereiche',departments),('contacts','Kontakte',contacts),('teams','Empfängerteams',teams)] %}
-<section class="panel form-panel"><h2>{{ label }}</h2>
+<section class="panel identity-panel" id="{{ entity }}"><div class="panel-heading"><h2>{{ label }}</h2><span class="count">{{ records|length }} Einträge</span></div>
 {% for item in records + [none] %}
-<form method="post" action="/admin/identities/{{ entity }}/{{ item.id if item else 0 }}">
+<form class="identity-row {% if not item %}is-new{% endif %}" method="post" action="/admin/identities/{{ entity }}/{{ item.id if item else 0 }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <label>{{ 'Identität #' ~ item.id if item else 'Neu anlegen' }} <input name="name" aria-label="Name {{ label }}" value="{{ item.display_name if entity == 'contacts' and item else item.name if item else '' }}" maxlength="{{ 160 if entity == 'contacts' else 150 }}" required></label>
 {% if entity == 'contacts' %}
@@ -18,7 +18,7 @@
 </form>
 {% endfor %}</section>
 {% endfor %}
-<section class="panel form-panel"><h2>Teammitgliedschaft</h2>
+<section class="panel panel-body"><h2>Teammitgliedschaft</h2>
 <p>Mitgliedschaft allein erlaubt keine Freigabe. Zusätzlich sind Freigabefähigkeit, konkrete Zuweisung und bereits vorhandener Vertragszugriff erforderlich. Änderungen beenden die Sitzungen des Kontos.</p>
 <ul>{% for member in memberships %}<li>Team #{{ member.team_id }} · Konto #{{ member.user_id }}</li>{% else %}<li>Keine Mitgliedschaften.</li>{% endfor %}</ul>
 <form method="post" action="/admin/recipient-memberships"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -26,5 +26,5 @@
 <label>Konto <select name="user_id" required>{% for account in accounts %}<option value="{{ account.id }}">{{ account.username }}</option>{% endfor %}</select></label>
 <label><input type="checkbox" name="is_active" value="1" checked> Mitgliedschaft aktiv (abwählen zum Entfernen)</label><button class="button secondary" type="submit">Mitgliedschaft speichern</button></form>
 </section>
-<section class="panel"><h2>Letzte Identitätsänderungen</h2><ul>{% for event in events %}<li>{{ event.created_at }} UTC · {{ event.action }} · {{ event.target }} · Akteur {{ event.actor_id or 'lokale Administration' }} · {{ event.details }}</li>{% else %}<li>Keine Ereignisse.</li>{% endfor %}</ul></section>
+<section class="panel panel-body"><h2>Letzte Identitätsänderungen</h2><ul class="audit-list">{% for event in events %}<li>{{ event.created_at.strftime("%d.%m.%Y %H:%M") }} UTC · {{ event.action }} · {{ event.target }} · Akteur {{ event.actor_id or 'lokale Administration' }} · {{ event.details }}</li>{% else %}<li>Keine Ereignisse.</li>{% endfor %}</ul></section>
 {% endblock %}

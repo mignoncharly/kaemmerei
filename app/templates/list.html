@@ -1,37 +1,20 @@
 {% extends 'base.html' %}
-{% block title %}Übersicht{% endblock %}
+{% block title %}Verträge{% endblock %}
 {% block content %}
+<div class="panel contract-overview">
 {% if import_warning %}<p role="alert">{{ import_warning }}</p>{% endif %}
-<div class="page-head">
+<div class="page-head" id="contract-toolbar" tabindex="-1">
  <div><div class="eyebrow">VERTRAGSVERWALTUNG</div><h1>Vertragsübersicht</h1><p>Verträge strukturiert erfassen, finden und nachvollziehen.</p></div>
- {% if can_create %}<a class="button primary" href="/contracts/new">+ Vertrag erfassen</a>{% endif %}
-</div>
-<nav class="dashboard-cards" aria-label="Vertragsübersicht nach Status">
- <a class="dashboard-card {% if focus == 'active' %}selected{% endif %}" href="/?focus=active" {% if focus == 'active' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Laufende Verträge</span><strong>{{ focus_counts.active }}</strong><small>Status Aktiv</small></a>
- <a class="dashboard-card dashboard-card-expiring {% if focus == 'expiring' %}selected{% endif %}" href="/?focus=expiring" {% if focus == 'expiring' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Anstehende Vertragsfristen</span><strong>{{ focus_counts.expiring }}</strong><small>Nächste {{ reminder_window_days }} Tage</small></a>
- <a class="dashboard-card dashboard-card-review {% if focus == 'review' %}selected{% endif %}" href="/?focus=review" {% if focus == 'review' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Entwürfe / in Bearbeitung</span><strong>{{ focus_counts.review }}</strong><small>Entwurf oder in Abstimmung</small></a>
- <a class="dashboard-card dashboard-card-approval {% if focus == 'approval' %}selected{% endif %}" href="/?focus=approval" {% if focus == 'approval' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Verträge mit offenen Freigaben</span><strong>{{ focus_counts.approval }}</strong><small>Zur Prüfung eingereicht</small></a>
- <a class="dashboard-card dashboard-card-ended {% if focus == 'ended' %}selected{% endif %}" href="/?focus=ended" {% if focus == 'ended' %}aria-current="page"{% endif %}><span class="dashboard-card-label">Gekündigt / beendet</span><strong>{{ focus_counts.ended }}</strong><small>Alle nicht archivierten Verträge</small></a>
-</nav>
-<section class="reminder-board" aria-label="Vertragsfristen und Warnungen">
- <div class="reminder-board-heading"><div><h2>Fristen &amp; Warnungen</h2><p>Unbestätigte Kalenderorientierung für nicht archivierte Verträge · manuelle Prüfung erforderlich</p></div><span class="count">Nächste {{ reminder_window_days }} Tage</span></div>
- <div class="reminder-columns">
-  <section class="reminder-card overdue-card"><div class="reminder-card-heading"><h3>Überfällig</h3><span>{{ overdue_reminder_total }}</span></div>
-   {% if overdue_reminders %}<ul>{% for reminder in overdue_reminders %}<li><a href="/contracts/{{ reminder.contract.id }}"><strong>{{ reminder.contract.designation }}</strong><small>{{ reminder.contract.contract_number }} · {{ reminder.label }} {{ reminder.due_date.strftime('%d.%m.%Y') }}</small></a><span class="reminder-age">{{ -reminder.days_remaining }} Tage überfällig</span></li>{% endfor %}</ul>
-   {% else %}<p class="reminder-empty">Keine überfälligen Fristen.</p>{% endif %}
-   {% if overdue_reminder_total > overdue_reminders|length %}<p>{{ overdue_reminders|length }} von {{ overdue_reminder_total }} · <a href="/reports#report-overdue">Alle anzeigen</a></p>{% endif %}
-  </section>
-  <section class="reminder-card upcoming-card"><div class="reminder-card-heading"><h3>Demnächst fällig</h3><span>{{ upcoming_reminder_total }}</span></div>
-   {% if upcoming_reminders %}<ul>{% for reminder in upcoming_reminders %}<li><a href="/contracts/{{ reminder.contract.id }}"><strong>{{ reminder.contract.designation }}</strong><small>{{ reminder.contract.contract_number }} · {{ reminder.label }} {{ reminder.due_date.strftime('%d.%m.%Y') }}</small></a><span class="reminder-age">{% if reminder.days_remaining == 0 %}Heute{% elif reminder.days_remaining == 1 %}Morgen{% else %}in {{ reminder.days_remaining }} Tagen{% endif %}</span></li>{% endfor %}</ul>
-   {% else %}<p class="reminder-empty">In diesem Zeitraum stehen keine Fristen an.</p>{% endif %}
-   {% if upcoming_reminder_total > upcoming_reminders|length %}<p>{{ upcoming_reminders|length }} von {{ upcoming_reminder_total }} · <a href="/reports#report-upcoming">Alle anzeigen</a></p>{% endif %}
-  </section>
- </div>
-</section>
-<section class="panel filters">
- <form method="get" action="/" class="filter-form">
-  {% if focus %}<input type="hidden" name="focus" value="{{ focus }}">{% endif %}
-  <div class="filter-grow"><label for="q">Suche</label><input id="q" type="search" name="q" value="{{ q }}" maxlength="100" placeholder="Bezeichnung, Nummer, Vertragspartner oder Person"></div>
+ <div class="contract-header-actions">
+  <button id="filter-toggle" class="button subtle" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="advanced-filter-panel" hidden><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 6h7m4 0h7M3 12h11m4 0h3M3 18h3m4 0h11M10 3v6m4 0v6M6 15v6"/></svg>Suche &amp; Filter{% if toolbar.chips %} ({{ toolbar.chips|length }}){% endif %}<span class="filter-chevron" aria-hidden="true">⌄</span></button>
+  <details class="contract-filter-disclosure" id="advanced-filter-disclosure">
+   <summary class="button subtle filter-fallback">Suche &amp; Filter{% if toolbar.chips %} ({{ toolbar.chips|length }}){% endif %}</summary>
+   <div id="advanced-filter-panel" class="contract-filter-panel">
+    <div class="contract-filter-heading"><h2 id="filter-panel-title">Suche &amp; Filter</h2><button class="button subtle" type="button" data-filter-close aria-label="Suche und Filter schließen" hidden>Schließen <span aria-hidden="true">×</span></button></div>
+    <form method="get" action="/" id="contract-filter-form">
+     {% if focus %}<input type="hidden" name="focus" value="{{ focus }}">{% endif %}
+     <div class="contract-search"><label for="q">Verträge suchen</label><input id="q" type="search" name="q" value="{{ q }}" maxlength="100" placeholder="Vertragsnummer, Bezeichnung, Vertragspartner oder Person"></div>
+     <div class="advanced-filter-grid">
   {% if user.role != 'department' %}
   <div><label for="department">Fachbereich</label><select name="department" id="department"><option value="">Alle Fachbereiche</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if selected_department == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select></div>
   {% endif %}
@@ -40,17 +23,43 @@
   <div><label for="deputy_contact_person">Vertretung</label><select name="deputy_contact_person" id="deputy_contact_person"><option value="">Alle Vertretungen</option>{% for person in contact_persons %}<option value="{{ person }}" {% if selected_deputy_contact_person == person %}selected{% endif %}>{{ person }}</option>{% endfor %}</select></div>
   <div><label for="status">Vertragsstatus</label><select name="status" id="status"><option value="">Alle Status</option>{% for code, label in contract_statuses %}<option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}<option value="archived" {% if selected_status == 'archived' %}selected{% endif %}>Archiviert</option></select></div>
   <div><label for="tax_review_status">§ 2b UStG-Prüfung</label><select name="tax_review_status" id="tax_review_status"><option value="">Alle Prüfstände</option>{% for code, label in tax_review_statuses %}<option value="{{ code }}" {% if selected_tax_review_status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-  <div><label for="page_size">Einträge je Seite</label><select id="page_size" name="page_size">{% for size in (25,50,100) %}<option value="{{ size }}" {% if page_size==size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></div>
-  <button class="button secondary" type="submit">Filtern</button>
-  <button class="button secondary" type="submit" formaction="/contracts/export.xlsx" aria-describedby="export-limit">Gefilterte Liste als Excel exportieren</button><small id="export-limit">Export: alle passenden Verträge, höchstens 5000; unabhängig von der aktuellen Ergebnisseite.</small>
- </form>
-</section>
-{% if can_create %}<section class="panel excel-import-panel"><p>Nur Neuanlage: Die automatisch erzeugte Vertragsnummer muss beim Import leer bleiben. Eine optionale externe Referenz ist innerhalb eines Fachbereichs eindeutig, auch im Archiv; Groß-/Kleinschreibung wird unterschieden. Gleiche Bezeichnungen sind möglich. Ohne externe Referenz erzeugt ein wiederholter Import neue Verträge. Formeln und Arbeitsmappen im Datumssystem 1904 sind nicht zulässig. Excel sichert weder Dokumente noch Historie.</p><div><h2>Vertragsliste importieren</h2><p class="history-subtitle">Excel-Vorlage laden, ausfüllen und bis zu 500 Verträge auf einmal übernehmen.</p><small class="hint">Pflicht: Bezeichnung, Vertragsart, Vertragsbeginn, zuständige Person; Admins zusätzlich Fachbereich. Datum als JJJJ-MM-TT. Nur .xlsx bis 10 MB; bei Fehlern wird nichts importiert.</small></div><div class="excel-import-actions"><a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a><form method="post" action="/contracts/import" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="visually-hidden" for="excel-file">Excel-Datei auswählen</label><input id="excel-file" type="file" name="file" accept=".xlsx" required><button class="button primary" type="submit">Import starten</button></form></div></section>{% endif %}
+  <div><label for="page_size">Einträge je Seite</label><select id="page_size" name="page_size">{% for size in (25,50,100) %}<option value="{{ size }}" {% if page_size==size %}selected{% endif %}>{{ size }}</option>{% endfor %}{% if page_size not in (25,50,100) %}<option value="{{ page_size }}" selected>{{ page_size }}</option>{% endif %}</select></div>
+     </div>
+     <div class="advanced-filter-actions"><button class="button primary" type="submit">Filter anwenden</button><a class="button subtle" href="{{ toolbar.reset_url }}">Zurücksetzen</a></div>
+    </form>
+   </div>
+  </details>
+  {% if can_create %}<a class="button primary" href="/contracts/new">+ Vertrag erfassen</a>{% endif %}
+ </div>
+</div>
+<nav class="contract-summary" aria-label="Vertragsübersicht nach Status">
+ {% for key, label, description in [('active','Aktiv','Laufende Verträge'), ('expiring','Fristen','Anstehende Vertragsfristen · nächste ' ~ reminder_window_days ~ ' Tage'), ('review','Entwürfe / Bearbeitung','Entwürfe oder in Abstimmung'), ('approval','Offene Freigaben','Verträge mit offenen Freigaben'), ('ended','Beendet','Gekündigte und beendete, nicht archivierte Verträge')] %}
+ <a href="/?focus={{ key }}" title="{{ description }}" {% if focus == key %}aria-current="page"{% endif %}><strong>{{ focus_counts[key] }}</strong><span>{{ label }}</span></a>
+ {% endfor %}
+</nav>
+{% if overdue_reminder_total or upcoming_reminder_total %}
+<details class="contract-reminders has-warnings"><summary>Fristen &amp; Warnungen · <strong>{{ overdue_reminder_total }} überfällig</strong> · {{ upcoming_reminder_total }} anstehend <span class="count">Details anzeigen</span></summary>
+{% include 'partials/reminders.html' %}
+</details>
+{% else %}
+<p class="contract-reminders no-warnings"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"/><path d="m8 15 3 3 5-5"/></svg>Keine überfälligen oder anstehenden Vertragsfristen.<span class="count">Nächste {{ reminder_window_days }} Tage</span></p>
+{% endif %}
+{% if toolbar.chips %}<div class="active-filters" aria-label="Aktive Suche und Filter"><span class="visually-hidden">Aktive Suche und Filter:</span>
+ {% for chip in toolbar.chips %}<a class="filter-chip" href="{{ chip.remove_url }}" aria-label="{{ chip.label }} entfernen"><span>{{ chip.label }}</span><span aria-hidden="true">×</span></a>{% endfor %}
+ <a class="reset-filters" href="{{ toolbar.reset_url }}">Alle Filter zurücksetzen</a>
+</div>{% endif %}
 <section class="panel table-panel">
- <div class="panel-heading"><h2>{% if focus_label %}{{ focus_label }}{% elif selected_status == 'archived' %}Archivierte Verträge{% else %}Nicht archivierte Verträge{% endif %}</h2><span class="count">{{ total_count }} Einträge insgesamt; {{ contracts|length }} auf dieser Seite{% if focus %} · <a href="/">Fokus zurücksetzen</a>{% endif %}</span></div>
+ <div class="panel-heading contract-list-heading"><div><h2>{% if focus_label %}{{ focus_label }}{% elif selected_status == 'archived' %}Archivierte Verträge{% else %}Nicht archivierte Verträge{% endif %} <span class="contract-result-count">({{ total_count }})</span></h2><span class="count">{{ contracts|length }} auf dieser Seite</span></div>{% if can_export %}<div class="contract-export"><a href="{{ toolbar.export_url }}" aria-describedby="export-limit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5"/></svg> Alle Treffer exportieren</a><small id="export-limit">Alle gefilterten Treffer · max. 5.000</small></div>{% endif %}</div>
  {% if contracts %}
- <div class="table-scroll"><table><thead><tr><th scope="col">Bezeichnung / Nummer</th><th scope="col">Vertragsart</th><th scope="col">Vertragsstatus</th><th scope="col">§ 2b UStG-Prüfung</th><th scope="col">Beginn</th><th scope="col">Fachbereich</th><th scope="col">Verantwortlich / Vertretung</th><th scope="col"></th></tr></thead>
- <tbody>{% for contract in contracts %}<tr><td><a class="record-link" href="/contracts/{{ contract.id }}">{{ contract.designation }}</a><small class="contract-id">{{ contract.contract_number }}</small></td><td>{{ contract.contract_type }}</td><td>{% if contract.archived_at %}Archiviert{% else %}{{ status_labels.get(contract.status, contract.status) }}{% endif %}</td><td><span class="tax-review-tag tax-review-{{ contract.tax_review_status }}">{{ tax_review_labels.get(contract.tax_review_status, contract.tax_review_status) }}</span></td><td class="nowrap">{{ contract.relevant_date.strftime('%d.%m.%Y') }}</td><td>{{ contract.department.name }}</td><td>{{ contract.contact_person or '–' }}{% if contract.deputy_contact_person %}<small class="contract-id">Vertretung: {{ contract.deputy_contact_person }}</small>{% endif %}</td><td class="nowrap"><a href="/contracts/{{ contract.id }}">Ansehen ›</a></td></tr>{% endfor %}</tbody></table></div>
+ {% if can_export %}
+ <form id="selection-export-form" class="selection-export" method="post" action="/contracts/export-selected.xlsx" hidden>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="contract_ids" id="selected-contract-ids" value="">
+  <strong id="selection-count" role="status" aria-live="polite"></strong>
+  <div><button class="button primary" type="submit" id="export-selection" disabled>Ausgewählte Verträge exportieren</button><button class="button subtle" type="button" id="clear-selection">Auswahl aufheben</button></div>
+ </form>
+ {% endif %}
+ <div class="table-scroll"><table><thead><tr>{% if can_export %}<th class="selection-cell" scope="col" data-selection-cell hidden><input type="checkbox" id="select-page" aria-label="Alle Verträge auf dieser Seite für den Export auswählen"></th>{% endif %}<th scope="col">Bezeichnung / Nummer</th><th scope="col">Vertragsart</th><th scope="col">Vertragsstatus</th><th scope="col">§ 2b UStG-Prüfung</th><th scope="col">Beginn</th><th scope="col">Fachbereich</th><th scope="col">Verantwortlich / Vertretung</th><th scope="col"><span class="visually-hidden">Aktionen</span></th></tr></thead>
+ <tbody>{% for contract in contracts %}<tr>{% if can_export %}<td class="selection-cell" data-selection-cell hidden><input type="checkbox" class="select-contract" value="{{ contract.id }}" aria-label="{{ contract.contract_number }} – {{ contract.designation }} für den Export auswählen"></td>{% endif %}<td><a class="record-link" href="/contracts/{{ contract.id }}">{{ contract.designation }}</a><small class="contract-id">{{ contract.contract_number }}</small></td><td>{{ contract.contract_type }}</td><td>{% if contract.archived_at %}Archiviert{% else %}{{ status_labels.get(contract.status, contract.status) }}{% endif %}</td><td><span class="tax-review-tag tax-review-{{ contract.tax_review_status }}">{{ tax_review_labels.get(contract.tax_review_status, contract.tax_review_status) }}</span></td><td class="nowrap">{{ contract.relevant_date.strftime('%d.%m.%Y') }}</td><td>{{ contract.department.name }}</td><td>{{ contract.contact_person or '–' }}{% if contract.deputy_contact_person %}<small class="contract-id">Vertretung: {{ contract.deputy_contact_person }}</small>{% endif %}</td><td class="nowrap"><a href="/contracts/{{ contract.id }}">Ansehen ›</a></td></tr>{% endfor %}</tbody></table></div>
  {% else %}<div class="empty"><p>Keine passenden Verträge gefunden.</p>{% if can_create and not archived %}<a href="/contracts/new">Ersten Vertrag erfassen</a>{% endif %}</div>{% endif %}
 </section>
 <nav class="pagination" aria-label="Ergebnisseiten">
@@ -58,4 +67,36 @@
 <span>Seite {{ page }} von {{ page_count }} ({{ total_count }} Treffer)</span>
 {% if next_page_url %}<a rel="next" href="{{ next_page_url }}">Nächste Seite</a>{% endif %}
 </nav>
+{% if can_create %}
+<section class="panel excel-import-panel" aria-labelledby="excel-import-title">
+ <h2 id="excel-import-title">Verträge aus Excel importieren</h2>
+ <p>Mehrere neue Verträge gleichzeitig erfassen. Bis zu 500 Verträge pro Datei.</p>
+ <ol class="excel-import-steps"><li>Vorlage herunterladen</li><li>Daten ausfüllen</li><li>Datei importieren</li></ol>
+ <form method="post" action="/contracts/import" enctype="multipart/form-data" id="excel-import-form">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <div class="excel-action-row">
+    <a class="button subtle excel-action" href="/contracts/import-template.xlsx"><span class="action-content">Excel-Vorlage herunterladen</span></a>
+    <label class="button subtle excel-action excel-file-picker" for="excel-file"><span class="action-content">Excel-Datei auswählen</span><input id="excel-file" type="file" name="file" accept=".xlsx" required aria-describedby="excel-file-hint excel-filename excel-file-error"></label>
+    <div class="excel-submit-control"><button class="button secondary excel-action" id="excel-import-submit" type="submit" disabled hidden><span class="action-content">Import starten</span></button><noscript><button class="button secondary excel-action" type="submit"><span class="action-content">Import starten</span></button></noscript></div>
+   </div>
+   <p class="hint" id="excel-file-hint">.xlsx, maximal 10 MB. Nur neue Verträge, keine Aktualisierung vorhandener Einträge.</p>
+   <p class="excel-filename" id="excel-filename" role="status" hidden></p>
+   <p class="field-error" id="excel-file-error" role="alert" hidden></p>
+ </form>
+ <details class="excel-import-notes"><summary>Hinweise zum Excel-Import</summary>
+  <ul>
+   <li><strong>Pflichtfelder:</strong> Bezeichnung, Vertragsart, Vertragsbeginn und zuständige Person; als Administrator zusätzlich ein aktiver Fachbereich. Fachbereichsnutzer importieren in ihren eigenen Fachbereich.</li>
+   <li><strong>Datei:</strong> .xlsx bis 10 MB, höchstens 500 Vertragszeilen. Es wird das erste Tabellenblatt verarbeitet. Verwenden Sie die vorgegebenen Spalten; unbekannte oder doppelte Spalten werden abgelehnt.</li>
+   <li><strong>Datum:</strong> JJJJ-MM-TT oder gültige Excel-Datumswerte im 1900-Datumssystem. Das 1904-Datumssystem wird nicht unterstützt.</li>
+   <li><strong>Neuanlage:</strong> Die Vertragsnummer muss leer bleiben und wird automatisch erzeugt. Vorhandene Verträge werden nicht aktualisiert oder überschrieben. Status „Aktiv“ kann nicht ohne belegte Freigabe importiert werden; verwenden Sie „Entwurf“. Fachliche Pflicht- und Berechtigungsprüfungen gelten weiterhin.</li>
+   <li><strong>Externe Referenz:</strong> Optional, aber innerhalb eines Fachbereichs eindeutig, auch im Archiv. Groß- und Kleinschreibung werden unterschieden. Bereits vorhandene oder in der Datei wiederholte Referenzen führen zur Ablehnung.</li>
+   <li><strong>Duplikate:</strong> Gleiche Bezeichnungen sind möglich. Ohne externe Referenz legt ein wiederholter Import neue Verträge an. Übereinstimmende Stammdaten werden zur manuellen Prüfung gemeldet und nicht automatisch zusammengeführt.</li>
+   <li><strong>Excel-Inhalte:</strong> Nur Werte verwenden; Formel- und Excel-Fehlerzellen werden abgelehnt. Formelergebnisse vorher als Werte einfügen.</li>
+   <li><strong>Fehler:</strong> Bei fehlerhaften Zeilen wird kein Vertrag aus der Datei übernommen. Korrigieren Sie die gemeldeten Zeilen und starten Sie den Import erneut.</li>
+   <li>Excel-Dateien sichern keine Vertragsdokumente, Anhänge oder Änderungshistorie.</li>
+  </ul>
+ </details>
+</section>
+{% endif %}
+</div>
 {% endblock %}

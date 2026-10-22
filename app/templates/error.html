@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Vorgang nicht abgeschlossen ({{ status_code }}){% endblock %}
 {% block content %}
-<section class="panel error-panel"><h1>Vorgang nicht abgeschlossen ({{ status_code }})</h1>
+<section class="panel error-panel"><div class="eyebrow">STATUS {{ status_code }}</div><h1>{% if status_code == 404 %}Eintrag nicht verfügbar{% elif status_code == 403 %}Zugriff nicht möglich{% elif status_code == 500 %}Technischer Fehler{% else %}Vorgang nicht abgeschlossen{% endif %}</h1>
 <p class="alert" role="alert">{{ message }}</p>
 <p>Der angeforderte Vorgang wurde nicht erfolgreich abgeschlossen. Bereits zuvor abgeschlossene Schritte bleiben erhalten. Es erfolgt keine automatische Wiederholung.</p>
 <p><a href="{{ reload_url }}">Seite neu laden</a> · <a href="/login">Anmelden</a> · <a href="/">Zur Übersicht</a></p>

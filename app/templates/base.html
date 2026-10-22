@@ -1,32 +1,49 @@
+{% from 'components.html' import icon, nav_link %}
+{% set authenticated_shell = user and not user.must_change_password %}
+{% set path = request.url.path %}
+{% set overview = path == '/dashboard' or (path == '/' and request.query_params.get('notice') == 'login') %}
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Vertragsregister{% endblock %} | OPEN.HERZ</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/site.css') }}">
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>{% block title %}Vertragsregister{% endblock %} | OPEN.HERZ</title>
+ <link rel="stylesheet" href="{{ url_for('static', path='/site.css') }}?v=redesign1">
 </head>
-<body>
+<body class="{% if authenticated_shell %}app-layout{% else %}auth-layout{% endif %}">
 <a class="skip-link" href="#main-content">Zum Hauptinhalt</a>
-<header class="topbar">
- <div class="topbar-inner">
-  <a class="brand" href="/">OPEN<span class="dot">.</span>HERZ <span class="brand-suffix">/ Vertragsregister</span></a>
-  {% if user %}
-  <div class="account"><span>{{ user.username }} <small>({% if user.role == 'department' %}Fachbereich{% elif user.role == 'reviewer' %}Leseberechtigung{% else %}Administration{% endif %}{% if user.can_approve %}; explizite Prüffähigkeit{% endif %})</small></span>
-   <a href="/reports">Auswertungen</a>
-   <a href="/reviews">Mein Arbeitskorb</a><a href="/account/password">Passwort ändern</a>
-   {% if user.role == 'admin' %}<a href="/admin/users">Benutzerverwaltung</a><a href="/admin/identities">Fachbereiche &amp; Identitäten</a><a href="/admin/integrations">Schnittstellen</a>{% endif %}
-   <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="link-button" type="submit">Abmelden</button></form>
-  </div>
-  {% endif %}
- </div>
-</header>
+{% if authenticated_shell %}
+<aside class="sidebar" id="app-navigation" aria-label="Hauptnavigation">
+ <div class="sidebar-brand"><a class="brand" href="/dashboard">OPEN<span class="dot">.</span>HERZ<small>Vertragsregister</small></a><button class="icon-button drawer-close" type="button" data-nav-close aria-label="Navigation schließen">{{ icon('close') }}</button></div>
+ <nav aria-label="Arbeitsbereiche">
+  <p class="nav-group">Arbeitsplatz</p>
+  {{ nav_link('/dashboard', 'Übersicht', 'overview', overview) }}
+  {{ nav_link('/', 'Verträge', 'contracts', (path == '/' and not overview) or path.startswith('/contracts')) }}
+  {{ nav_link('/reviews', 'Mein Arbeitskorb', 'tasks', path == '/reviews') }}
+  {{ nav_link('/reports', 'Auswertungen', 'reports', path == '/reports') }}
+  {% if user.role == 'admin' %}<p class="nav-group">Verwaltung</p>
+  {{ nav_link('/admin/users', 'Benutzerverwaltung', 'users', path.startswith('/admin/users')) }}
+  {{ nav_link('/admin/identities', 'Fachbereiche & Teams', 'departments', path == '/admin/identities') }}
+  {{ nav_link('/admin/integrations', 'Schnittstellen', 'connections', path.startswith('/admin/integrations')) }}{% endif %}
+  <p class="nav-group">Persönlich</p>
+  {{ nav_link('/account/password', 'Konto & Sicherheit', 'security', path == '/account/password') }}
+ </nav>
+ <div class="sidebar-footer"><div class="user-summary"><span class="avatar" aria-hidden="true">{{ user.username[:2]|upper }}</span><div><strong>{{ user.username }}</strong><small>{% if user.role == 'department' %}{{ user.department.name }}{% elif user.role == 'reviewer' %}Prüfung · Lesezugriff{% else %}Administration{% endif %}</small></div></div><form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-button" type="submit">{{ icon('logout') }} Abmelden</button></form></div>
+</aside>
+<button class="drawer-backdrop" type="button" data-nav-close aria-label="Navigation schließen" tabindex="-1" hidden></button>
+<div class="app-workspace" id="app-workspace">
+ <header class="topbar"><button class="icon-button drawer-toggle" type="button" aria-label="Navigation öffnen" aria-controls="app-navigation" aria-expanded="false" data-nav-toggle>{{ icon('menu') }}</button>
+  <nav class="breadcrumb" aria-label="Brotkrumennavigation"><a href="/dashboard">Vertragsregister</a><span aria-hidden="true">/</span><span>{{ self.title() }}</span></nav>
+  <span class="pilot-badge">Technischer Pilot</span>
+  <details class="account-menu"><summary aria-label="Kontomenü für {{ user.username }}"><span class="avatar" aria-hidden="true">{{ user.username[:2]|upper }}</span><span class="account-name">{{ user.username }}</span><span aria-hidden="true">⌄</span></summary><div><strong>{{ user.username }}</strong><a href="/account/password">Passwort & Konto</a><form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="link-button">Abmelden</button></form></div></details>
+ </header>
+{% else %}<div class="auth-workspace"><header class="auth-header"><a class="brand" href="/login">OPEN<span class="dot">.</span>HERZ<small>Vertragsregister</small></a><span>Interne Vertragsverwaltung</span></header>{% endif %}
 <main class="container" id="main-content" tabindex="-1">
-{% if user %}<div class="notice" role="note">Technischer Pilot · Finanz- und Fristenregeln sind fachlich noch nicht bestätigt. Erfasste Werte und berechnete Kalendertermine dienen der Orientierung; verbindliche Ergebnisse bitte manuell prüfen und dokumentieren.</div>{% endif %}
-{% if notice %}<div class="notice" id="success-notice" role="status" aria-live="polite">{{ notice }} <button type="button" class="link-button" data-dismiss-notice="success-notice" aria-label="Erfolgsmeldung schließen">Schließen</button></div>{% endif %}
+{% if authenticated_shell %}<details class="pilot-note"><summary>{{ icon('security') }} Hinweise zum technischen Pilotbetrieb</summary><p>Finanz- und Fristenregeln sind fachlich noch nicht bestätigt. Erfasste Werte und berechnete Kalendertermine dienen der Orientierung; verbindliche Ergebnisse bitte manuell prüfen und dokumentieren.</p></details>{% endif %}
+{% if notice %}<div class="notice" id="success-notice" role="status" aria-live="polite"><span>{{ notice }}</span><button type="button" class="link-button" data-dismiss-notice="success-notice" aria-label="Erfolgsmeldung schließen">Schließen</button></div>{% endif %}
 {% block content %}{% endblock %}
 </main>
-<footer class="footer">Interne Arbeitsversion · Datenzugriff nur mit persönlicher Anmeldung</footer>
+<footer class="footer">OPEN.HERZ Vertragsregister <span>Persönlicher Zugang · Interne Arbeitsversion</span></footer>
+</div>
 <script src="{{ url_for('static', path='/notifications.js') }}" defer></script>
-</body>
-</html>
+<script src="{{ url_for('static', path='/interface.js') }}?v=redesign1" defer></script>
+</body></html>

@@ -26,7 +26,7 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
-from app.presentation import safe_values, review_options, FIELD_LABELS
+from app.presentation import safe_values, review_options, listing_toolbar, import_error_message, FIELD_LABELS
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
 from app.documents import ensure_storage, stage_upload, new_document, process_document, download_response, audit_denied, ClamAVScanner, MEDIA
@@ -39,7 +39,7 @@ from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, re
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.dates import add_months, calculate_notice_deadline, calculate_next_end_date, contract_dates
 from app.financial import current_groups, inventory_trend
-from app.listing import normalize_filters, filtered_contracts, EXPORT_MAX_ROWS
+from app.listing import normalize_filters, filtered_contracts, selected_export_ids, EXPORT_MAX_ROWS
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
 from app.options import (BUDGET_ASSIGNMENTS, CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
@@ -56,6 +56,7 @@ REMINDER_WINDOW_DAYS = 90
 DOCUMENT_TYPES = MEDIA
 TEMPLATES = Jinja2Templates(directory=str(BASE / "templates"))
 TEMPLATES.env.globals['recovery_labels']=FIELD_LABELS
+TEMPLATES.env.filters['import_error_message']=import_error_message
 TEMPLATES.env.globals['new_request_id']=lambda: str(uuid4())
 TEMPLATES.env.filters["euro"] = lambda amount: format_euro(amount)
 SUCCESS_NOTICES = {
@@ -73,6 +74,12 @@ SUCCESS_NOTICES = {
     "user_created": "Benutzer wurde angelegt.",
     "user_updated": "Benutzer und Berechtigungen wurden gespeichert.",
     "integration_revoked": "Der API-Zugriff wurde widerrufen.",
+    "identity_updated": "Die Verwaltungsdaten wurden gespeichert. Berechtigungsänderungen beenden betroffene Sitzungen.",
+    "password_updated": "Ihr Passwort wurde geändert. Andere Sitzungen wurden beendet.",
+    "assignment_updated": "Die Prüfungszuweisung wurde gespeichert.",
+    "document_replaced": "Die neue Dokumentversion wurde zur Prüfung übernommen. Den Bearbeitungsstand finden Sie bei den Unterlagen.",
+    "document_link_updated": "Die Dokumentenverknüpfung wurde gespeichert.",
+    "document_hold": "Die Aufbewahrungssperre wurde gesetzt.",
 }
 USER_ROLES = (
     ("department", "Fachbereichsnutzer"),
@@ -114,7 +121,7 @@ def html(request: Request, template: str, context: dict, status_code: int = 200)
         if request.query_params.get("notice") == "imported" and request.query_params.get("imported_count", "").isdigit():
             notice += f" {request.query_params.get('imported_count')} Verträge wurden übernommen."
             if ambiguity.isdigit() and 0 < int(ambiguity[:4]) <= MAX_IMPORT_ROWS:
-                context['import_warning'] = f'{int(ambiguity[:4])} rows match existing descriptions; review the new records. Descriptions are not unique identities.'
+                context['import_warning'] = f'{int(ambiguity[:4])} Zeilen haben übereinstimmende Stammdaten. Bitte prüfen Sie die neu angelegten Verträge. Bezeichnungen allein sind keine eindeutigen Identifikatoren.'
         context = {**context, "notice": notice}
     return TEMPLATES.TemplateResponse(request, template, context, status_code=status_code)
 
@@ -140,6 +147,21 @@ def user_csrf(request: Request, db: Session) -> tuple[User, str]:
     session = get_login_session(request, db)
     assert session is not None
     return user, session.csrf_token
+
+
+def error_context(request: Request) -> dict:
+    """Re-resolve the session for error navigation; never infer access from a URL."""
+    try:
+        for db in get_db(request):
+            user = get_user(request, db)
+            session = get_login_session(request, db) if user else None
+            if user and user.role == 'department':
+                _ = user.department.name
+            return base_context(request, user, session.csrf_token if session else '')
+    except Exception:
+        # A database outage must still have a safe, self-contained error page.
+        return {'user': None}
+    return {'user': None}
 
 
 def require_integration_token(request: Request, db: Session) -> IntegrationToken:
@@ -550,8 +572,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if request.scope['path'].startswith('/api/'):
             return JSONResponse({'detail':'Changed since this form was loaded'},status_code=409)
         return TEMPLATES.TemplateResponse(request=request, name='workflow_conflict.html', context={
+            **error_context(request),
             'request':request,'submitted':exc.submitted,'current_version':exc.current_version,
-            'reload_url':'/'.join(request.scope['path'].split('/')[:3]),'user':None},status_code=409)
+            'reload_url':'/'.join(request.scope['path'].split('/')[:3])},status_code=409)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request, exc):
@@ -566,7 +589,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             413:'Die Anfrage oder der Export ist zu groß. Bitte den Umfang verkleinern.',
             422:'Bitte die Angaben prüfen und korrigieren.',429:'Zu viele Anfragen. Bitte später erneut versuchen.'}
         return TEMPLATES.TemplateResponse(request=request,name='error.html',context={
-            'user':None,'status_code':exc.status_code,'message':messages.get(exc.status_code,'Der Vorgang konnte nicht abgeschlossen werden.'),
+            **error_context(request),'status_code':exc.status_code,'message':messages.get(exc.status_code,'Der Vorgang konnte nicht abgeschlossen werden.'),
             'submitted':getattr(request.state,'safe_values',{}),
             'reload_url':request.scope['path'] if request.method=='GET' else '/'.join(request.scope['path'].split('/')[:3]) or '/'},
             status_code=exc.status_code,headers=exc.headers)
@@ -580,6 +603,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.exception_handler(PoolTimeout)
     async def database_capacity_error(request, exc):
         return await http_error(request,HTTPException(503,'Database capacity exhausted',headers={'Retry-After':'5'}))
+
+    @app.exception_handler(Exception)
+    async def unexpected_error(request, exc):
+        import logging
+        logging.getLogger(__name__).error('Unhandled application error', exc_info=exc)
+        if request.scope['path'].startswith('/api/'):
+            return JSONResponse({'detail':'Internal server error'}, status_code=500)
+        # No database calls or submitted values during an unexpected failure.
+        response = TEMPLATES.TemplateResponse(request=request, name='error.html', context={
+            'user':None, 'status_code':500, 'message':'Ein technischer Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.',
+            'reload_url':'/', 'submitted':{}}, status_code=500)
+        response.headers.update({'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff',
+            'X-Frame-Options':'DENY', 'Referrer-Policy':'same-origin',
+            'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"})
+        if settings.production:
+            response.headers['Strict-Transport-Security']='max-age=31536000'
+        return response
 
     @app.get('/health/live', include_in_schema=False)
     def live():
@@ -693,7 +733,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "tokens": tokens, "departments": departments,
                     "owner_users":db.scalars(select(User).where(User.is_active.is_(True)).order_by(User.username)).all(),
                     "new_token": new_token, "error": error, "now": now_utc(),
-                    "notice": "Der API-Token wurde erstellt. Kopiere ihn aus dem grünen Feld." if new_token else ""}, status_code)
+                    "values": getattr(request.state, 'safe_values', {}) if error else {},
+                    "notice": "Der API-Token wurde erstellt. Kopieren Sie das einmalig angezeigte Geheimnis." if new_token else ""}, status_code)
 
     @app.get("/admin/integrations", response_class=HTMLResponse)
     def integrations_page(request: Request, db: Session = Depends(get_db)):
@@ -731,7 +772,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return render_integrations(request, user, csrf, db, error=error, status_code=422)
         from app.token_service import grant_fields
         try:grant=grant_fields(db,form,user)
-        except ValueError as exc:return render_integrations(request,user,csrf,db,error=str(exc),status_code=422)
+        except ValueError as exc:
+            messages = {
+                'Choose legacy_v1 or explicit v2 capabilities including metadata':'Bitte ein gültiges API-Profil und für v2 mindestens Vertragsmetadaten auswählen.',
+                'document_content requires documents':'Dateiinhalt erfordert zusätzlich das Leserecht für Dokumentmetadaten.',
+                'V2 tokens require finite expiry':'Für v2 ist eine Laufzeit von 90 Tagen oder einem Jahr erforderlich.',
+                'Active accountable owner required':'Bitte ein aktives verantwortliches Konto auswählen.',
+                'Accountable service name required (max 120)':'Bitte einen verantwortlichen Dienst mit höchstens 120 Zeichen angeben.',
+            }
+            return render_integrations(request,user,csrf,db,error=messages.get(str(exc),'Bitte die Schnittstellenangaben prüfen.'),status_code=422)
         raw_token = "ohvr_" + secrets.token_urlsafe(32)
         expires_at = (now_utc() + timedelta(days=int(expires_in))
                       if expires_in != "never" else None)
@@ -947,6 +996,36 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, _csrf = user_csrf(request, db)
         _filters, stmt = listing_spec(db, user, locals())
         contracts_to_export = db.scalars(stmt.options(joinedload(Contract.department)).limit(EXPORT_MAX_ROWS+1)).all()
+        return export_response(contracts_to_export)
+
+    @app.post('/contracts/export-selected.xlsx')
+    def export_selected_contracts(request: Request, db: Session = Depends(get_db)):
+        user, _csrf = user_csrf(request, db)
+        form = parsed_form(request, max_files=0, max_fields=2)
+        require_csrf(request, db, str(form.get('csrf_token', '')))
+        if len(form.getlist('contract_ids')) != 1 or len(form.getlist('csrf_token')) != 1:
+            raise HTTPException(422, 'Bitte eine eindeutige Vertragsauswahl übermitteln.')
+        try:
+            ids = selected_export_ids(form.get('contract_ids'), EXPORT_MAX_ROWS)
+        except OverflowError as exc:
+            raise HTTPException(413, str(exc)) from None
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+        # Includes archive records, with exactly the same effective read scope as XLSX.
+        # One scoped query; no per-ID existence checks disclosing foreign records.
+        records = db.scalars(contract_query(user).where(Contract.id.in_(ids))
+            .options(joinedload(Contract.department))
+            .order_by(Contract.updated_at.desc(), Contract.id.desc()).limit(EXPORT_MAX_ROWS+1)).all()
+        if len(records) != len(ids):
+            raise HTTPException(404, 'Die Auswahl enthält nicht verfügbare Verträge. Es wurde keine Datei erstellt. Bitte die Liste neu laden und erneut auswählen.')
+        response = export_response(records)
+        audit(db, user.id, 'contract_selection_export_prepared', 'contracts',
+              record_count=len(records), contract_ids=[record.id for record in records])
+        db.commit()
+        return response
+
+    def export_response(contracts_to_export):
+        # Shared serialization and budgets for both complete-filter and explicit-ID exports.
         if len(contracts_to_export) > EXPORT_MAX_ROWS:
             raise HTTPException(413, 'Der Export ist auf 5000 Verträge begrenzt. Bitte die Filter eingrenzen.')
         payment_labels = dict(PAYMENT_INTERVALS)
@@ -1174,7 +1253,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 errors.append(f'Row {row_number}: {exc}')
                 continue
             if row.get('contract_number'):
-                errors.append(f'Row {row_number}: create-only import generates contract numbers. Remove Vertragsnummer; use external_reference for source identity.')
+                errors.append(f'Zeile {row_number}: Die Vertragsnummer wird bei der Neuanlage erzeugt und muss leer bleiben. Verwenden Sie bei Bedarf eine externe Referenz.')
                 continue
             for key in ("notice_period_months", "renewal_period_months"):
                 raw = row.get(key, "")
@@ -1214,7 +1293,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             try:
                 values = validate_data(row, user, db)
                 if values["status"]=="active":
-                    raise ValidationError("Imported active status has no verifiable approval; import as draft")
+                    raise ValidationError('Status „Aktiv“ hat keine belegte Freigabe. Bitte als Entwurf importieren.')
                 tax_values(user,None,values)
             except ValidationError as exc:
                 errors.append(f"Zeile {row_number}: {exc}")
@@ -1239,7 +1318,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if reference:
                 key = (values['department_id'], reference)
                 if key in existing_keys or key in imported_keys:
-                    errors.append(f'Row {row_number}: external reference already exists in this department or workbook.')
+                    errors.append(f'Zeile {row_number}: Die externe Referenz ist in diesem Fachbereich oder in der Datei bereits vorhanden.')
                 imported_keys.add(key)
         if errors:
             return html(request, "import_result.html", {**base_context(request, user, csrf),
@@ -1270,6 +1349,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise
         return redirect(f"/?notice=imported&imported_count={len(created)}&ambiguous_rows={len(ambiguous_rows)}")
 
+    @app.get('/dashboard', response_class=HTMLResponse)
     @app.get("/", response_class=HTMLResponse)
     def contracts(request: Request, q: str = "", department: str = "",
                   focus: str = "",
@@ -1279,6 +1359,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                   db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         filters, stmt = listing_spec(db, user, locals())
+        dashboard_view = request.url.path == '/dashboard' or request.query_params.get('notice') == 'login'
         q, department, focus = filters['q'], filters['department'], filters['focus']
         contract_type, contact_person = filters['contract_type'], filters['contact_person']
         deputy_contact_person, status = filters['deputy_contact_person'], filters['status']
@@ -1301,7 +1382,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         page_count = max(1, (total_count + page_size - 1) // page_size)
         page = min(page, page_count)
         items = db.scalars(stmt.options(joinedload(Contract.department))
-            .limit(page_size).offset((page - 1) * page_size)).all()
+            .limit(min(6, page_size) if dashboard_view else page_size).offset((page - 1) * page_size)).all()
         def page_url(number):
             return '/?' + urlencode({**filters, 'page':number, 'page_size':page_size})
         focus_counts = {
@@ -1320,7 +1401,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                          set(db.scalars(select(Contract.deputy_contact_person).where(*metadata_scope).distinct()).all())) - {""}
         contract_types = list(CONTRACT_TYPES) + sorted(stored_types - set(CONTRACT_TYPES))
         contact_persons = list(CONTACT_PERSONS) + sorted(stored_people - set(CONTACT_PERSONS))
-        return html(request, "list.html", {**base_context(request, user, csrf),
+        return html(request, 'dashboard.html' if dashboard_view else 'list.html', {**base_context(request, user, csrf),
+                    "toolbar": listing_toolbar(filters, page_size, user, departments, focus_labels),
+                    "can_export": active_access(user),
                     "contracts": items, "total_count": total_count, "page":page, "page_size":page_size,
                     "page_count":page_count, "previous_page_url":page_url(page-1) if page>1 else None,
                     "next_page_url":page_url(page+1) if page<page_count else None,

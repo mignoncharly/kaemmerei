@@ -5,7 +5,8 @@ SAFE_FIELDS = frozenset(('designation','contract_type','contract_partner','relev
     'financial_direction','value_basis','external_reference','payment_interval','budget_assignment',
     'tax_review_status','tax_review_result','username','role','is_active','can_approve','title','kind',
     'due_date','description','assigned_user_id','assigned_to','subject','recipient','recipient_detail',
-    'request_text','result_text','version','name','display_name','team_id','user_id'))
+    'request_text','result_text','version','name','display_name','team_id','user_id',
+    'service_owner','owner_user_id','expires_in','api_profile','api_scopes','document_name'))
 FIELD_LABELS = dict(designation='Bezeichnung',contract_type='Vertragsart',contract_partner='Vertragspartner',
     relevant_date='Vertragsbeginn',end_date='Vertragsende',date_description='Datumsbeschreibung',department_id='Fachbereich',
     contact_person='Zuständige Person',deputy_contact_person='Vertretung',status='Status',notice_period_months='Kündigungsfrist (Monate)',
@@ -16,11 +17,16 @@ FIELD_LABELS = dict(designation='Bezeichnung',contract_type='Vertragsart',contra
     username='Benutzername',role='Rolle',is_active='Konto aktiv',can_approve='Freigabefähigkeit',title='Titel',kind='Art',
     due_date='Frist',description='Beschreibung',assigned_user_id='Zugewiesenes Konto',assigned_to='Zuständigkeit',
     subject='Betreff',recipient='Prüfstelle',recipient_detail='Empfängerangabe',request_text='Prüfauftrag',
-    result_text='Rückmeldung',version='Geladene Version',name='Name',display_name='Anzeigename',team_id='Team',user_id='Konto')
+    result_text='Rückmeldung',version='Geladene Version',name='Name',display_name='Anzeigename',team_id='Team',user_id='Konto',
+    service_owner='Verantwortlicher Dienst',owner_user_id='Verantwortliches Konto',expires_in='Laufzeit',
+    api_profile='API-Profil',api_scopes='API-Rechte',capability='Leserechte',document_name='Dokumentbezeichnung')
 
 
 def safe_values(form):
     values={k:str(v)[:5000] for k,v in form.items() if k in SAFE_FIELDS and isinstance(v,str)}
+    if hasattr(form, 'getlist'):
+        allowed = {'metadata','finance','documents','document_content','tax','tasks','history'}
+        values['capability'] = ','.join(v for v in form.getlist('capability') if v in allowed)
     for key in ('automatic_renewal','is_active','can_approve'):
         values[key]=str(form.get(key,''))=='1'
     return values
@@ -34,3 +40,54 @@ def review_options(user, contract, review, permitted, statuses):
     independent=(review.assigned_user_id==user.id and review.team_id is not None
                  and user.id not in (contract.created_by_id,contract.material_actor_id))
     return [(code,label) for code,label in statuses if code!='approved' or independent]
+
+
+def listing_toolbar(filters, page_size, user, departments, focus_labels):
+    """Presentation URLs from the existing normalized query; no filtering here."""
+    from urllib.parse import urlencode
+    from app.options import CONTRACT_STATUSES, TAX_REVIEW_STATUSES
+    applied = {key: value for key, value in filters.items() if value}
+    if user.role == 'department':
+        applied.pop('department', None)  # Ignored by the server for this role.
+    paging = {'page_size': page_size} if page_size != 50 else {}
+    labels = dict(q='Suche', department='Fachbereich', contract_type='Vertragsart',
+                  contact_person='Zuständig', deputy_contact_person='Vertretung',
+                  status='Status', tax_review_status='§ 2b UStG', focus='Fokus')
+    names = {
+        'department': {str(dept.id): dept.name for dept in departments},
+        'status': {**dict(CONTRACT_STATUSES), 'archived': 'Archiviert'},
+        'tax_review_status': dict(TAX_REVIEW_STATUSES), 'focus': focus_labels,
+    }
+    def url(values, fragment='contract-toolbar'):
+        query = urlencode({**values, **paging})
+        return ('/?' + query if query else '/') + '#' + fragment
+    chips = [dict(key=key, label=labels[key] + ': ' + names.get(key, {}).get(value, value),
+                  remove_url=url({k: v for k, v in applied.items() if k != key}))
+             for key, value in applied.items() if key in labels]
+    return dict(chips=chips, reset_url=url({}),
+                clear_search_url=url({k: v for k, v in applied.items() if k != 'q'}),
+                export_url='/contracts/export.xlsx' + ('?' + urlencode(applied) if applied else ''))
+
+
+def import_error_message(message):
+    """Translate controlled parser diagnostics for the UI; keep row/cell context."""
+    import re
+    message = re.sub(r'\bRow (\d+)', r'Zeile \1', str(message))
+    translations = {
+        'Formula cells are not supported; paste literal values first.': 'Formeln sind nicht zulässig. Bitte die Ergebnisse als feste Werte einfügen.',
+        'Excel error cell; replace with a literal value.': 'Die Excel-Zelle enthält einen Fehler. Bitte durch einen gültigen Wert ersetzen.',
+        'Too many ZIP members or duplicate ZIP paths.': 'Die Arbeitsmappe enthält zu viele oder doppelte Dateibestandteile. Bitte eine neue Datei mit der Vorlage erstellen.',
+        '1904 workbook date system is not supported; use ISO date strings in a 1900 workbook.': 'Das 1904-Datumssystem wird nicht unterstützt. Bitte JJJJ-MM-TT in einer Arbeitsmappe mit 1900-Datumssystem verwenden.',
+        'Invalid worksheet relationship target.': 'Die Verknüpfung zum Tabellenblatt ist ungültig. Bitte die Excel-Vorlage verwenden.',
+        'Invalid worksheet row number.': 'Ungültige Zeilennummer im Tabellenblatt.',
+        'Invalid or repeated worksheet row number.': 'Ungültige oder wiederholte Zeilennummer im Tabellenblatt.',
+        'invalid cell reference': 'ungültiger Zellverweis',
+        'duplicate or out-of-range column.': 'doppelte Spalte oder Spalte außerhalb des zulässigen Bereichs.',
+        'Unsupported column:': 'Nicht unterstützte Spalte:',
+        '. Remove it explicitly before importing.': '. Bitte diese Spalte vor dem Import entfernen.',
+        'Duplicate column:': 'Doppelte Spalte:',
+        'Invalid Excel date: use a whole supported day serial or ISO date; serial 60 is fictitious.': 'Ungültiges Excel-Datum. Bitte JJJJ-MM-TT oder einen gültigen ganzzahligen Datumswert verwenden; der Excel-Datumswert 60 ist nicht zulässig.',
+    }
+    for original, translated in translations.items():
+        message = message.replace(original, translated)
+    return message

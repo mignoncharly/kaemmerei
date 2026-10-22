@@ -1,0 +1,39 @@
+{
+  "format": "ohvr-filter-popover-evidence-v1",
+  "date": "2026-10-22",
+  "source": "c3bd73274fe2ed7e545341380fefaca8d2f6d5cb",
+  "baseline": "a36fb9374939dd45ab2a576277ad579d9eff6020",
+  "synthetic_only": true,
+  "pytest": {
+    "passed": 23,
+    "skipped": 0,
+    "seconds": 16.8,
+    "suites": ["test_contract_toolbar.py", "test_frontend_redesign.py", "test_phase8.py", "test_report_projection.py"],
+    "local_report": ".verification/popover-tests.xml"
+  },
+  "live_http": {
+    "status": "passed",
+    "checks": 15,
+    "roles": ["admin", "kultur", "pruefer"],
+    "browser_rendering": false,
+    "local_report": ".verification/popover-http.json"
+  },
+  "static_checks": {"javascript_syntax": "passed", "python_compile": "passed", "git_diff_check": "passed"},
+  "browser_connector": {"available_browsers": 0},
+  "browser": {
+    "status": "blocked",
+    "stage": "automation_driver",
+    "error_code": "automation_driver_permission_denied",
+    "exception_type": "PermissionError",
+    "winerror": 5,
+    "checks": ["server_started"],
+    "browser_started": false,
+    "local_report": ".verification/popover-browser/result.json"
+  },
+  "screenshots": [],
+  "visual_inspection": "NOT_PERFORMED",
+  "responsive_widths_pending": [390, 768, 1280, 1440],
+  "keyboard_validation": "NOT_PERFORMED",
+  "first_row_position_measurement": "NOT_PERFORMED",
+  "push_merge_deploy": false
+}

@@ -43,7 +43,7 @@ def install_document_routes(app,*,get_db,user_csrf):
         if not app.state.config.queued_document_scans:
             try:process_document(db,app.state.config,app.state.document_scanner,document.id,user=user)
             except Exception:db.rollback()
-        return RedirectResponse(f'/contracts/{contract_id}',status_code=303)
+        return RedirectResponse(f'/contracts/{contract_id}?notice=document_replaced',status_code=303)
 
     @app.post('/contracts/{contract_id}/documents/{document_id}/link')
     def correct_link(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
@@ -65,7 +65,7 @@ def install_document_routes(app,*,get_db,user_csrf):
         db.add(Revision(contract_id=contract.id,actor_id=user.id,action='document_uploaded',before={'document_id':old.id},
             after={'document_id':new.id,'replaces_id':old.id,'source':'external_document_system'}))
         db.commit()
-        return RedirectResponse(f'/contracts/{contract_id}',status_code=303)
+        return RedirectResponse(f'/contracts/{contract_id}?notice=document_link_updated',status_code=303)
 
     @app.post('/contracts/{contract_id}/documents/{document_id}/hold')
     def hold(request:Request,contract_id:int,document_id:int,db=Depends(get_db)):
@@ -79,4 +79,4 @@ def install_document_routes(app,*,get_db,user_csrf):
         document.legal_hold=True;document.version+=1
         audit(db,user.id,'document_hold_placed',f'document:{document.id}')
         db.commit()
-        return RedirectResponse(f'/contracts/{contract_id}',status_code=303)
+        return RedirectResponse(f'/contracts/{contract_id}?notice=document_hold',status_code=303)

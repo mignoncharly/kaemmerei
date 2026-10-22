@@ -1,37 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Schnittstellen{% endblock %}
 {% block content %}
-<div class="page-head"><div><div class="eyebrow">F15 · VERBINDUNGEN</div><h1>Schnittstellen</h1><p>Externe Verwaltungsanwendungen können freigegebene Vertragsdaten über eine geschützte JSON-API abrufen.</p></div><a class="button secondary" href="/">Zur Vertragsübersicht</a></div>
+<div class="page-head"><div><div class="eyebrow">VERWALTUNG · VERBINDUNGEN</div><h1>Schnittstellen</h1><p>Externe Verwaltungsanwendungen können freigegebene Vertragsdaten über eine geschützte JSON-API abrufen.</p></div><a class="button secondary" href="/">Zur Vertragsübersicht</a></div>
 
-{% if new_token %}<section class="panel integration-secret"><strong>Neuer Integrationstoken</strong><p>Kopiere diesen Token jetzt in die externe Anwendung. Er wird später nicht erneut angezeigt.</p><code>{{ new_token }}</code><small>Nur lesender Zugriff. Beenden kannst du den Zugriff jederzeit unten über „Widerrufen“.</small></section>{% endif %}
+{% if new_token %}<section class="panel integration-secret"><strong>Neuer Integrationstoken</strong><p>Kopieren Sie diesen Token jetzt in die externe Anwendung. Er wird später nicht erneut angezeigt.</p><code>{{ new_token }}</code><small>Nur lesender Zugriff. Beenden Sie den Zugriff jederzeit unten über „Widerrufen“.</small></section>{% endif %}
 {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
 
 <section class="panel integration-form-panel"><div class="panel-heading"><div><h2>Neue Schnittstelle anlegen</h2><p class="history-subtitle">Erstellt einen geheimen API-Token. Schreibzugriffe sind nicht möglich.</p></div></div>
  <form class="integration-form" method="post" action="/admin/integrations">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-  <div><label for="integration-name">Name der Anwendung</label><input id="integration-name" name="name" maxlength="120" required placeholder="z. B. H&H Finanzwesen"></div>
-  <div><label for="integration-department">Datenzugriff</label><select id="integration-department" name="department_id"><option value="">Alle Fachbereiche · nur lesend</option>{% for department in departments %}<option value="{{ department.id }}">Nur {{ department.name }}</option>{% endfor %}</select></div>
-  <div><label for="integration-expiry">Gültigkeit</label><select id="integration-expiry" name="expires_in"><option value="90" selected>90 Tage</option><option value="365">1 Jahr</option><option value="never">Unbegrenzt</option></select></div>
-  <div><label for="integration-profile">API-Profil</label><select id="integration-profile" name="api_profile"><option value="v2">v2: ausgewählte Rechte und zuverlässiger Änderungsabruf</option><option value="legacy_v1">v1: bisheriger umfassender Lesezugriff</option></select></div>
-  <div><label for="service-owner">Verantwortlicher Dienst / Organisation</label><input id="service-owner" name="service_owner" maxlength="120" required></div>
-  <div><label for="owner-user">Verantwortliches Konto</label><select id="owner-user" name="owner_user_id">{% for account in owner_users %}<option value="{{ account.id }}" {% if account.id==user.id %}selected{% endif %}>{{ account.username }}</option>{% endfor %}</select></div>
+  <div><label for="integration-name">Name der Anwendung</label><input id="integration-name" value="{{ values.get('name', '') }}" name="name" maxlength="120" required placeholder="z. B. H&H Finanzwesen"></div>
+  <div><label for="integration-department">Datenzugriff</label><select id="integration-department" name="department_id"><option value="">Alle Fachbereiche · nur lesend</option>{% for department in departments %}<option value="{{ department.id }}" {% if values.get("department_id", "") == department.id|string %}selected{% endif %}>Nur {{ department.name }}</option>{% endfor %}</select></div>
+  <div><label for="integration-expiry">Gültigkeit</label><select id="integration-expiry" name="expires_in"><option value="90" {% if values.get("expires_in", "90") == "90" %}selected{% endif %}>90 Tage</option><option value="365" {% if values.get("expires_in") == "365" %}selected{% endif %}>1 Jahr</option><option value="never" {% if values.get("expires_in") == "never" %}selected{% endif %}>Unbegrenzt</option></select></div>
+  <div><label for="integration-profile">API-Profil</label><select id="integration-profile" name="api_profile"><option value="v2">v2: ausgewählte Rechte und zuverlässiger Änderungsabruf</option><option value="legacy_v1" {% if values.get("api_profile") == "legacy_v1" %}selected{% endif %}>v1: bisheriger umfassender Lesezugriff</option></select></div>
+  <div><label for="service-owner">Verantwortlicher Dienst / Organisation</label><input id="service-owner" value="{{ values.get('service_owner', '') }}" name="service_owner" maxlength="120" required></div>
+  <div><label for="owner-user">Verantwortliches Konto</label><select id="owner-user" name="owner_user_id">{% for account in owner_users %}<option value="{{ account.id }}" {% if values.get("owner_user_id", user.id|string) == account.id|string %}selected{% endif %}>{{ account.username }}</option>{% endfor %}</select></div>
   <fieldset><legend>v2-Leserechte (v1 behält seinen bisherigen Umfang)</legend>
-  <label><input type="checkbox" name="capability" value="metadata" checked> Vertragsmetadaten (für v2 erforderlich)</label>
-  <label><input type="checkbox" name="capability" value="finance"> Finanzdaten</label>
-  <label><input type="checkbox" name="capability" value="documents"> Dokumentmetadaten und DMS-Links</label>
-  <label><input type="checkbox" name="capability" value="document_content"> Dateiinhalt (zusätzlich Dokumentmetadaten auswählen)</label>
-  <label><input type="checkbox" name="capability" value="tax"> Steuerprüfung</label>
-  <label><input type="checkbox" name="capability" value="tasks"> Aufgaben</label>
-  <label><input type="checkbox" name="capability" value="history"> Prüfentscheidungen und vollständige historische Inhalte, einschließlich früherer Finanz-/Steuerdaten</label>
+  <label><input type="checkbox" name="capability" value="metadata" {% if "metadata" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Vertragsmetadaten (für v2 erforderlich)</label>
+  <label><input type="checkbox" name="capability" value="finance" {% if "finance" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Finanzdaten</label>
+  <label><input type="checkbox" name="capability" value="documents" {% if "documents" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Dokumentmetadaten und DMS-Links</label>
+  <label><input type="checkbox" name="capability" value="document_content" {% if "document_content" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Dateiinhalt (zusätzlich Dokumentmetadaten auswählen)</label>
+  <label><input type="checkbox" name="capability" value="tax" {% if "tax" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Steuerprüfung</label>
+  <label><input type="checkbox" name="capability" value="tasks" {% if "tasks" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Aufgaben</label>
+  <label><input type="checkbox" name="capability" value="history" {% if "history" in values.get("capability", "metadata").split(",") %}checked{% endif %}> Prüfentscheidungen und vollständige historische Inhalte, einschließlich früherer Finanz-/Steuerdaten</label>
   </fieldset>
   <button class="button primary" type="submit">Token erstellen</button>
  </form>
  <p class="integration-note">v2 erfordert eine Laufzeit von 90 oder 365 Tagen. Ein deaktiviertes verantwortliches Konto sperrt neu zugeordnete Tokens. Alte Tokens ohne zugeordnetes Konto behalten ausschließlich ihren bisherigen v1-Umfang. Bestehende Verbraucher erhalten keine zusätzlichen v2-Rechte.</p>
 </section>
 
-<section class="panel"><h2>Token rotieren oder Berechtigungen ändern</h2>
+<section class="panel panel-body"><h2>Token rotieren oder Berechtigungen ändern</h2>
  <p>Rotation zeigt ein neues Geheimnis einmalig an. Alter und neuer Token bleiben bis Ablauf oder ausdrücklichem Widerruf gültig. Der neue Verbraucher beginnt mit einem eigenen Snapshot; nach erfolgreicher Umstellung den Vorgänger widerrufen. Alte Tokens werden bei Rotation Ihrem Konto zugeordnet, sofern bisher kein Verantwortlicher hinterlegt war.</p>
- {% for token in tokens %}{% if token.is_active %}<details><summary>{{ token.name }} · {{ token.api_scopes }} · {{ token.service_owner or 'Verantwortung noch nicht zugeordnet' }}</summary>
+ {% for token in tokens %}{% if token.is_active %}<details class="token-editor"><summary>{{ token.name }} · {{ token.api_scopes }} · {{ token.service_owner or 'Verantwortung noch nicht zugeordnet' }}</summary>
  <form method="post" action="/admin/integrations/{{ token.id }}/rotate"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Neuen Token für die Umstellung erzeugen</button></form>
  <form method="post" action="/admin/integrations/{{ token.id }}/scope"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
  <label>API-Rechte: legacy_v1 oder v2 mit metadata und gewählten Rechten aus obiger Liste<input name="api_scopes" value="{{ token.api_scopes }}" maxlength="300" required></label>
@@ -44,7 +44,7 @@
 </section>
 
 <section class="panel integration-list-panel"><div class="panel-heading"><div><h2>Vergebene Zugriffstokens</h2><p class="history-subtitle">Geheimnisse werden nur bei der Erstellung gezeigt; gespeichert wird ausschließlich ein Hash.</p></div><span class="count">{{ tokens|length }}</span></div>
- {% if tokens %}<div class="table-scroll"><table class="integration-table"><thead><tr><th scope="col">Anwendung</th><th scope="col">Zugriff</th><th scope="col">Token</th><th scope="col">Erstellt</th><th scope="col">Läuft ab</th><th scope="col">Letzte Nutzung</th><th scope="col">Status</th><th scope="col"></th></tr></thead><tbody>
+ {% if tokens %}<div class="table-scroll"><table class="integration-table"><thead><tr><th scope="col">Anwendung</th><th scope="col">Zugriff</th><th scope="col">Token</th><th scope="col">Erstellt</th><th scope="col">Läuft ab</th><th scope="col">Letzte Nutzung</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Aktionen</span></th></tr></thead><tbody>
  {% for token in tokens %}<tr><td><strong>{{ token.name }}</strong><small class="contract-id">von {{ token.created_by.username }}</small></td><td>{% if token.department %}{{ token.department.name }}{% else %}Alle Fachbereiche{% endif %}</td><td><code>{{ token.token_prefix }}…</code></td><td>{{ token.created_at.strftime('%d.%m.%Y') }}</td><td>{% if token.expires_at %}{{ token.expires_at.strftime('%d.%m.%Y') }}{% else %}Unbegrenzt{% endif %}</td><td>{% if token.last_used_at %}{{ token.last_used_at.strftime('%d.%m.%Y %H:%M') }} UTC{% else %}Noch nie{% endif %}</td><td><span class="account-status {% if token.is_active and (not token.expires_at or token.expires_at > now) %}is-active{% else %}is-inactive{% endif %}">{% if not token.is_active %}Widerrufen{% elif token.expires_at and token.expires_at <= now %}Abgelaufen{% else %}Aktiv{% endif %}</span></td><td>{% if token.is_active %}<form method="post" action="/admin/integrations/{{ token.id }}/revoke"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button danger" type="submit">Widerrufen</button></form>{% endif %}</td></tr>{% endfor %}
  </tbody></table></div>{% else %}<div class="empty">Noch keine Schnittstellen-Tokens angelegt.</div>{% endif %}
 </section>

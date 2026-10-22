@@ -9,6 +9,22 @@ FILTER_LIMITS = dict(q=100,department=10,focus=16,contract_type=120,contact_pers
 EXPORT_MAX_ROWS = 5000
 
 
+def selected_export_ids(raw, max_rows=EXPORT_MAX_ROWS):
+    """Strict, bounded IDs; reject ambiguity rather than silently exporting a subset."""
+    if not isinstance(raw, str) or not raw:
+        raise ValueError('Bitte mindestens einen Vertrag auswählen.')
+    if len(raw) > max_rows * 11 or raw.count(',') >= max_rows:
+        raise OverflowError('Der Export ist auf 5.000 Verträge begrenzt.')
+    parts = raw.split(',')
+    if any(not part.isascii() or not part.isdecimal() or len(part)>10
+           or part.startswith('0') or int(part)>2147483647 for part in parts):
+        raise ValueError('Die Vertragsauswahl ist ungültig. Bitte die Seite neu laden und erneut auswählen.')
+    ids = [int(part) for part in parts]
+    if len(set(ids)) != len(ids):
+        raise ValueError('Die Vertragsauswahl enthält doppelte Einträge. Bitte erneut auswählen.')
+    return ids
+
+
 def normalize_filters(values):
     result={key:str(values.get(key,'')).strip()[:limit] for key,limit in FILTER_LIMITS.items()}
     if result['status'] not in {k for k,_ in CONTRACT_STATUSES}|{'archived'}:result['status']=''
