@@ -1,5 +1,14 @@
 # Synthetic pilot acceptance package — U023
 
+U024 local Microsoft Edge: **VERIFIED**, 32 checks, exit 0, synthetic only, exact
+source `d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`; result SHA-256
+`2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+[Validated evidence](evidence/u024-edge-verified.json), [diagnosis and scope](U024_BROWSER_FAILURE_DIAGNOSIS.md).
+This closes the local Edge engineering check, with no new browser run. Formal
+12-scenario participant acceptance is **NOT COMPLETE**; R43, actual scanner,
+native symlink, current hosted CI and actual-host gates remain open. Real-data
+use and production deployment remain blocked pending separate approvals.
+
 Baseline: verified code `05648eda3ce6ddb9fe7e33082593e294522fbf24` and preserved
 documentation `8ca205c`. New exact-source execution evidence is recorded in
 HANDOFF U023 after the code freeze. This package does not claim participant
@@ -112,7 +121,7 @@ Each run gets a new `.verification/u023-browser-<UUID>` directory. Only share
 `sanitized-report.json`; keep logs/screenshots local. Expected format:
 
 ```json
-{"format":"ohvr-local-browser-verification-v2","source":"<actual 40-char Git SHA>","status":"passed or failed_or_environment_blocked","exit_code":0,"synthetic_only":true,"check_count":31,"result_sha256":"<actual SHA-256 or null>","error_code":null}
+{"format":"ohvr-local-browser-verification-v2","source":"<actual 40-char Git SHA>","status":"passed or failed_or_environment_blocked","exit_code":0,"synthetic_only":true,"check_count":32,"result_sha256":"<actual SHA-256 or null>","error_code":null}
 ```
 
 Check count is illustrative, never a prefilled pass. Success requires a fresh v2
@@ -200,9 +209,10 @@ source build/manifest and isolated packaged migration/startup. Review every skip
 expected backend skips need a passing actual-backend counterpart. A missing
 scanner/symlink privilege is missing local environment coverage, not a backend pass.
 
-Current workflow `.github/workflows/phase1-verification.yml` expands to eight jobs:
+Current workflow `.github/workflows/phase1-verification.yml` expands to ten hosted job executions:
 locked-release Windows and Linux; cross-OS release reproducibility; real frontend
-browser; real scanner; native PostgreSQL; SQLite; PostgreSQL service. **All eight
+browser; real scanner; native PostgreSQL; SQLite; PostgreSQL service; required native
+storage links on Windows and Linux. **All ten
 must run against the final candidate commit** after explicit external authorization.
 Retain job/run IDs, source SHA, artifacts, test/skips and failure classifications.
 Current workflow additionally repeats selected phases/backup tests, verifies
@@ -215,7 +225,7 @@ Candidate evidence inventory must bind exact code source, source artifact SHA-25
 schema head, dependency lock hash, test report hashes, benchmark, native/scanner/
 browser outcomes, outstanding gates and all exclusions. Keep tests and evidence
 separate from a deployable package. A checksum proves integrity, not approval.
-Do not mark candidate fully accepted while R43, actual host/scanner/browser,
+Do not mark candidate fully accepted while R43, actual host/scanner,
 participant acceptance or independent review remains open.
 
 ## Pending municipal decisions remain separate

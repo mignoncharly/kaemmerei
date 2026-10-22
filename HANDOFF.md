@@ -6,6 +6,14 @@ Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
 Current stage: Phase 9 remaining operations gates; Phase 10 acceptance/release preparation (U021). P10-T02 matrix prepared; no production release or Phase 9 exit. See docs/PHASE9_OPERATIONS.md and docs/PHASE10_ACCEPTANCE.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
+Latest update U025: local Microsoft Edge U024 is **VERIFIED** at exact source
+`d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`, 32 checks, synthetic only, result
+SHA-256 `2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+See [evidence](docs/evidence/u024-edge-verified.json). No unnecessary browser rerun.
+U025 adds required native-link CI and an executable, source-bound 12-scenario
+acceptance package builder. Formal participant acceptance remains incomplete;
+real-data and production approvals are not granted. See latest update below.
+
 ## 1. Start here
 
 1. Read this file, the ten-phase plan, [README.md](README.md), and [docs/ARBEITSPLAN.md](docs/ARBEITSPLAN.md).
@@ -642,3 +650,26 @@ with two fixture checks. Full corrected browser scenarios remain unverified; do 
 browser acceptance passed. Existing U023 database/workload evidence remains tied to its
 original source. No deployment, push, database/ACL change or municipal approval occurred.
 The pre-existing uncommitted Start-TestDatabase.ps1 edit is preserved.
+
+
+## U025 ? verified local Edge and executable acceptance preparation
+
+Validated the actual local U024 wrapper, parent and browser artifacts and their
+hashes; the prior managed WinError 5 is historical, not a current local Edge blocker.
+No browser/application/runtime dependency code changed in U025. The package builder
+checks ancestor identity and browser-relevant source equivalence before carrying
+forward the exact U024 source/hash. Automated browser success never populates the
+12 participant result rows: all start NOT_RUN, separate from formal approval.
+
+Actual Windows junction and junction-parent storage rejection passed locally.
+Symbolic-link creation remains unavailable under this managed identity. A new
+Windows/Linux native-storage-links CI matrix requires real links and fails instead
+of skipping when privileges are missing. No privileges or ACLs were changed.
+
+Actual ClamAV is neither configured, on PATH nor present in its standard Windows
+installation directory. R43 requires authorized native patching and repeat checks;
+no installer/service/configuration action is authorized here. A read-only current
+GitHub workflow lookup was unreachable; no push/dispatch or current hosted success
+is claimed. All ten final-source hosted job executions remain required.
+See docs/U025_SYNTHETIC_ACCEPTANCE_PACKAGE.md for executed engineering evidence,
+packet location and the exact remaining owner actions.

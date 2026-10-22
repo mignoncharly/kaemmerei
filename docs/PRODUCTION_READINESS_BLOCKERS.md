@@ -1,6 +1,15 @@
 # Production readiness: blockers and product-owner inputs
 
-U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+U024 local Microsoft Edge: **VERIFIED**, 32 checks, exit 0, synthetic only, exact
+source `d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`; result SHA-256
+`2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+[Validated evidence](evidence/u024-edge-verified.json), [diagnosis and scope](U024_BROWSER_FAILURE_DIAGNOSIS.md).
+This closes the local Edge engineering check, with no new browser run. Formal
+12-scenario participant acceptance is **NOT COMPLETE**; R43, actual scanner,
+native symlink, current hosted CI and actual-host gates remain open. Real-data
+use and production deployment remain blocked pending separate approvals.
+
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, scanner/host and participant gates remain open; no real-data or production authorization.
 
 U023: [synthetic pilot acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.
 

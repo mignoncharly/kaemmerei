@@ -1,5 +1,14 @@
 # U023 candidate verification and remaining actions
 
+U024 local Microsoft Edge: **VERIFIED**, 32 checks, exit 0, synthetic only, exact
+source `d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`; result SHA-256
+`2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+[Validated evidence](evidence/u024-edge-verified.json), [diagnosis and scope](U024_BROWSER_FAILURE_DIAGNOSIS.md).
+This closes the local Edge engineering check, with no new browser run. Formal
+12-scenario participant acceptance is **NOT COMPLETE**; R43, actual scanner,
+native symlink, current hosted CI and actual-host gates remain open. Real-data
+use and production deployment remain blocked pending separate approvals.
+
 Verified implementation: `af290a445026e99cab6622c056993409ffa7de7e`. It descends from verified `05648eda3ce6ddb9fe7e33082593e294522fbf24` and preserves documentation follow-up `8ca205c`. Later evidence/documentation commits do not relabel unexecuted tests as passes.
 
 Status: **PREPARED_NOT_ACCEPTED**. [Machine-readable candidate evidence](evidence/u023-candidate.json), [full procedures and R43 impact/remediation](SYNTHETIC_PILOT_ACCEPTANCE.md), [12 participant scenarios](pilot/scenarios-v1.json).
@@ -47,24 +56,24 @@ Source bundle: [source.zip](../.verification/u023-rc/source.zip), 128 files plus
 
 [Candidate manifest](../.verification/u023-rc/candidate.json), its `candidate.sha256` sidecar and `evidence/*.json` bind source, lock/workflow/artifact/JUnit/result hashes, final and earlier failed outcomes, recovery and explicit gates. Initial assembly encountered a direct diagnostic folder without a wrapper report; incomplete scratch output was preserved, collector corrected to select actual report files, then the complete candidate assembled successfully. No source/test outcome changed for that correction.
 
-Eight expanded CI jobs must run on the final candidate commit: locked-release Linux/Windows, release reproducibility, frontend browser, document scanner, native PostgreSQL, SQLite and PostgreSQL service. Configuration parsed locally and now requires native floors, actual-scanner HTTP checks under restricted PostgreSQL roles and the mixed workload. **Current hosted CI: NOT_RUN.** Prior hosted success at `3442ad8` supplies no current-source CI pass. Pushing/dispatching any external run still requires authorization.
+U025 adds required native-storage-links on Linux and Windows; ten hosted job executions must run on the final candidate commit: locked-release Linux/Windows, release reproducibility, frontend browser, document scanner, native PostgreSQL, SQLite and PostgreSQL service. Configuration parsed locally and now requires native floors, actual-scanner HTTP checks under restricted PostgreSQL roles and the mixed workload. **Current hosted CI: NOT_RUN.** Prior hosted success at `3442ad8` supplies no current-source CI pass. Pushing/dispatching any external run still requires authorization.
 
 ## Remaining action ledger
 
 | Classification | Gate / exact next action | Responsible role |
 |---|---|---|
 | VERIFIED | Current local suites, mixed workload, encrypted recovery, strict native parser/old-version rejection, scanner adapter/failure controls, evidence validator, actual PowerShell syntax and local read-only inventory execution | Engineering; evidence above |
-| IMPLEMENTED BUT UNVERIFIED | Expanded browser journeys: run tracked wrapper normally using the command below, return sanitized report; managed driver fails CreateFile WinError 5. Participant and manual screen-reader checks remain separate. | Product owner/local authorized operator; engineering reviews result |
-| IMPLEMENTED BUT UNVERIFIED | Eight hosted CI jobs on exact final candidate source; record run IDs/outcomes/artifacts. Authorize publishing an isolated review branch/CI run, or provide an approved equivalent runner, before engineering acts externally. | Product owner authorization, then engineering |
+| VERIFIED | U024 local Edge: 32 checks at d3f5ad2; exact source/hash above. Participant and manual screen-reader checks remain separate. | Engineering validated local artifacts |
+| IMPLEMENTED BUT UNVERIFIED | Ten hosted CI job executions on exact final candidate source; record run IDs/outcomes/artifacts. Authorize publishing an isolated review branch/CI run, or provide an approved equivalent runner, before engineering acts externally. | Product owner authorization, then engineering |
 | EXTERNALLY BLOCKED | R43: authorize/provide reviewed patched server and matching native tools (existing 18 branch: 18.6+), then native attestation, actual roles/revocation, TLS, workload and recovery/stability checks. Observed server/pg_dump/pg_restore/psql remain 18.3; loaded libpq separately 18.4. No exploit confirmed or native upgrade performed. | Authorized system administration with product owner authorization |
 | EXTERNALLY BLOCKED | Actual scanner: approved maintained clamscan, current official signatures/update provenance and scan-identity access; execute required real engine/HTTP check, then actual-host encrypted/macro/limit and throughput acceptance. No endpoint-security exclusion or daemon exposure. | Authorized scan/host operator and engineering |
 | EXTERNALLY BLOCKED | STRATO: supply exact non-secret tariff/category/OS from existing product overview, then authorized read-only host inventory/capability references. Verify persistent native service, isolation from website, VPN/firewall/TLS, ACL/quota and recovery. SFTP alone is insufficient; no connector/browser account surface available here. | Product owner and authorized host operator |
-| EXTERNALLY BLOCKED | Actual native link rejection and intended Windows reparse/storage checks using an already permitted identity or CI; no ACL/Windows/browser bypass. | Engineering and authorized test-host operator |
+| EXTERNALLY BLOCKED | Windows junction rejection is now verified locally; actual symbolic-link rejection still requires an already permitted identity or required CI; no ACL/Windows/browser bypass. | Engineering and authorized test-host operator |
 | EXTERNALLY BLOCKED | Select Fachbereich and execute/review 12 cases with actual participants and dated evidence; validator currently records 12 NOT_RUN, zero passes, no formal authorization. | Responsible Kämmerei representative, selected users, product owner/operator |
 | EXTERNALLY BLOCKED | Written finance/deadline/records answers and relevant municipal confirmation, then separate real-data authorization. Pending packets retain null expected outputs; manual fields remain; disposal disabled. | Kämmerei and municipality; engineering versions/tests approved rules afterward |
 | EXTERNALLY BLOCKED | Actual-host operating adoption/off-host recovery, independent security/permission review and municipal production authorization | Provisional municipal IT/System Administration, independent reviewer and municipality |
 
-Safe browser command in the normal authorized PowerShell terminal:
+Future browser reruns only after relevant code changes (U024 already passed):
 
 ```powershell
 cd C:\kämmerei\OPEN_HERZ_Vertragsregister_Phase

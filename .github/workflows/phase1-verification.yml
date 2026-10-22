@@ -72,6 +72,27 @@ jobs:
               summaries.append(summary)
           assert summaries[0]==summaries[1]
           print('Windows/Linux committed-source artifacts match byte for byte')
+  native-storage-links:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      REQUIRE_NATIVE_LINKS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: python -m pip install -r requirements-dev.txt
+      - name: Require actual symbolic links and Windows junction rejection
+        run: python -m pytest -q tests/test_phase5.py tests/test_storage_links.py -k "actual_linked_storage or junction" --database sqlite --junitxml=.verification/native-storage-links.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-storage-links-${{ matrix.os }}
+          path: .verification/native-storage-links.xml
   frontend-browser:
     runs-on: ubuntu-24.04
     steps:

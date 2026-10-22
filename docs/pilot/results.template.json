@@ -6,7 +6,7 @@
     {
       "id": "PILOT-001",
       "status": "NOT_RUN",
-      "participant_role": "K?mmerei test user",
+      "participant_role": "Kämmerei test user",
       "observed_at": null,
       "evidence_reference": null,
       "actual": null
@@ -30,7 +30,7 @@
     {
       "id": "PILOT-004",
       "status": "NOT_RUN",
-      "participant_role": "K?mmerei test user",
+      "participant_role": "Kämmerei test user",
       "observed_at": null,
       "evidence_reference": null,
       "actual": null
@@ -62,7 +62,7 @@
     {
       "id": "PILOT-008",
       "status": "NOT_RUN",
-      "participant_role": "Responsible K?mmerei representative",
+      "participant_role": "Responsible Kämmerei representative",
       "observed_at": null,
       "evidence_reference": null,
       "actual": null
@@ -86,7 +86,7 @@
     {
       "id": "PILOT-011",
       "status": "NOT_RUN",
-      "participant_role": "Selected K?mmerei test users",
+      "participant_role": "Selected Kämmerei test users",
       "observed_at": null,
       "evidence_reference": null,
       "actual": null

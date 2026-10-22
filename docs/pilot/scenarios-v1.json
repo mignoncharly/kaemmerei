@@ -1,7 +1,7 @@
 {
   "format": "ohvr-synthetic-pilot-scenarios-v1",
   "version": 1,
-  "scope": "K?mmerei + one selected Fachbereich; internal/VPN; local TOTP; synthetic data only",
+  "scope": "Kämmerei + one selected Fachbereich; internal/VPN; local TOTP; synthetic data only",
   "pending": [
     "finance",
     "contractual deadline interpretation",
@@ -11,16 +11,16 @@
   "scenarios": [
     {
       "id": "PILOT-001",
-      "participant_role": "K?mmerei test user",
+      "participant_role": "Kämmerei test user",
       "title": "Password and TOTP enrollment",
-      "steps": "Operator authorizes enrollment of a disposable K?mmerei account. Sign in with password, open a contract URL before MFA, enroll in a test authenticator, submit current code, sign out and attempt replay.",
+      "steps": "Operator authorizes enrollment of a disposable Kämmerei account. Sign in with password, open a contract URL before MFA, enroll in a test authenticator, submit current code, sign out and attempt replay.",
       "expected": "Password alone exposes no register; valid current code opens own scope; replay rejected; no seed/code in shared evidence."
     },
     {
       "id": "PILOT-002",
       "participant_role": "Fachbereich test user",
       "title": "Department isolation and permissions",
-      "steps": "Sign in using separate browser profiles for K?mmerei and selected Fachbereich. Open own and other department contract/document IDs; try account administration and an unauthorized edit.",
+      "steps": "Sign in using separate browser profiles for Kämmerei and selected Fachbereich. Open own and other department contract/document IDs; try account administration and an unauthorized edit.",
       "expected": "Own scope available; foreign metadata/content hidden; administrative and business permissions follow provisional matrix. No infrastructure/Judith grants."
     },
     {
@@ -32,7 +32,7 @@
     },
     {
       "id": "PILOT-004",
-      "participant_role": "K?mmerei test user",
+      "participant_role": "Kämmerei test user",
       "title": "Create own synthetic case and cross-scope search",
       "steps": "Create SYN-PILOT-KAM-001 with fictional rental data. Search/filter/list/report/export from each department profile.",
       "expected": "Each profile sees only permitted records; counts/export agree; no foreign record or unconfirmed calculation treated as approved."
@@ -60,7 +60,7 @@
     },
     {
       "id": "PILOT-008",
-      "participant_role": "Responsible K?mmerei representative",
+      "participant_role": "Responsible Kämmerei representative",
       "title": "Independent assigned review",
       "steps": "Writer requests completeness review; authorized account administrator configures eligible independent assignee with existing read scope. Reviewer decides with reason; attempt self-decision and stale decision; materially edit content and inspect invalidation.",
       "expected": "Only correctly scoped assigned independent reviewer decides current content; self/stale/wrong-recipient rejected; material edit invalidates earlier approval. Completeness decision supplies no accounting/legal determination."
@@ -81,7 +81,7 @@
     },
     {
       "id": "PILOT-011",
-      "participant_role": "Selected K?mmerei test users",
+      "participant_role": "Selected Kämmerei test users",
       "title": "Browser accessibility and usability",
       "steps": "Exercise keyboard-only navigation, skip link, error recovery, 320/390-pixel reflow and approved screen reader; navigate complete reminder pages and compare full counts.",
       "expected": "Usable focus/labels/errors/reflow and complete pagination; record actual assistive technology/browser version and issues. Automation does not constitute manual AT acceptance."
@@ -90,7 +90,7 @@
       "id": "PILOT-012",
       "participant_role": "Product owner/software engineer/project IT operator",
       "title": "Acceptance boundary and release record",
-      "steps": "Review source/artifact/evidence and role scope with K?mmerei representative and selected users. Record every case actual result, participant role, timestamp and evidence reference.",
+      "steps": "Review source/artifact/evidence and role scope with Kämmerei representative and selected users. Record every case actual result, participant role, timestamp and evidence reference.",
       "expected": "No NOT_RUN/BLOCKED/FAILED becomes accepted. Synthetic pilot acceptance remains separate from real-data authorization, independent review and municipal production approval."
     }
   ]

@@ -1,0 +1,64 @@
+{
+  "format": "ohvr-local-edge-verified-v1",
+  "status": "VERIFIED",
+  "scope": "local Microsoft Edge, synthetic SQLite, synthetic scanner",
+  "browser_channel": "msedge",
+  "channel_provenance": "operator-confirmed execution of tracked PowerShell launcher",
+  "source": "d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d",
+  "run_id": "u023-browser-d3daac21079b428eb2ee63c77e6ed744",
+  "browser_version": "155.0.4283.62",
+  "check_count": 32,
+  "checks": [
+    "fixture_edit",
+    "server_started",
+    "chart_css_applied",
+    "no_inline_styles",
+    "html_language",
+    "report_table_headers",
+    "validation_visible",
+    "error_persists_after_five_seconds",
+    "unchecked_renewal_preserved",
+    "keyboard_skip_link",
+    "skip_link_focus",
+    "archive_confirmation_required",
+    "form_reflow_390",
+    "report_reflow_390",
+    "form_reflow_320",
+    "report_reflow_320",
+    "no_csp_violations",
+    "pilot_department_admin_denied",
+    "pilot_foreign_contract_denied",
+    "pilot_create_contract",
+    "pilot_edit_history",
+    "pilot_document_upload_accepted",
+    "pilot_clean_document_listed",
+    "pilot_download",
+    "pilot_review_request",
+    "pilot_other_department_cannot_read_created_contract",
+    "pilot_archive_preserves_history",
+    "pilot_archived_edit_denied",
+    "pilot_password_alone_not_authenticated",
+    "pilot_mfa_enrollment_login",
+    "pilot_mfa_replay_denied",
+    "source_unchanged"
+  ],
+  "synthetic_only": true,
+  "result_sha256": "2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179",
+  "started_at": "2026-10-22T08:32:12.747757+00:00",
+  "finished_at": "2026-10-22T08:32:37.294879+00:00",
+  "artifacts": {
+    "sanitized-report.json": {
+      "sha256": "557dd5ead8d92da5b60ee15d5bb0dbf5e112480c9cc6bc159a9043ed98ab744e"
+    },
+    "execution/sanitized-report.json": {
+      "sha256": "1011fe561c675f5a10253d0c7959d732a247c93cdf68db8dd47c6b80c17e271e"
+    },
+    "execution/browser/result.json": {
+      "sha256": "2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179"
+    }
+  },
+  "formal_pilot_acceptance_complete": false,
+  "real_data_authorized": false,
+  "production_authorized": false,
+  "hosted_ci_verified": false
+}

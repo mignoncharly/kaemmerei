@@ -187,7 +187,9 @@ def test_actual_linked_storage_is_rejected(private_tmp):
     target=private_tmp/'target';target.mkdir()
     link=private_tmp/'linked'
     try:link.symlink_to(target,target_is_directory=True)
-    except OSError:pytest.skip('OS does not permit creating a symlink under this test identity')
+    except OSError:
+        if os.getenv('REQUIRE_NATIVE_LINKS')=='1':pytest.fail('Required native symlink creation is unavailable; release gate cannot skip')
+        pytest.skip('OS does not permit creating a symlink under this test identity')
     with pytest.raises(ValueError):Settings(document_storage_dir=link).validate()
 
 

@@ -74,22 +74,31 @@ regression evidence is recorded in `docs/evidence/u024-browser-fix.json`: **112 
 The four skips are real ClamAV, Windows symlink creation, and two PostgreSQL-only MFA
 checks in this explicitly SQLite targeted selection. They are not browser passes.
 
-**IMPLEMENTED BUT UNVERIFIED:** corrected end-to-end browser scenarios. The simulated
-launcher tests are diagnostic contract tests, never browser acceptance evidence.
-No full PostgreSQL, mixed benchmark, recovery or hosted CI result from U023 is relabelled
-as a test of this correction. Application runtime and database code were not changed.
+**VERIFIED (local Microsoft Edge):** the normal Windows session completed all **32**
+checks, exit **0**, synthetic-only **true**, at exact source
+`d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`. Matching local run:
+`u023-browser-d3daac21079b428eb2ee63c77e6ed744`. Browser version: `155.0.4283.62`.
+The wrapper, revision runner and browser result agree on source, outcome and hash;
+all 32 check IDs are unique, including `source_unchanged`.
 
-**EXTERNALLY BLOCKED:** a separate managed-environment rerun at corrected source,
-`u023-browser-d440ba05748f49afb72c8153155fc744`, stopped before Edge launch:
-`PermissionError`, WinError 5, `automation_driver_permission_denied`,
-`failing_stage=automation_driver`. It retained two successful fixture checks and produced
-both `execution/browser/result.json` and the sanitized parent/wrapper reports. This
-new managed-environment limitation is distinct from the user's specified local failure.
-No permissions bypass was attempted. Browser acceptance remains unpassed.
+Result SHA-256: `2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+[Sanitized verification record](evidence/u024-edge-verified.json). The user's
+confirmation and the tracked launcher's selected/default channel establish Edge;
+the original result records the browser version rather than a channel field.
+Evidence was inspected without rerunning browser automation. Later unrelated
+verification-tool/documentation changes do not rewrite this source or hash.
 
-## One next command
+The earlier managed run `u023-browser-d440ba05748f49afb72c8153155fc744` remains a
+historical driver-permission failure (WinError 5, two fixture checks). It does not
+negate the successful normal-session run and is no longer a local Edge blocker.
+No full PostgreSQL, mixed benchmark, recovery or hosted CI result from U023 is
+relabeled as a test of U024. Formal participant acceptance, manual assistive
+technology, actual host/VPN/TLS, real scanner and native patch gates remain separate.
 
-From the repository directory in the normal authorized Windows PowerShell session:
+## Future reruns only when browser inputs change
+
+No immediate rerun is required. If subsequent browser/application/dependency changes
+require verification, run from the repository in the normal authorized session:
 
 ```powershell
 .\scripts\Invoke-PilotBrowserVerification.ps1 -ExpectedSource ((git rev-parse HEAD).Trim()) -Channel msedge
