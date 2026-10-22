@@ -97,6 +97,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The filter verifier renders the committed pre-popover baseline.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
@@ -104,11 +107,24 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - name: Real browser CSP, recovery, keyboard and responsive checks
         run: python scripts/verify_phase8_browser.py
+      - name: Integrated dashboard, role, MFA and responsive journeys
+        if: success() || failure()
+        run: python scripts/verify_frontend_redesign.py --channel chromium --output .verification/integrated-redesign-browser
+      - name: Search and filter popover with actual baseline comparison
+        if: success() || failure()
+        run: python scripts/verify_contract_toolbar.py --channel chromium --output .verification/integrated-filter-browser
+      - name: Selected Excel export and import control centering
+        if: success() || failure()
+        run: python scripts/verify_excel_selection.py --channel chromium --output .verification/integrated-excel-browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: phase8-browser-verification
-          path: .verification/phase8-browser/
+          path: |
+            .verification/phase8-browser/
+            .verification/integrated-redesign-browser/
+            .verification/integrated-filter-browser/
+            .verification/integrated-excel-browser/
   document-scanner:
     runs-on: ubuntu-24.04
     services:
