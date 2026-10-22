@@ -49,4 +49,9 @@ progressive Navigation, keine parallele Frontend-Berechtigungslogik.
 ## Fortschritt
 
 - Inventar und Ausgangsstand erfasst; Baseline-Tests und Browserlauf gestartet.
-- Umsetzung und Verifikation folgen in FRONTEND_IMPLEMENTATION_REPORT.md.
+- Gemeinsame Hülle, Designsystem, Dashboard und sämtliche Seitentemplates umgesetzt.
+- Abschlusslauf: 416 Tests und 15 Subtests bestanden, 44 klassifizierte Skips.
+- 33 HTTP-Prüfungen gegen die gestartete synthetische Anwendung bestanden.
+- Browserstart und PostgreSQL-Einrichtung durch Windows-Berechtigungen blockiert.
+- Screenshots, Tastatur-/Responsive- und visuelle Browserabnahme bleiben offen.
+- Vollständige Ergebnisse und Wiederaufnahmebefehle: FRONTEND_IMPLEMENTATION_REPORT.md.
