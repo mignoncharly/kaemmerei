@@ -6,6 +6,7 @@ import socket
 import sys
 import threading
 import time
+import re
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
@@ -18,7 +19,10 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--channel',choices=('chrome','msedge','chromium'),default=None)
     parser.add_argument('--output',type=Path,default=ROOT/'.verification/phase8-browser')
+    parser.add_argument('--run-id',help='Parent-issued execution identity; not a credential')
     args=parser.parse_args()
+    if args.run_id is not None and not re.fullmatch('[a-f0-9]{32}',args.run_id):
+        parser.error('Invalid execution identity')
     from scripts.pilot_verification import source_identity
     from app.documents import reject_links
     source=source_identity()
@@ -27,6 +31,7 @@ def main():
     output.mkdir(parents=True,exist_ok=False)
     results={'format':'ohvr-browser-verification-v2','source':source,'checks':[],'synthetic_only':True,
              'backend':'sqlite','scanner':'synthetic','screen_reader_manual_test':False}
+    if args.run_id is not None:results['run_id']=args.run_id
     try:
         execute(args,output,results)
         results['stage']='source_validation'

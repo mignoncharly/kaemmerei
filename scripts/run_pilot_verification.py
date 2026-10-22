@@ -12,6 +12,7 @@ from pathlib import Path
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from uuid import uuid4
 from scripts.pilot_verification import ROOT,source_identity,write_report
 
 
@@ -39,6 +40,9 @@ def main():
     report={'format':'ohvr-revision-verification-v1','source':source,'selection':args.selection,
             'started_at':datetime.now(timezone.utc).isoformat(),'synthetic_only':True,
             'status':'IMPLEMENTED BUT UNVERIFIED','executed':False,'setup_or_installation_changed':False}
+    if args.selection=='browser':
+        report.update(check_count=None,failed_check=None)
+        browser_run_id=uuid4().hex
     try:source_identity(source)
     except Exception:
         from scripts.browser_diagnostics import diagnostic
@@ -57,7 +61,8 @@ def main():
     elif args.selection=='mixed':
         command=[sys.executable,'-u','-m','scripts.benchmark_phase9','--mixed','--output',str(output/'workload.json')]
     else:
-        command=[sys.executable,'-u','scripts/verify_phase8_browser.py','--output',str(output/'browser')]
+        command=[sys.executable,'-u','scripts/verify_phase8_browser.py','--output',str(output/'browser'),
+                 '--run-id',browser_run_id]
         if args.channel:command+=['--channel',args.channel]
     # Do not run an unrelated endpoint or install dependencies on behalf of the caller.
     if args.selection=='scanner' and not env.get('CLAMAV_EXECUTABLE'):
@@ -77,7 +82,8 @@ def main():
         report['status']='VERIFIED' if result.returncode==0 else 'IMPLEMENTED BUT UNVERIFIED'
         if args.selection=='browser':
             from scripts.browser_diagnostics import browser_result
-            passed,details=browser_result(output/'browser/result.json',source,report['started_at'],result.returncode)
+            passed,details=browser_result(output/'browser/result.json',source,report['started_at'],result.returncode,
+                                          run_id=browser_run_id)
             report.update(details)
             report['status']='VERIFIED' if passed else 'IMPLEMENTED BUT UNVERIFIED'
         if (output/'junit.xml').is_file():report['tests']=junit_summary(output/'junit.xml')

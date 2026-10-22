@@ -95,6 +95,63 @@ def test_department_document_upload_is_available_and_filename_has_decorative_pre
         assert label!='synthetic.txt' and re.search(r'(?:^|\s)synthetic\.txt$',label)
 
 
+@pytest.mark.parametrize('state', ['passed','assertion','blocked'])
+@pytest.mark.parametrize('identity', ['matching','missing','previous_run','invalid_parent'])
+def test_execution_identity_binds_evidence_without_filesystem_clock_dependency(state,identity):
+    with scratch_directory('ohvr-browser-identity-') as directory:
+        path=Path(directory)/'result.json';started=datetime.now(timezone.utc)
+        checks=['case_'+str(i) for i in range(30)]+['source_unchanged'] if state=='passed' else (
+            ['fixture_edit'] if state=='assertion' else [])
+        data={'source':'a'*40,'format':'ohvr-browser-verification-v2','synthetic_only':True,
+              'status':'passed' if state=='passed' else 'failed','checks':checks,
+              'diagnostic_summary':'PASSWORD=SECRET https://private.invalid/key',
+              'exception_type':'SECRET','winerror':True,'environment':{'PASSWORD':'SECRET'},
+              'exception':'SECRET file contents'}
+        if state!='passed':
+            data.update(error_code='browser_assertion_failed' if state=='assertion' else 'automation_driver_permission_denied',
+                        failing_stage='document_upload' if state=='assertion' else 'automation_driver',
+                        failed_check='pilot_clean_document_listed' if state=='assertion' else 'SECRET/private/key')
+        if identity!='missing':data['run_id']='c'*32 if identity=='previous_run' else 'b'*32
+        path.write_text(json.dumps(data),encoding='utf-8')
+        # Matching identity is decisive even on an old filesystem clock. A fresh
+        # timestamp cannot rescue a missing/replayed/invalid execution identity.
+        stamp=(started+timedelta(seconds=-1 if identity=='matching' else 1)).timestamp()
+        os.utime(path,(stamp,stamp))
+        passed,report=browser_result(path,'a'*40,started.isoformat(),0 if state=='passed' else 1,
+                                     run_id='SECRET' if identity=='invalid_parent' else 'b'*32)
+        assert passed==(identity=='matching' and state=='passed')
+        assert {'check_count','failed_check','error_code','failing_stage','diagnostic_summary'}<=report.keys()
+        assert not any(word in json.dumps(report) for word in ('SECRET','https://','PASSWORD','private/key'))
+        assert 'winerror' not in report and 'exception_type' not in report
+        if identity=='matching':
+            assert report['check_count']==len(checks)
+            if state=='assertion':assert report['failed_check']=='pilot_clean_document_listed'
+            else:assert report['failed_check'] is None
+            if state=='blocked':assert report['failing_stage']=='automation_driver'
+        else:
+            assert report['check_count'] is None and report['failed_check'] is None
+            assert report['error_code']=='browser_result_invalid'
+
+
+@pytest.mark.parametrize('fault', ['wrong_source','duplicate','unsafe_check','passed_nonzero','failed_zero'])
+def test_matching_execution_identity_does_not_bypass_other_validations(fault):
+    with scratch_directory('ohvr-browser-validation-') as directory:
+        path=Path(directory)/'result.json';started=datetime.now(timezone.utc)
+        data={'source':'a'*40,'format':'ohvr-browser-verification-v2','synthetic_only':True,
+              'run_id':'b'*32,'status':'failed','checks':['fixture_edit'],
+              **failure(AssertionError('SECRET'),'document_upload','pilot_clean_document_listed')}
+        code=1
+        if fault=='wrong_source':data['source']='c'*40
+        elif fault=='duplicate':data['checks']*=2
+        elif fault=='unsafe_check':data['checks']=['SECRET/private-file']
+        elif fault=='passed_nonzero':data.update(status='passed',checks=['case_'+str(i) for i in range(30)]+['source_unchanged'])
+        elif fault=='failed_zero':code=0
+        path.write_text(json.dumps(data),encoding='utf-8')
+        passed,report=browser_result(path,'a'*40,started.isoformat(),code,run_id='b'*32)
+        assert not passed and report['error_code']=='browser_result_invalid'
+        assert report['check_count'] is None and 'SECRET' not in json.dumps(report)
+
+
 @pytest.mark.skipif(os.name!='nt',reason='Actual Windows PowerShell required')
 @pytest.mark.parametrize('child_report',['structured_failure','missing_report','malformed_report'])
 def test_actual_powershell_wrapper_propagates_or_classifies_child_failure(child_report):
@@ -135,8 +192,13 @@ def test_revision_runner_never_accepts_unverified_browser_child(monkeypatch,caps
             if scenario=='child_assertion':
                 path=output/'browser';path.mkdir()
                 data={'format':'ohvr-browser-verification-v2','source':'a'*40,'status':'failed','synthetic_only':True,
+                      'run_id':command[command.index('--run-id')+1],
                       'checks':['fixture_edit'],**failure(AssertionError('SECRET'),'document_upload','pilot_clean_document_listed')}
                 (path/'result.json').write_text(json.dumps(data),encoding='utf-8')
+                # Deterministic reproduction of a fresh result whose filesystem
+                # clock lags the wall clock. The matching parent nonce proves this run.
+                older=(datetime.now(timezone.utc)-timedelta(seconds=1)).timestamp()
+                os.utime(path/'result.json',(older,older))
             return subprocess.CompletedProcess(command,1 if scenario=='child_assertion' else 0)
         monkeypatch.setattr(runner.subprocess,'run',child)
         with pytest.raises(SystemExit) as exited:runner.main()
@@ -145,4 +207,9 @@ def test_revision_runner_never_accepts_unverified_browser_child(monkeypatch,caps
         assert report['status']=='IMPLEMENTED BUT UNVERIFIED' and report['error_code']
         assert report['executed']==(scenario not in ('source_failure','process_permission'))
         assert 'SECRET' not in capsys.readouterr().out
-        if scenario=='child_assertion':assert report['check_count']==1 and report['failed_check']=='pilot_clean_document_listed'
+        if scenario=='child_assertion':
+            assert report['check_count']==1 and report['failed_check']=='pilot_clean_document_listed'
+            assert report['failing_stage']=='document_upload' and report['error_code']=='browser_assertion_failed'
+            assert report['exit_code']==1 and report['exception_type']=='AssertionError'
+        else:
+            assert report['check_count'] is None and report['failed_check'] is None
