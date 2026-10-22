@@ -1,6 +1,13 @@
 # Remediation plan — 10 implementation phases
 
-U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](docs/U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+U025: local Microsoft Edge U024 is **VERIFIED**, 32 checks, synthetic only, source
+`d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`, result SHA-256
+`2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+[Validated Edge evidence](docs/evidence/u024-edge-verified.json) and
+[executable 12-scenario acceptance package / engineering progress](docs/U025_SYNTHETIC_ACCEPTANCE_PACKAGE.md).
+No browser rerun, formal pilot acceptance, real-data authorization or production deployment.
+
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](docs/U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, scanner/host and participant gates remain open; no real-data or production authorization.
 
 U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](docs/U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
 

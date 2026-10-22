@@ -1,5 +1,7 @@
 # Phase 10 — acceptance and release preparation
 
+U025: [built acceptance package, exact-source tests and remaining owner actions](U025_SYNTHETIC_ACCEPTANCE_PACKAGE.md). Windows junction rejection verified; required Windows/Linux native-link CI added. Formal acceptance remains incomplete.
+
 U024 local Microsoft Edge: **VERIFIED**, 32 checks, exit 0, synthetic only, exact
 source `d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`; result SHA-256
 `2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
