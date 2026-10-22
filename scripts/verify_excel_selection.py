@@ -77,6 +77,28 @@ def execute(args,output,result):
                             check(f'{role}_import_initial_disabled_{width}',submit.is_disabled())
                             controls=[page.locator('.excel-action-row>a'),page.locator('.excel-file-picker'),submit]
                             bounds=[control.bounding_box() for control in controls]
+                            def check_centering(state):
+                                metrics=[control.evaluate("""(e) => {
+                                    const box=e.getBoundingClientRect();
+                                    const text=e.querySelector('.action-content').getBoundingClientRect();
+                                    const style=getComputedStyle(e);
+                                    return {display:style.display, align:style.alignItems,
+                                        justify:style.justifyContent, lineHeight:style.lineHeight,
+                                        xOffset:text.x+text.width/2-box.x-box.width/2,
+                                        yOffset:text.y+text.height/2-box.y-box.height/2,
+                                        textCenterY:text.y+text.height/2};
+                                }""") for control in controls]
+                                result.setdefault('import_alignment',[]).append(
+                                    {'role':role,'width':width,'state':state,'controls':metrics})
+                                check(f'{role}_content_centered_{state}_{width}',all(
+                                    m['display']=='flex' and m['align']=='center' and
+                                    m['justify']=='center' and abs(m['xOffset'])<1 and
+                                    abs(m['yOffset'])<1 for m in metrics))
+                                check(f'{role}_line_height_{state}_{width}',len({m['lineHeight'] for m in metrics})==1)
+                                if width>700:
+                                    check(f'{role}_text_row_{state}_{width}',
+                                          max(m['textCenterY'] for m in metrics)-min(m['textCenterY'] for m in metrics)<1)
+                            check_centering('disabled')
                             check(f'{role}_control_heights_{width}',all(abs(b['height']-48)<1 for b in bounds))
                             if width>700:
                                 check(f'{role}_controls_aligned_{width}',max(b['y'] for b in bounds)-min(b['y'] for b in bounds)<1)
@@ -90,6 +112,7 @@ def execute(args,output,result):
                             page.locator('#excel-file').set_input_files({'name':'synthetischer-import.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':workbook()})
                             check(f'{role}_filename_{width}','synthetischer-import.xlsx' in page.locator('.excel-filename').inner_text())
                             check(f'{role}_valid_file_enabled_{width}',submit.is_enabled() and not page.locator('#excel-file-error').is_visible())
+                            check_centering('enabled')
                             page.locator('#excel-import-title').scroll_into_view_if_needed();capture(f'import-{width}')
                             page.locator('#excel-file').set_input_files([])
                             check(f'{role}_file_clear_disabled_{width}',submit.is_disabled() and not page.locator('#excel-filename').is_visible())

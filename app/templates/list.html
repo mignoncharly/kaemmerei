@@ -75,9 +75,9 @@
  <form method="post" action="/contracts/import" enctype="multipart/form-data" id="excel-import-form">
    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
    <div class="excel-action-row">
-    <a class="button subtle" href="/contracts/import-template.xlsx">Excel-Vorlage herunterladen</a>
-    <label class="button subtle excel-file-picker" for="excel-file"><span>Excel-Datei auswählen</span><input id="excel-file" type="file" name="file" accept=".xlsx" required aria-describedby="excel-file-hint excel-filename excel-file-error"></label>
-    <div class="excel-submit-control"><button class="button secondary" id="excel-import-submit" type="submit" disabled hidden>Import starten</button><noscript><button class="button secondary" type="submit">Import starten</button></noscript></div>
+    <a class="button subtle excel-action" href="/contracts/import-template.xlsx"><span class="action-content">Excel-Vorlage herunterladen</span></a>
+    <label class="button subtle excel-action excel-file-picker" for="excel-file"><span class="action-content">Excel-Datei auswählen</span><input id="excel-file" type="file" name="file" accept=".xlsx" required aria-describedby="excel-file-hint excel-filename excel-file-error"></label>
+    <div class="excel-submit-control"><button class="button secondary excel-action" id="excel-import-submit" type="submit" disabled hidden><span class="action-content">Import starten</span></button><noscript><button class="button secondary excel-action" type="submit"><span class="action-content">Import starten</span></button></noscript></div>
    </div>
    <p class="hint" id="excel-file-hint">.xlsx, maximal 10 MB. Nur neue Verträge, keine Aktualisierung vorhandener Einträge.</p>
    <p class="excel-filename" id="excel-filename" role="status" hidden></p>
