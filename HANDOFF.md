@@ -1,6 +1,6 @@
 # Implementation handoff and current state
 
-Last updated: 2026-10-21\
+Last updated: 2026-10-22\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
 Current stage: Phase 9 remaining operations gates; Phase 10 acceptance/release preparation (U021). P10-T02 matrix prepared; no production release or Phase 9 exit. See docs/PHASE9_OPERATIONS.md and docs/PHASE10_ACCEPTANCE.md.\
@@ -628,3 +628,17 @@ Final 10-user/10k/50k/20k mixed workload passed all operations/isolation: report
 Browser wrapper corrected to capture child stderr without PowerShell Stop promotion; actual final-source driver still blocked by Windows CreateFile WinError5, wrapper exits2 and child exits1, no pass. Actual ClamAV unconfigured; required runner reports EXTERNALLY_BLOCKED/not executed; ordinary portable signature retrieval failed and verifier unavailable, no install/bypass. Local host inventory executes/read-denial safely; no STRATO connector/browser surface or account entitlement evidence. Old/current skip review: 34 SQLite backend skips have PG passes, two unique actual scanner/native-link gaps remain in both. Participant validation: 12 NOT_RUN. Native tools/server18.3 below floor; separate runtime libpq18.4 inventory; no installation/service/ACL changes. R43 open.
 
 Auditable local candidate .verification/u023-rc plus sanitized docs/evidence/u023-candidate.json and docs/U023_CANDIDATE_VERIFICATION.md; PREPARED_NOT_ACCEPTED. CI configuration parsed, all eight expanded final-source jobs NOT_RUN. Candidate assembly initially encountered a diagnostic folder with no wrapper report; incomplete output retained, filtered actual reports and reassembled successfully. No external infrastructure mutations or settled decisions re-requested; pending municipal rules/records, real-data/production authorization and independent review remain separate. Existing launcher whitespace preserved unstaged. Subsequent commit is documentation/evidence only.
+
+
+## U024 ? latest local browser diagnosis (2026-10-22)
+
+See [confirmed failure, correction and next command](docs/U024_BROWSER_FAILURE_DIAGNOSIS.md).
+The specified 09:05:22 local run failed a filename assertion after browser startup:
+the exact-text selector ignored a decorative icon. Local engineering revision
+`7d6e82caab258f654d4a310142efba24998919c5` corrects the selector, verifies the upload response,
+and preserves structured browser failure evidence through Python and PowerShell.
+A separate managed-environment run now correctly reports automation-driver WinError 5
+with two fixture checks. Full corrected browser scenarios remain unverified; do not mark
+browser acceptance passed. Existing U023 database/workload evidence remains tied to its
+original source. No deployment, push, database/ACL change or municipal approval occurred.
+The pre-existing uncommitted Start-TestDatabase.ps1 edit is preserved.

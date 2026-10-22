@@ -1,0 +1,107 @@
+{
+  "format": "ohvr-browser-fix-evidence-v1",
+  "source": "7d6e82caab258f654d4a310142efba24998919c5",
+  "date": "2026-10-22",
+  "browser_acceptance_passed": false,
+  "regression": {
+    "format": "ohvr-browser-fix-regression-v1",
+    "source": "7d6e82caab258f654d4a310142efba24998919c5",
+    "synthetic_only": true,
+    "started_at": "2026-10-22T07:45:46.340778+00:00",
+    "selection": [
+      "tests/test_browser_diagnostics.py",
+      "tests/test_windows_operations.py",
+      "tests/test_pilot_verification.py",
+      "tests/test_phase5.py",
+      "tests/test_phase8.py",
+      "tests/test_phase9_mfa.py"
+    ],
+    "exit_code": 0,
+    "tests": {
+      "collected": 116,
+      "passed": 112,
+      "failure": 0,
+      "error": 0,
+      "skipped": 4,
+      "skips": [
+        {
+          "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+        },
+        {
+          "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+        },
+        {
+          "test": "tests.test_phase9_mfa.test_simultaneous_enrollment_consumes_one_challenge_and_revokes_other"
+        },
+        {
+          "test": "tests.test_phase9_mfa.test_pg_mfa_credentials_policy_and_challenge_have_no_normal_data_access"
+        }
+      ],
+      "passing_subtests": 0,
+      "junit_sha256": "6a63f42003faa21fad56ca5d094192225ae138d95d2c16e55151aea91d2fe3e8"
+    },
+    "source_unchanged": true,
+    "finished_at": "2026-10-22T07:46:28.161389+00:00"
+  },
+  "managed_browser": {
+    "sanitized-report.json": {
+      "sha256": "0509d4e477209b2bc54511b3349aa09823e93b17c75cf55e40e5edc729d3e7af",
+      "format": "ohvr-local-browser-verification-v2",
+      "source": "7d6e82caab258f654d4a310142efba24998919c5",
+      "status": "failed_or_environment_blocked",
+      "exit_code": 2,
+      "synthetic_only": true,
+      "check_count": 2,
+      "error_code": "automation_driver_permission_denied",
+      "failing_stage": "automation_driver",
+      "child_exit_code": 1,
+      "failed_check": null
+    },
+    "execution/sanitized-report.json": {
+      "sha256": "9021d6371f1274b76c5fd8d7dbe6a471046b7730f1f9c1c6d31c226b984fc5d8",
+      "format": "ohvr-revision-verification-v1",
+      "source": "7d6e82caab258f654d4a310142efba24998919c5",
+      "status": "IMPLEMENTED BUT UNVERIFIED",
+      "exit_code": 1,
+      "synthetic_only": true,
+      "check_count": 2,
+      "error_code": "automation_driver_permission_denied",
+      "failing_stage": "automation_driver",
+      "exception_type": "PermissionError",
+      "winerror": 5
+    },
+    "execution/browser/result.json": {
+      "sha256": "0d195a704a26a4e43add7f0340d7f75e29fc66dd6c8dcf83c55033a6b2f09354",
+      "format": "ohvr-browser-verification-v2",
+      "source": "7d6e82caab258f654d4a310142efba24998919c5",
+      "status": "failed",
+      "synthetic_only": true,
+      "error_code": "automation_driver_permission_denied",
+      "failing_stage": "automation_driver",
+      "exception_type": "PermissionError",
+      "winerror": 5,
+      "checks": [
+        "fixture_edit",
+        "server_started"
+      ]
+    }
+  },
+  "specified_local_run": {
+    "id": "u023-browser-5be2a5aac1e448108ca587c2624e8150",
+    "source": "41055a7ff4c6c0b7f49afc0f8a553200c6ecd88f",
+    "child_exit_code": 1,
+    "parent_exit_code": 2,
+    "exception_type": "AssertionError",
+    "failed_check": "pilot_clean_document_listed",
+    "root_cause": "exact_filename_selector_excludes_decorative_icon",
+    "browser_startup_reached": true,
+    "private_artifact_sha256": {
+      "private-wrapper.log": "37cf33db9df2a6df3d204dd0daf7fb6be3bb936e68a4e4f9a1863fab29d48e50",
+      "execution/private.log": "4530f173a0196251165bb410ed5c933ce8aa637b479bbe3a9083a4902a030039",
+      "execution/sanitized-report.json": "384f5289625def8263d7c58582f3050e37bd3abb26cf5706399e284a541c8445"
+    }
+  },
+  "changes_external_infrastructure": false,
+  "changed_postgresql_or_acls": false,
+  "hosted_ci_run": false
+}
