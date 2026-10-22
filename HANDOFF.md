@@ -6,6 +6,8 @@ Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
 Current stage: Phase 9 remaining operations gates; Phase 10 acceptance/release preparation (U021). P10-T02 matrix prepared; no production release or Phase 9 exit. See docs/PHASE9_OPERATIONS.md and docs/PHASE10_ACCEPTANCE.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
+Latest U026: [review branch, ten pending CI checks, maintained scanner preparation, native observations and tester instructions](docs/U026_REMAINING_GATES.md). Engineering source adca68b: 87 passed/2 environment skips; no publication, installation or browser rerun.
+
 Latest update U025: local Microsoft Edge U024 is **VERIFIED** at exact source
 `d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`, 32 checks, synthetic only, result
 SHA-256 `2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.

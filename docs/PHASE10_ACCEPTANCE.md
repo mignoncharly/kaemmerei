@@ -1,5 +1,7 @@
 # Phase 10 — acceptance and release preparation
 
+U026: [categorized gates and exact-source evidence](U026_REMAINING_GATES.md), [review/CI and tester handoff](U026_OPERATOR_HANDOFF.md), [PostgreSQL maintenance proposal](U026_POSTGRESQL_PATCH_PROCEDURE.md). Local review branch prepared, unpublished; 87 targeted passes and 2 explicit environment skips at adca68b. All ten hosted checks remain NOT_RUN. Actual scanner, executing patched server, formal participant acceptance and municipal authorization remain separate open gates.
+
 U025: [built acceptance package, exact-source tests and remaining owner actions](U025_SYNTHETIC_ACCEPTANCE_PACKAGE.md). Windows junction rejection verified; required Windows/Linux native-link CI added. Formal acceptance remains incomplete.
 
 U024 local Microsoft Edge: **VERIFIED**, 32 checks, exit 0, synthetic only, exact

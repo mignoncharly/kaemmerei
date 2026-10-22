@@ -19,7 +19,7 @@ evidence linked from the U026 remaining-gates record. It identifies these ten ru
 | frontend-browser | ubuntu-24.04 |
 | document-scanner | ubuntu-24.04 |
 | native-postgresql | ubuntu-24.04 |
-| sqlite | ubuntu-24.04 |
+| sqlite | ubuntu-latest |
 | postgresql | ubuntu-24.04 |
 
 All hosted outcomes are NOT_RUN. Local YAML checks are not hosted results. Publishing

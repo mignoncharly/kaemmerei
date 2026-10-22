@@ -1,0 +1,207 @@
+{
+  "format": "ohvr-u026-evidence-v1",
+  "source": "adca68bfb9f56ae20d39e51b6c54873b758b1de4",
+  "branch": "review/u026-synthetic-pilot",
+  "repository": "https://github.com/mignoncharly/kaemmerei",
+  "published": false,
+  "hosted_checks_executed": false,
+  "browser_rerun": false,
+  "browser": {
+    "status": "VERIFIED",
+    "source": "d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d",
+    "result_sha256": "2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179",
+    "check_count": 32,
+    "browser_version": "155.0.4283.62",
+    "candidate_browser_inputs_unchanged": true,
+    "formal_participant_acceptance": false
+  },
+  "observations": {
+    "regression": {
+      "artifact": ".verification/u026-regression/sanitized-report.json",
+      "sha256": "fe10c6c38084242527433b6ed331c52c9dd5b5516e284e8eccf4708341605790",
+      "report": {
+        "source": "adca68bfb9f56ae20d39e51b6c54873b758b1de4",
+        "selection": [
+          "tests/test_review_candidate.py",
+          "tests/test_release_bundle.py",
+          "tests/test_pilot_verification.py",
+          "tests/test_phase5.py",
+          "tests/test_acceptance_package.py",
+          "tests/test_storage_links.py"
+        ],
+        "exit_code": 0,
+        "source_unchanged": true,
+        "tests": {
+          "collected": 89,
+          "passed": 87,
+          "failure": 0,
+          "error": 0,
+          "skipped": 2,
+          "skips": [
+            {
+              "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+            },
+            {
+              "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+            }
+          ],
+          "passing_subtests": 0,
+          "junit_sha256": "5806f406f177529aa05733eb29af6787e594dcd06efd3cf2daae0e2a6db8966d"
+        },
+        "observed_at": "2026-10-22T12:38:46.110063+00:00"
+      }
+    },
+    "native_read_only": {
+      "artifact": ".verification/u026-native.json",
+      "sha256": "d9ede86df44f3d825e0171cb3dce2c544c49e580f4b2a7f3831465e14129b0fb",
+      "report": {
+        "format": "ohvr-native-gate-v1",
+        "components": {
+          "pg_dump": {
+            "binary_sha256": "ef67845c7d08384c6514f4b6f4ea5f997ecb149bf3a78063dab25d0686e421a0",
+            "status": "IMPLEMENTED BUT UNVERIFIED",
+            "version_num": 180003,
+            "reason": "missing_unreviewed_or_below_production_floor"
+          },
+          "pg_restore": {
+            "binary_sha256": "0561ed28de98e32828a59303504d8af8b4371c1ad24dbb764e3453564c28f54d",
+            "status": "IMPLEMENTED BUT UNVERIFIED",
+            "version_num": 180003,
+            "reason": "missing_unreviewed_or_below_production_floor"
+          },
+          "psql": {
+            "binary_sha256": "832f7fdf02c1c592f2df5f8bf48b6cfbc1e2bfd713f0822d1ac6724a312b5895",
+            "status": "IMPLEMENTED BUT UNVERIFIED",
+            "version_num": 180003,
+            "reason": "missing_unreviewed_or_below_production_floor"
+          }
+        },
+        "server": {
+          "status": "EXTERNALLY_BLOCKED",
+          "reason": "read_only_probe_unavailable"
+        },
+        "libpq_version_num": 180004,
+        "libpq_implementation": "binary",
+        "installation_changed": false,
+        "scope": "read-only versions/settings; no exploit or application acceptance",
+        "client_server_major_match": false,
+        "baseline_passed": false,
+        "r43_closed": false,
+        "source": "adca68bfb9f56ae20d39e51b6c54873b758b1de4",
+        "observed_at": "2026-10-22T12:38:09.577417+00:00"
+      }
+    },
+    "installed_server_binary": {
+      "artifact": ".verification/u026-server-binary.json",
+      "sha256": "13559b70cf61a9cdd0b6907d8ba19a4acf16526adcb07072c83542a56be75fcd",
+      "report": {
+        "source": "adca68bfb9f56ae20d39e51b6c54873b758b1de4",
+        "scope": "read-only installed server binary and dedicated cluster metadata",
+        "runtime_server_version": "NOT_OBSERVED",
+        "installation_changed": false,
+        "installed_server_binary": {
+          "version_num": 180003,
+          "sha256": "8fea7fea9884d26e47696c1294aa73b042eb51a178030f62b02a3151933f97c0"
+        },
+        "dedicated_loopback_port_reachable": false
+      }
+    },
+    "scanner_readiness": {
+      "artifact": ".verification/u026-scanner-readiness.json",
+      "sha256": "c0c5dce9d12043b0e0485419fb8900cf2e40a75ec8853795b5a89cbecd753745",
+      "report": {
+        "format": "ohvr-scanner-readiness-v1",
+        "status": "EXTERNALLY_BLOCKED",
+        "real_engine_integration_verified": false,
+        "freshness_verified": false,
+        "official_signature_authenticity_verified": false,
+        "installation_changed": false,
+        "reason": "approved_engine_and_official_definitions_not_configured",
+        "source": "adca68bfb9f56ae20d39e51b6c54873b758b1de4",
+        "baseline_sha256": "21602b812b483ae123c9a65bd2656cf38bf6e1200a13edf5f06c63248f741815"
+      }
+    },
+    "engineering_review": {
+      "artifact": ".verification/u026-engineering-review.json",
+      "sha256": "cab8fc4c022c7f0480b5e502d9b0f9920c07a84e9084af9c5be204b1e0fe48bb",
+      "report": {
+        "format": "ohvr-isolated-review-v1",
+        "source": "adca68bfb9f56ae20d39e51b6c54873b758b1de4",
+        "repository": "https://github.com/mignoncharly/kaemmerei",
+        "remote": "origin",
+        "branch": "review/u026-synthetic-pilot",
+        "publication_authorized": false,
+        "pushed": false,
+        "workflow_dispatched": false,
+        "ci": {
+          "workflow": ".github/workflows/phase1-verification.yml",
+          "workflow_sha256": "35330225abf65fe4cf9da1050ec22024fb3da4ae0ca7b5072f23a9c7ec7ce4ce",
+          "executions": [
+            {
+              "job": "locked-release",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "locked-release",
+              "platform": "windows-latest",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "release-reproducibility",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "native-storage-links",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "native-storage-links",
+              "platform": "windows-latest",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "frontend-browser",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "document-scanner",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "native-postgresql",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "sqlite",
+              "platform": "ubuntu-latest",
+              "status": "NOT_RUN"
+            },
+            {
+              "job": "postgresql",
+              "platform": "ubuntu-24.04",
+              "status": "NOT_RUN"
+            }
+          ],
+          "required_count": 10,
+          "hosted_execution_authorized": false,
+          "hosted_success_claimed": false,
+          "committed_workflow_sha256": "e535b4fc846684965fbd883b38a856f0df0216cdff024c042d69769bc630c6ae"
+        },
+        "retained_u025_package": {
+          "status": "VERIFIED",
+          "archive_sha256": "ffab0034f7b7d0e924501b625a0e318b830402aec8917ac20024796327acc57f",
+          "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+          "scenarios": 12,
+          "participant_cases_executed": 0,
+          "formal_acceptance_complete": false
+        }
+      }
+    }
+  }
+}
