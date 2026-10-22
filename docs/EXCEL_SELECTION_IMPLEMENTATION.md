@@ -1,5 +1,67 @@
 # Excel-Auswahl-Export und verständlicher Import
 
+## Korrektur der inneren Zentrierung
+
+Nachtrag vom 22.10.2026, Implementierung
+`e3165437400bc24a0e0868b57e3189e0f6e77a7a`:
+
+Die bisherige Höhenprüfung erfasste den Fehler nicht: Die spezifischere Regel
+`label:has(>input:not([type=checkbox]))` setzte den Dateiauswahl-Trigger auf
+`display: block` und überschrieb die Flex-Zentrierung von `.button`.
+Das absolut positionierte native Dateifeld verursachte keine zusätzliche Höhe.
+
+- Formular-Labels mit `.button` sind von dieser Block-Regel ausgenommen.
+- Alle drei Aktionen einschließlich No-JS-Fallback verwenden `.excel-action`
+  mit derselben Flex-Zentrierung, 48 px Höhe, Innenabständen und Zeilenhöhe.
+  Der sichtbare Text steht jeweils im direkten `.action-content`-Span.
+- Keine Positionskorrekturen, Transformationen oder kompensierenden Margins.
+  Dateiname, Hinweise und Fehlermeldung bleiben unter dem Raster; mobile
+  Stapelung, Dateifokus, Deaktivierung und Backendverhalten bleiben erhalten.
+
+Zusätzliche Codeprüfung: Formular-Aktionsleisten, Filter-/Exportaktionen,
+Dokumentupload und Versionsupload, Administration, Dashboard-Schnellzugriffe
+und Karten geprüft. Nur der Excel-Picker verwendet ein Button-Label mit
+eingeschlossenem Dateifeld. Die übrigen Buttons behalten ihre gemeinsame
+Flex-Zentrierung. Native Uploadfelder und mehrzeilige Informationskarten haben
+bewusst andere Strukturen; kein weiterer Fall desselben Selektorkonflikts
+gefunden. Das ist eine Codeprüfung, keine visuelle Abnahme dieser Seiten.
+
+Geänderte Dateien: `app/static/site.css`, `app/templates/list.html`,
+`scripts/verify_excel_selection.py` und dieser Bericht.
+
+Verifikation: **31 Tests bestanden, keine Skips, 18,28 s**
+(`tests/test_excel_selection.py`, `tests/test_frontend_redesign.py`).
+Bestehende Starlette-Deprecation-Warnung. JS-Syntax, Python-Kompilierung und
+`git diff --check` bestanden. Protokolle:
+`.verification/import-centering-tests.txt` und `import-centering-tests.xml`.
+
+Der Browserprüfer misst zusätzlich die tatsächlichen Textmittelpunkte relativ
+zu allen drei Controls, gemeinsame Zeilenhöhe und Textausrichtung auf Desktop,
+jeweils bei deaktiviertem und aktiviertem Import. Vorgesehen sind
+390/768/1280/1440 px mit admin, kultur und bau; pruefer bleibt ohne Importzugriff.
+Die bisherigen Rollen-, Upload-, Tastatur- und Exportprüfungen bleiben enthalten.
+
+**Visuelle Abnahme weiterhin ausstehend:** Der synthetische Server startete,
+aber Windows verweigerte den Start des Automationstreibers (`WinError 5`).
+Kein Browserstart, keine Geometriemessung und keine Screenshots. Der zusätzliche
+Browser-Connector meldete keine verfügbare Instanz. Evidenz:
+`.verification/import-centering-browser/result.json`,
+`screenshots: []`, `visual_inspection: NOT_PERFORMED`.
+
+In einer lokalen PowerShell mit erlaubtem Browserprozess ausführen:
+
+```powershell
+Set-Location 'C:\kämmerei\OPEN_HERZ_Vertragsregister_Redesign'
+$centeringRun = Get-Date -Format 'yyyyMMdd-HHmmss'
+python scripts\verify_excel_selection.py --channel msedge --output ".verification\import-centering-$centeringRun"
+```
+
+Danach `result.json` und die tatsächlichen `{Rolle}-import-{Breite}.png` prüfen,
+insbesondere Textzentrierung, Desktop-Baselines und mobile Stapelung.
+Nutzerreferenzen unverändert; kein Push, Merge oder Deployment.
+
+---
+
 ## Layoutkorrektur: ein gemeinsames Aktionsraster
 
 Nachtrag vom 22.10.2026, Implementierung
