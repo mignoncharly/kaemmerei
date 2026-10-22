@@ -6,6 +6,8 @@ Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
 Current stage: Phase 9 remaining operations gates; Phase 10 acceptance/release preparation (U021). P10-T02 matrix prepared; no production release or Phase 9 exit. See docs/PHASE9_OPERATIONS.md and docs/PHASE10_ACCEPTANCE.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
 
+Latest U026: hosted CI execution **and local artifact preservation VERIFIED** for exact commit 3d4a180297db801293e4b86e42e9f60a55fbca86, [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267). Independently validated all nine original ZIPs, required native-link JUnit and both identical nested releases; no CI/browser rerun or artifact recreation. [Preserved integrity evidence](docs/evidence/u026-artifacts-verified.json), [remaining intended-host/participant/municipal actions](docs/U026_NEXT_ACTIONS.md). R43 and scanner verification remain open on the intended host; twelve scenarios NOT_RUN; no merge or deployment.
+
 Latest U026: [review branch, ten pending CI checks, maintained scanner preparation, native observations and tester instructions](docs/U026_REMAINING_GATES.md). Engineering source adca68b: 87 passed/2 environment skips; no publication, installation or browser rerun.
 
 Latest update U025: local Microsoft Edge U024 is **VERIFIED** at exact source

@@ -42,7 +42,7 @@ from app.financial import current_groups, inventory_trend
 from app.listing import normalize_filters, filtered_contracts, EXPORT_MAX_ROWS
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
-from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
+from app.options import (BUDGET_ASSIGNMENTS, CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
                          PAYMENT_INTERVALS, REVIEW_RECIPIENTS, CONTRACT_REVIEW_STATUSES,
                          TASK_KINDS, TASK_STATUSES, TAX_REVIEW_STATUSES)
 from app.security import (COOKIE_NAME, attempt_key, clear_failures, cookie_response,
@@ -124,6 +124,7 @@ def base_context(request: Request, user: User | None, csrf_token: str = "") -> d
             "contract_types": CONTRACT_TYPES, "contact_persons": CONTACT_PERSONS,
             "contract_statuses": CONTRACT_STATUSES,
             "financial_directions": FINANCIAL_DIRECTIONS,
+            "budget_assignments": BUDGET_ASSIGNMENTS,
             "payment_intervals": PAYMENT_INTERVALS,
             "payment_interval_labels": dict(PAYMENT_INTERVALS),
             "tax_review_statuses": TAX_REVIEW_STATUSES,

@@ -1,5 +1,7 @@
 # U025: synthetic acceptance package and remaining technical gates
 
+U026 hosted CI execution and local artifact preservation are both **VERIFIED** for exact commit `3d4a180297db801293e4b86e42e9f60a55fbca86`, [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267). All ten jobs passed; all nine saved ZIPs match published SHA-256/CRC/member hashes; required Windows/Linux native-link cases and identical nested releases are validated. [Original report/integrity receipt](evidence/u026-artifacts-verified.json), [verified execution scope](U026_HOSTED_CI_EXECUTION.md), [next operator steps](U026_NEXT_ACTIONS.md). Intended-host R43/TLS, approved host scanner/configuration, twelve NOT_RUN participant scenarios and municipal authorizations remain open. No rerun, artifact recreation, merge or deployment.
+
 Engineering revision: `da60deaf6cd89a16b2711a5bad9a0fd377b00215`.
 [Machine-readable evidence](evidence/u025-engineering.json). Subsequent documentation
 commits do not change the source recorded in executed tests or artifacts.

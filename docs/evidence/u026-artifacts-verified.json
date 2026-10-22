@@ -1,0 +1,479 @@
+{
+  "format": "ohvr-u026-preserved-artifacts-verified-v1",
+  "status": "VERIFIED",
+  "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+  "run_id": 39791514267,
+  "run_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267",
+  "report": ".verification/u026-confirmed-run/preserved-8ca121aa85ff4b1b8e8c4b7ea9278dd8/sanitized-report.json",
+  "report_sha256": "98cce9fd325d240cb138ab62e30880ba244f22aa1031c01f01545fb0fd1c582e",
+  "originals_modified": false,
+  "artifacts": [
+    {
+      "id": 12433030261,
+      "name": "native-postgresql-verification",
+      "sha256": "ce07822162f9996544a85c30a2b30c6b7f5fed3ecc9eb37ef959310e4d72095e",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "phase1-postgresql.json": "4ab4abc95e0f2eb8e744ad5f11ea91403c29ed54fd0f43b7e94c2620784d5aca",
+        "native-postgresql-pytest.xml": "60a416df6def453b813359f3a38019dcbed58ebde53ff0a30f4928bf1445fbd9",
+        "phase7-native.xml": "aeaabfc2c69189af42be1717a7b1beb7128241bd78d6e6da1d4954a7b658c200",
+        "phase6-native.xml": "581962978296077a9a7b8cc25572cf8e8b8147680cac3968bcc3ac2698096657",
+        "phase8-native.xml": "f4eb4daf62ef5c02298c841ad406ab79759830bf4814eee24de5243346b3175a",
+        "phase9-native.xml": "1c803609aeb161182ba3e8b29fc695c0159a281523ff0b4c891f05930372dfc2",
+        "phase9-backup-native.xml": "9c977de3821637495df28cdedad295b5c3b1fe632fcf37187c123245474821b2",
+        "native-security-gate.json": "29a50cff4da11b0a8769f1557b383dc30d3dd1e2d2828a13169d4112d33bf238"
+      },
+      "junit": [
+        {
+          "file": "native-postgresql-pytest.xml",
+          "cases": 411,
+          "failure": 0,
+          "error": 0,
+          "skipped": 8
+        },
+        {
+          "file": "phase7-native.xml",
+          "cases": 19,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        {
+          "file": "phase6-native.xml",
+          "cases": 21,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        {
+          "file": "phase8-native.xml",
+          "cases": 8,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        {
+          "file": "phase9-native.xml",
+          "cases": 72,
+          "failure": 0,
+          "error": 0,
+          "skipped": 3
+        },
+        {
+          "file": "phase9-backup-native.xml",
+          "cases": 19,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      ],
+      "reports": [
+        {
+          "file": "phase1-postgresql.json",
+          "summary": {}
+        },
+        {
+          "file": "native-security-gate.json",
+          "summary": {
+            "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "baseline_passed": true,
+            "r43_closed": false,
+            "libpq_version_num": 180006,
+            "server": {
+              "status": "VERIFIED",
+              "version_num": 160015,
+              "ssl_enabled": false
+            },
+            "components": {
+              "pg_dump": {
+                "status": "VERIFIED",
+                "version_num": 160015
+              },
+              "pg_restore": {
+                "status": "VERIFIED",
+                "version_num": 160015
+              },
+              "psql": {
+                "status": "VERIFIED",
+                "version_num": 160015
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 12432211678,
+      "name": "phase8-browser-verification",
+      "sha256": "6cbaeac63b6f80a4c36870ac5370e6821ddc55b0bba6baccc20f9e08e6dd1713",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "reports-320.png": "dca62100f1608ead442a6348dc5bb3452ad8ca40a37d04de8e8fbe04eb1b3d7b",
+        "reports-desktop.png": "743db70915ff353e446cddc23f09fd7ec48299b6452d85827c91cbee82afdc8f",
+        "reports-390.png": "bc4b6d39d5fe39fda9cb317560df62ed2585ed702af96bdbc05808144eaa7c1d",
+        "result.json": "3e6fac2823d9eecd731114240f50a444d97a475fe0670c06f77153ace4259b4f",
+        "validation-desktop.png": "44e48d843813dd7c9fcad1e33889296f57573d41784345cd521df55360288f79"
+      },
+      "junit": [],
+      "reports": [
+        {
+          "file": "result.json",
+          "summary": {
+            "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "status": "passed",
+            "browser_version": "156.0.8078.4",
+            "synthetic_only": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 12431967012,
+      "name": "postgresql-verification",
+      "sha256": "30c2d2a2a39ca6296f0c1adab766dd6e7a27701bb2ed4815a6d5bdd9dd692c51",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "postgresql-pytest.xml": "0ae82085997edacdf8e0a47ebd8d9ae8c126ce897d69d40945010f990c81eace",
+        "phase6-postgresql.xml": "8fdbc054e2cfddfb210522aaaeb7b35c8e4a52733c0dda05a6849d2d32a856ad",
+        "phase1-postgresql.json": "4ab4abc95e0f2eb8e744ad5f11ea91403c29ed54fd0f43b7e94c2620784d5aca",
+        "phase7-postgresql.xml": "54af13f3399ace8f0f277257d5ce1cde0ac385c23054b1e5afb8a081d76b5b56",
+        "phase8-postgresql.xml": "a8030d32e6f25f1667cc08fcd29112e1ee2d62a2834d32fefd5ba3fc54d87a43",
+        "phase9-postgresql.xml": "b12f24952eae33a142b7ff8103e5946faa124451f3a8b7549c2322a848cd5f62",
+        "phase9-backup-postgresql.xml": "3f860fe804caf32a8fec4ae11aab9572b46ba8903cfb003f38ded8f851032fcd",
+        "service-native-security-gate.json": "3507f8e7f74dd3c6db4cc8cbd17435ff0a961e17bd104184805ff39435d3fa65",
+        "ci-mixed/sanitized-report.json": "50002f6fabb6d4b0be6e830e2877bc1f28b60075d162f7dcab8fe79926385158",
+        "ci-mixed/workload.json": "cf8ccef4314015b0b2d85e4d512a90b062dc27e2781ec947ff1543ce71b5648b"
+      },
+      "junit": [
+        {
+          "file": "postgresql-pytest.xml",
+          "cases": 411,
+          "failure": 0,
+          "error": 0,
+          "skipped": 8
+        },
+        {
+          "file": "phase6-postgresql.xml",
+          "cases": 21,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        {
+          "file": "phase7-postgresql.xml",
+          "cases": 19,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        {
+          "file": "phase8-postgresql.xml",
+          "cases": 8,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        {
+          "file": "phase9-postgresql.xml",
+          "cases": 72,
+          "failure": 0,
+          "error": 0,
+          "skipped": 3
+        },
+        {
+          "file": "phase9-backup-postgresql.xml",
+          "cases": 19,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      ],
+      "reports": [
+        {
+          "file": "phase1-postgresql.json",
+          "summary": {}
+        },
+        {
+          "file": "service-native-security-gate.json",
+          "summary": {
+            "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "baseline_passed": true,
+            "r43_closed": false,
+            "libpq_version_num": 180006,
+            "server": {
+              "status": "VERIFIED",
+              "version_num": 180006,
+              "ssl_enabled": false
+            },
+            "components": {
+              "pg_dump": {
+                "status": "VERIFIED",
+                "version_num": 180006
+              },
+              "pg_restore": {
+                "status": "VERIFIED",
+                "version_num": 180006
+              },
+              "psql": {
+                "status": "VERIFIED",
+                "version_num": 180006
+              }
+            }
+          }
+        },
+        {
+          "file": "ci-mixed/sanitized-report.json",
+          "summary": {
+            "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "status": "VERIFIED",
+            "synthetic_only": true
+          }
+        },
+        {
+          "file": "ci-mixed/workload.json",
+          "summary": {}
+        }
+      ]
+    },
+    {
+      "id": 12431955917,
+      "name": "native-storage-links-windows-latest",
+      "sha256": "b703a3fa1018d469036f02413f38c3635cefb00c7de6c10b6dc326acbf1cacbf",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "native-storage-links.xml": "ac56cd9bccb6370edfd4ab5feef004f6d39fba6f378d6c5ee2ee7ddab8852f49"
+      },
+      "junit": [
+        {
+          "file": "native-storage-links.xml",
+          "cases": 2,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      ],
+      "reports": []
+    },
+    {
+      "id": 12431930970,
+      "name": "runtime-release-ubuntu-24.04",
+      "sha256": "9f893e8e1a334d5f9d8066098dc12812ee71c5c495cd2ed14c40802d77db67a1",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "release.zip": "528b00f3d609a1313d749ae32ae697dc89b24b045a8292d54347cf5238837c6a",
+        "release-summary.json": "1b47b9588e8d06c597f55111e20c0e4bd260ee268a3826fcb2687b57e3905582",
+        "release-tests.xml": "ceb7e6b6cba4ea28a07713f898fe00669de219c357f811aa21ad385ed9703c97"
+      },
+      "junit": [
+        {
+          "file": "release-tests.xml",
+          "cases": 30,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      ],
+      "reports": [
+        {
+          "file": "release-summary.json",
+          "summary": {
+            "source_commit": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "artifact_sha256": "528b00f3d609a1313d749ae32ae697dc89b24b045a8292d54347cf5238837c6a"
+          }
+        }
+      ],
+      "release": {
+        "source_commit": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+        "migration_head": "0027_child_read_admission",
+        "artifact_sha256": "528b00f3d609a1313d749ae32ae697dc89b24b045a8292d54347cf5238837c6a",
+        "file_count": 128
+      }
+    },
+    {
+      "id": 12431482158,
+      "name": "document-scanner-verification",
+      "sha256": "739bd19e598cea1af30146176095636bb7643bf1bff19ccc364b6b74f7865f79",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "scanner-readiness.json": "e4a7cadf10e5a79711e2219a3efabfdb26c38a09015fc5ab225ec940eb25cd88",
+        "phase5-scanner.xml": "78c1596cdf3ded23bd6b363e785566e3dc1e230a66312659a80c0b25582bd32c",
+        "phase5-scanner.json": "422be9b2d80d59eb9707f5afa39759820b8551a86e6d7566089c0b38565e8766"
+      },
+      "junit": [
+        {
+          "file": "phase5-scanner.xml",
+          "cases": 1,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      ],
+      "reports": [
+        {
+          "file": "scanner-readiness.json",
+          "summary": {
+            "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "status": "READY_FOR_REAL_ENGINE_TESTS",
+            "engine_version": "1.5.4"
+          }
+        },
+        {
+          "file": "phase5-scanner.json",
+          "summary": {
+            "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "clean": "clean",
+            "infected": "infected",
+            "synthetic_only": true,
+            "actual_http_clean_download": true,
+            "actual_http_infected_download_denied": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 12431153776,
+      "name": "native-storage-links-ubuntu-24.04",
+      "sha256": "0ee91f9f37811cb5a902fe3a273715625acc592404915f4e9dba187238ea34c3",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "native-storage-links.xml": "8eea65cb7d2b25b3059800d43d4f9662859cd205ee329c70b70499446866af88"
+      },
+      "junit": [
+        {
+          "file": "native-storage-links.xml",
+          "cases": 2,
+          "failure": 0,
+          "error": 0,
+          "skipped": 1
+        }
+      ],
+      "reports": []
+    },
+    {
+      "id": 12430304283,
+      "name": "runtime-release-windows-latest",
+      "sha256": "518ea2ce4715798935d16ebf6649b597d839092290098f38e7ebdfcd8a63fe70",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "release.zip": "528b00f3d609a1313d749ae32ae697dc89b24b045a8292d54347cf5238837c6a",
+        "release-summary.json": "275090c3af3eaab96f27c92a4a966e303bbee92cd3d87663b8756791cc541e3d",
+        "release-tests.xml": "3a733c09bebc9433699589e9c3b9a9d94cf61832354f331bed3de58598f0de5a"
+      },
+      "junit": [
+        {
+          "file": "release-tests.xml",
+          "cases": 30,
+          "failure": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      ],
+      "reports": [
+        {
+          "file": "release-summary.json",
+          "summary": {
+            "source_commit": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+            "artifact_sha256": "528b00f3d609a1313d749ae32ae697dc89b24b045a8292d54347cf5238837c6a"
+          }
+        }
+      ],
+      "release": {
+        "source_commit": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+        "migration_head": "0027_child_read_admission",
+        "artifact_sha256": "528b00f3d609a1313d749ae32ae697dc89b24b045a8292d54347cf5238837c6a",
+        "file_count": 128
+      }
+    },
+    {
+      "id": 12430269423,
+      "name": "sqlite-verification",
+      "sha256": "5871e48ca4eb21143d44876532e0e76e016d135245b18da9346de23ece05bce9",
+      "zip_crc_verified": true,
+      "member_sha256": {
+        "phase1-sqlite.json": "a5ff17dc9c92372ab1a6deca74435ca91de460ce7f73394b79f5ae9504c38a80",
+        "sqlite-pytest.xml": "f6090cc71238232ce059ab4d4244d10e7c95fa626108cd6bd17694f74a6667c2"
+      },
+      "junit": [
+        {
+          "file": "sqlite-pytest.xml",
+          "cases": 411,
+          "failure": 0,
+          "error": 0,
+          "skipped": 50
+        }
+      ],
+      "reports": [
+        {
+          "file": "phase1-sqlite.json",
+          "summary": {}
+        }
+      ]
+    }
+  ],
+  "native_links": {
+    "windows-latest": {
+      "required_cases": [
+        {
+          "test": "test_actual_linked_storage_is_rejected",
+          "executed_and_passed": true
+        },
+        {
+          "test": "test_actual_windows_junction_storage_and_parent_are_rejected",
+          "executed_and_passed": true
+        }
+      ],
+      "verified": true,
+      "non_applicable_windows_junction_skip_allowed": false,
+      "artifact_sha256": "b703a3fa1018d469036f02413f38c3635cefb00c7de6c10b6dc326acbf1cacbf"
+    },
+    "ubuntu-24.04": {
+      "required_cases": [
+        {
+          "test": "test_actual_linked_storage_is_rejected",
+          "executed_and_passed": true
+        }
+      ],
+      "verified": true,
+      "non_applicable_windows_junction_skip_allowed": true,
+      "artifact_sha256": "0ee91f9f37811cb5a902fe3a273715625acc592404915f4e9dba187238ea34c3"
+    }
+  },
+  "validation": {
+    "published_sha256": true,
+    "zip_crc": true,
+    "all_outer_member_hashes": true,
+    "required_native_tests": true,
+    "matching_nested_source_releases": true,
+    "no_ci_or_browser_rerun": true
+  },
+  "formal_pilot_acceptance_complete": false,
+  "intended_host_r43_closed": false,
+  "intended_host_scanner_verified": false,
+  "participant_scenarios": {
+    "NOT_RUN": 12
+  },
+  "skip_review": {
+    "sqlite_skips_with_passed_postgresql_counterpart": 42,
+    "shared_linux_suite_skips": 8,
+    "shared_test_ids": [
+      "tests.test_browser_diagnostics.test_actual_powershell_wrapper_propagates_or_classifies_child_failure[structured_failure]",
+      "tests.test_browser_diagnostics.test_actual_powershell_wrapper_propagates_or_classifies_child_failure[missing_report]",
+      "tests.test_browser_diagnostics.test_actual_powershell_wrapper_propagates_or_classifies_child_failure[malformed_report]",
+      "tests.test_phase5.test_real_clamav_engine_with_current_official_database",
+      "tests.test_storage_links.test_actual_windows_junction_storage_and_parent_are_rejected",
+      "tests.test_windows_operations.test_windows_launcher_has_valid_actual_powershell_syntax[deploy/windows/Invoke-Ohvr.ps1]",
+      "tests.test_windows_operations.test_windows_launcher_has_valid_actual_powershell_syntax[scripts/Invoke-PilotBrowserVerification.ps1]",
+      "tests.test_windows_operations.test_windows_launcher_has_valid_actual_powershell_syntax[scripts/Get-PilotHostInventory.ps1]"
+    ],
+    "age_tool_not_provisioned_in_sqlite_job": 2,
+    "no_blanket_all_skips_passed_claim": true,
+    "windows_powershell_tests": {
+      "count": 6,
+      "ci_linux_skips": "expected_OS_specific",
+      "current_hosted_windows_job_does_not_run_these_six_tests": true,
+      "local_U024_regression_evidence_retained": true
+    },
+    "separately_executed_scanner_case_passed": true,
+    "separately_executed_windows_junction_passed": true
+  }
+}

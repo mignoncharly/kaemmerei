@@ -97,3 +97,26 @@ destructive rollback script is supplied or executed.
 
 An 18.3 rollback reintroduces known exposure: keep it isolated with no real-data use,
 production opening or R43 closure, and schedule a newly approved remediation.
+
+## Intended-host evidence worksheet (prepare now; execute only after approval)
+
+The successful STRATO SSH/SFTP assessment does not identify Windows, a PostgreSQL
+installation, service rights or a maintenance target. Await the owner's product/tariff
+evidence; do not use additional server probes or existing website databases to fill gaps.
+Use [the isolated Windows requirements](WINDOWS_SYNTHETIC_PILOT_REQUIREMENTS.md).
+
+| Receipt | Required contents / pass condition | Current state |
+|---|---|---|
+| Scope | Approved Windows host/cluster references, distribution/architecture, shared binary consumers, responsible operator, window and exact permitted actions | NOT_PROVIDED |
+| Native inventory | Installed binaries separately from executing server, version numbers/digests for pg_dump/pg_restore/psql, loaded psycopg/libpq implementation/version, matching major and approved patched minor | NOT_RUN on intended host |
+| Vendor/update review | Approved package signature/hash/source, extension compatibility and release-note applicability decisions; no automatic repairs | NOT_PROVIDED |
+| Protected backup | Coherent encrypted DB/documents/config/role/key-reference receipt, validated isolated restore and cold rollback target; no secrets in shared record | NOT_RUN on intended host |
+| Actual TLS sessions | App-role session encryption and verify-full CA/hostname success; incorrect CA/hostname rejected with no plaintext fallback | NOT_RUN on intended host |
+| Post-maintenance regressions | Source-bound restricted PostgreSQL/RLS/MFA/pool tests, scanner, monitoring/restart, workload and encrypted restore; zero unexplained required skips | NOT_RUN on intended host |
+| Closure decision | Operator/engineering review links all receipts, observations, exceptions and residual gates; no automated R43 closure from a version-only pass | OPEN |
+
+The existing native probe only permits an existing loopback control URL; `SHOW ssl`
+reports server capability, not negotiated encryption or application verify-full policy.
+Do not repoint it to remote STRATO or weaken its endpoint/source controls. Version
+baseline success deliberately keeps `r43_closed: false`. No new TLS sessions, database
+catalog reads, fixture writes or maintenance were executed for this worksheet.

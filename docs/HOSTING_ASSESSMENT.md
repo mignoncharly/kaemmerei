@@ -1,5 +1,7 @@
 # STRATO suitability investigation — read-only, U022
 
+Current U026 update: [completed STRATO read-only assessment](STRATO_HOSTING_ASSESSMENT.md) verifies SSH/SFTP/shell access and the existing TOFU pin. Product/OS/administration/application hosting remain unverified; the owner will confirm the tariff. The U022 observations below are historical, not the current access status. No further discovery or deployment.
+
 U023: [the acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) adds a non-secret
 product/host evidence template and a read-only Windows inventory script. Public
 Windows product capability was rechecked; it still establishes no account
