@@ -41,20 +41,21 @@ def test_toolbar_search_remove_reset_pagination_export(environment,role,total):
                page_size='25',page='2')
     page=client.get('/',params=query);ctx=page.context;toolbar=ctx['toolbar']
     assert ctx['total_count']==30 and len(ctx['contracts'])==5
-    assert len(toolbar['chips'])==(5 if role=='kultur' else 6)
-    assert all(chip['key'] not in ('q','page_size') for chip in toolbar['chips'])
+    assert len(toolbar['chips'])==(6 if role=='kultur' else 7)
+    assert all(chip['key'] != 'page_size' for chip in toolbar['chips'])
     for chip in toolbar['chips']:
         values=params(chip['remove_url'])
         assert chip['key'] not in values and 'page' not in values
-        assert values['q']==['Synthetic'] and values['page_size']==['25']
+        if chip['key']!='q': assert values['q']==['Synthetic']
+        assert values['page_size']==['25']
         assert values['contract_type']==['Miete'] if chip['key']!='contract_type' else True
         response=client.get(chip['remove_url']);assert response.status_code==200
         assert chip['key'] not in [c['key'] for c in response.context['toolbar']['chips']]
     reset=client.get(toolbar['reset_url'])
-    assert reset.context['q']=='Synthetic' and reset.context['toolbar']['chips']==[]
-    assert reset.context['total_count']==(30 if role=='kultur' else 32)
+    assert reset.context['q']=='' and reset.context['toolbar']['chips']==[]
+    assert reset.context['total_count']==total
     cleared=client.get(toolbar['clear_search_url'])
-    assert cleared.context['q']=='' and len(cleared.context['toolbar']['chips'])==len(toolbar['chips'])
+    assert cleared.context['q']=='' and len(cleared.context['toolbar']['chips'])==len(toolbar['chips'])-1
     assert cleared.context['total_count']==30
     previous=client.get(ctx['previous_page_url'])
     assert previous.context['total_count']==30 and len(previous.context['contracts'])==25
@@ -77,8 +78,28 @@ def test_toolbar_focus_nondefault_page_size_and_escaped_queries(environment):
     Markup(response.text).labels_present()
     assert '<option value="1" selected>1</option>' in response.text
     chips=response.context['toolbar']['chips']
-    assert {c['key'] for c in chips}=={'focus','status'}
+    assert {c['key'] for c in chips}=={'q','focus','status'}
     assert '<script>&' not in response.text
-    assert params(chips[0]['remove_url'])['q']==['<script>& + ä']
+    assert params(next(c for c in chips if c['key']=='status')['remove_url'])['q']==['<script>& + ä']
     response=client.get('/?focus=active&status=archived')
     assert [c['key'] for c in response.context['toolbar']['chips']]==['status']
+
+
+def test_compact_overview_search_chip_and_scoped_summary(environment):
+    client,app=environment;seed(app);login(client,'kultur')
+    response=client.get('/')
+    assert 'class="contract-summary"' in response.text
+    assert 'class="dashboard-cards"' not in response.text
+    assert 'contract-toolbar-main' not in response.text
+    assert 'Keine überfälligen oder anstehenden Vertragsfristen.' in response.text
+    assert response.context['focus_counts']==client.get('/dashboard').context['focus_counts']
+    # Search belongs to the closed disclosure; export belongs to the table header.
+    start=response.text.index('id="advanced-filter-disclosure"')
+    end=response.text.index('</details>',start)
+    assert start < response.text.index('id="q"') < end
+    assert response.text.index('contract-list-heading') < response.text.index('Excel exportieren')
+    search=client.get('/?q=Synthetic&page_size=25')
+    assert [c['key'] for c in search.context['toolbar']['chips']]==['q']
+    assert 'Suche &amp; Filter (1)' in search.text
+    cleared=client.get(search.context['toolbar']['chips'][0]['remove_url'])
+    assert cleared.context['total_count']==31 and cleared.context['page_size']==25

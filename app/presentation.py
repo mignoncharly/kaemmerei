@@ -50,7 +50,7 @@ def listing_toolbar(filters, page_size, user, departments, focus_labels):
     if user.role == 'department':
         applied.pop('department', None)  # Ignored by the server for this role.
     paging = {'page_size': page_size} if page_size != 50 else {}
-    labels = dict(department='Fachbereich', contract_type='Vertragsart',
+    labels = dict(q='Suche', department='Fachbereich', contract_type='Vertragsart',
                   contact_person='Zuständig', deputy_contact_person='Vertretung',
                   status='Status', tax_review_status='§ 2b UStG', focus='Fokus')
     names = {
@@ -64,6 +64,6 @@ def listing_toolbar(filters, page_size, user, departments, focus_labels):
     chips = [dict(key=key, label=labels[key] + ': ' + names.get(key, {}).get(value, value),
                   remove_url=url({k: v for k, v in applied.items() if k != key}))
              for key, value in applied.items() if key in labels]
-    return dict(chips=chips, reset_url=url({'q': applied['q']} if applied.get('q') else {}),
-                clear_search_url=url({k: v for k, v in applied.items() if k != 'q'}, 'q'),
+    return dict(chips=chips, reset_url=url({}),
+                clear_search_url=url({k: v for k, v in applied.items() if k != 'q'}),
                 export_url='/contracts/export.xlsx' + ('?' + urlencode(applied) if applied else ''))

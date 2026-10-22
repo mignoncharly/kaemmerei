@@ -41,27 +41,65 @@
     region.setAttribute('aria-label', 'Datentabelle – bei Bedarf horizontal scrollen');
   });
   const filterForm = document.querySelector('#contract-filter-form');
-  if (filterForm) {
+  if (filterForm && typeof HTMLDialogElement !== 'undefined' && HTMLDialogElement.prototype.showModal) {
     const disclosure = document.querySelector('#advanced-filter-disclosure');
     const filterToggle = document.querySelector('#filter-toggle');
-    const syncFilters = () => filterToggle.setAttribute('aria-expanded', String(disclosure.open));
+    const panel = document.querySelector('#advanced-filter-panel');
+    const dialog = document.createElement('dialog');
+    dialog.className = 'contract-filter-dialog';
+    dialog.setAttribute('aria-labelledby', 'filter-panel-title');
+    // Move the one existing form into the native modal. No duplicated controls.
+    dialog.append(panel);
+    disclosure.replaceWith(dialog);
     filterToggle.hidden = false;
-    filterForm.classList.add('toolbar-enhanced');
-    filterToggle.addEventListener('click', () => {
-      disclosure.open = !disclosure.open;
-      syncFilters();
+    panel.querySelector('[data-filter-close]').hidden = false;
+    function positionFilters() {
+      const anchor = filterToggle.getBoundingClientRect();
+      const width = Math.min(620, window.innerWidth - 32);
+      const top = Math.max(16, Math.min(anchor.bottom + 8, window.innerHeight - 96));
+      // CSSOM coordinates keep placement local to the trigger without inline templates.
+      dialog.style.setProperty('--filter-left', Math.max(16, Math.min(anchor.right - width, window.innerWidth - width - 16)) + 'px');
+      dialog.style.setProperty('--filter-top', top + 'px');
+      dialog.style.setProperty('--filter-height', Math.max(80, window.innerHeight - top - 16) + 'px');
+    }
+    function openFilters(focusSearch = true) {
+      if (dialog.open) return;
+      positionFilters();
+      dialog.showModal(); // Native focus containment and inert background, also on mobile.
+      dialog.scrollTop = 0;
+      document.body.classList.add('contract-filter-open');
+      filterToggle.setAttribute('aria-expanded', 'true');
+      if (focusSearch) filterForm.querySelector('#q').focus({preventScroll: true});
+    }
+    function closeFilters() { if (dialog.open) dialog.close(); }
+    filterToggle.addEventListener('click', () => dialog.open ? closeFilters() : openFilters());
+    panel.querySelector('[data-filter-close]').addEventListener('click', closeFilters);
+    dialog.addEventListener('close', () => {
+      if (dialog.open) return;
+      document.body.classList.remove('contract-filter-open');
+      filterToggle.setAttribute('aria-expanded', 'false');
+      filterToggle.focus({preventScroll: true});
     });
-    disclosure.addEventListener('toggle', syncFilters);
-    // Reveal invalid controls before the browser tries to focus them.
+    // Escape uses the native dialog cancel event. Only a full outside click dismisses.
+    const outside = event => {
+      const rect = dialog.getBoundingClientRect();
+      return event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom);
+    };
+    let outsideStart = false;
+    dialog.addEventListener('pointerdown', event => { outsideStart = outside(event); });
+    dialog.addEventListener('click', event => { if (outsideStart && outside(event)) closeFilters(); outsideStart = false; });
+    window.addEventListener('resize', () => { if (dialog.open) positionFilters(); });
     filterForm.addEventListener('invalid', event => {
-      if (disclosure.contains(event.target)) { disclosure.open = true; syncFilters(); }
+      openFilters(false);
     }, true);
-    if (disclosure.querySelector('[aria-invalid="true"], [role="alert"]')) disclosure.open = true;
-    syncFilters();
-    window.addEventListener('pageshow', syncFilters);
-    // Removal links reload the server result and return focus to a stable control.
-    if (location.hash === '#contract-toolbar') filterToggle.focus({preventScroll: true});
-    if (location.hash === '#q') document.querySelector('#q').focus({preventScroll: true});
+    const invalid = panel.querySelector('[aria-invalid="true"], [role="alert"]');
+    if (invalid) { openFilters(false); invalid.focus(); }
+    window.addEventListener('pageshow', () => {
+      filterToggle.setAttribute('aria-expanded', String(dialog.open));
+      document.body.classList.toggle('contract-filter-open', dialog.open);
+      if (dialog.open) positionFilters();
+      else if (location.hash === '#contract-toolbar' || location.hash === '#q') filterToggle.focus({preventScroll: true});
+    });
   }
   document.querySelectorAll('input,select,textarea').forEach(input => {
     const hint = input.parentElement.querySelector('.hint,.field-hint');
