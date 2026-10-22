@@ -1,5 +1,7 @@
 # Production readiness: blockers and product-owner inputs
 
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+
 U023: [synthetic pilot acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.
 
 U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
@@ -25,7 +27,7 @@ The remediation plan has **not yet reached full production acceptance**:
 - **Phase 9:** substantial implementation completed; operational verification and some engineering work remain.
 - **Phase 10:** acceptance preparation exists; business validation, independent review and rollout acceptance remain open.
 
-Current local evidence: implementation `05648eda3ce6ddb9fe7e33082593e294522fbf24` passed 343 PostgreSQL tests with 2 explicit skips and 15 subtests; the representative mixed workload and encrypted restore passed. Eight hosted CI jobs belong only to prior `3442ad8`; no current-source hosted CI was dispatched. See the U022 report above.
+Current local evidence: implementation `af290a445026e99cab6622c056993409ffa7de7e` passed 362 PostgreSQL tests with 2 explicit skips and 15 subtests in the final serial run; the representative mixed workload and encrypted restore passed. The earlier connection-timeout failure is retained in the U023 candidate record. Eight hosted CI jobs belong only to prior `3442ad8`; no current-source hosted CI was dispatched. See the U022 report above.
 
 The original PostgreSQL startup problem and security defects R01, R04 and R10 are resolved. The remaining blockers concern production readiness and acceptance.
 

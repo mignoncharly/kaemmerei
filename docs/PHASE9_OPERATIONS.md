@@ -1,5 +1,7 @@
 # Phase 9 - Availability and operations
 
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+
 U023: [synthetic pilot acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.
 
 U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
