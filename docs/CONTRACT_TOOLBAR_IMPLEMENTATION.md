@@ -1,5 +1,10 @@
 # Vertragsübersicht: kompakte Suche und Filter
 
+**Historischer Stand:** Die permanente Suchleiste wurde durch die
+[Korrektur auf „Suche & Filter“](CONTRACT_FILTER_POPOVER_IMPLEMENTATION.md)
+ersetzt. Dieser Bericht und seine Evidenz dokumentieren weiterhin den früheren
+Implementierungsstand; maßgeblich für die aktuelle Oberfläche ist der Nachtrag.
+
 Stand: 22.10.2026. Worktree `OPEN_HERZ_Vertragsregister_Redesign`, Branch
 `redesign/frontend-dashboard`. Ausgangsstand:
 `e4c3740833b9ac77befcec91b0c6cfa05be8d63b`.

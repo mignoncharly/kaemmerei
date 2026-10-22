@@ -1,5 +1,8 @@
 # OPEN.HERZ Vertragsregister – Frontend-Redesign
 
+Aktuelle Layoutkorrektur: [„Suche & Filter“ als Popover / Drawer](CONTRACT_FILTER_POPOVER_IMPLEMENTATION.md).
+Die permanente Suchleiste entfällt; Kennzahlen und Tabellenkopf sind kompakt.
+
 Nachtrag zur Vertragsübersicht: [Kompakte Toolbar und Filter](CONTRACT_TOOLBAR_IMPLEMENTATION.md)
 dokumentiert die gezielte Weiterentwicklung einschließlich eigener Regression
 und noch ausstehender Browserabnahme. Die nachfolgenden Ergebnisse beziehen
