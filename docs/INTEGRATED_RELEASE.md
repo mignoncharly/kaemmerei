@@ -2,6 +2,9 @@
 
 Stand: 22.10.2026. Ausschließlich synthetische lokale Tests.
 
+Fortsetzung der Abnahme: [Browserdiagnose-Korrektur und PostgreSQL-Nachprüfung](BROWSER_DIAGNOSTIC_ACCEPTANCE.md).
+Die folgenden Integrationsnachweise bleiben an ihre ursprünglichen Commits gebunden.
+
 ## Verbindlicher Arbeitsort
 
 Künftige Entwicklung erfolgt ausschließlich in
