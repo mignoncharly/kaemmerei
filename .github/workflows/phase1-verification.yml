@@ -143,6 +143,8 @@ jobs:
           sudo freshclam --stdout --datadir="$AV_DB" --log="$AV_DB/update.log"
           echo "CLAMAV_EXECUTABLE=$(command -v clamscan)" >> "$GITHUB_ENV"
           echo "CLAMAV_DATABASE_DIR=$AV_DB" >> "$GITHUB_ENV"
+      - name: Require reviewed maintained scanner engine and official definition inventory
+        run: python -m scripts.scanner_readiness --expected-source "$GITHUB_SHA" --output .verification/scanner-readiness.json
       - name: Create restricted scanner verification role on disposable CI service
         run: |
           python - <<'PY'
@@ -159,6 +161,7 @@ jobs:
         with:
           name: document-scanner-verification
           path: |
+            .verification/scanner-readiness.json
             .verification/phase5-scanner.json
             .verification/phase5-scanner.xml
   native-postgresql:

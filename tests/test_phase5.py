@@ -345,10 +345,14 @@ def test_real_clamav_engine_with_current_official_database(documents):
     sample=b''.join((b'X5O!P%@AP[4',b'\\PZX54(P^)7CC)7}$',b'EICAR-STANDARD-ANTIVIRUS-TEST-FILE!',b'$H+H*'))
     detected=scanner.scan(sample)
     assert clean.outcome=='clean',clean
+    from scripts.scanner_readiness import supported_engine
+    baseline=json.loads(Path('docs/pilot/scanner-engine-baseline-v1.json').read_text())
+    supported_engine(clean.version,baseline)
     assert detected.outcome=='infected',detected
     record,doc,_=upload(documents,scanner)
     client,app,owner=documents
-    assert client.get(f'/contracts/{record}/documents/{doc}').status_code==200
+    clean_download=client.get(f'/contracts/{record}/documents/{doc}')
+    assert clean_download.status_code==200 and clean_download.content==b'%PDF-1.4\nSynthetic content'
     path=f'/contracts/{record}/documents'
     response=client.post(path,data=workflow_payload(client,path,{'csrf_token':csrf_from(client.get('/').text)}),
         files={'documents':('synthetic-eicar.txt',sample,'text/plain')},follow_redirects=False)
