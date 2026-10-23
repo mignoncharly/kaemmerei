@@ -130,6 +130,9 @@ def create_backup(engine,settings,options,*,database):
     if (engine.dialect.name!='postgresql' or not database or
             database in ('postgres','template0','template1') or engine.url.database!=database):
         raise ValueError('Explicit named PostgreSQL application database required; no default/control database')
+    if options.production or settings.production:
+        from app.config import validate_database_tls
+        validate_database_tls(engine.url.render_as_string(hide_password=False))
     directory=_local(options.directory)
     validate_storage_setting(directory)
     storage=_local(settings.document_storage_dir)
@@ -152,11 +155,16 @@ def create_backup(engine,settings,options,*,database):
             try:
                 schema=db.scalar(text('SELECT version_num FROM alembic_version'))
                 if schema!=migration_head():raise ValueError('Review current migrations and inventory before backup')
-                major=int(db.scalar(text('SHOW server_version_num')))//10000
+                server_version=int(db.scalar(text('SHOW server_version_num')))
+                major=server_version//10000
                 result=subprocess.run([str(options.pg_dump),'--version'],capture_output=True,
                                       env=_tool_env(),timeout=10,check=True)
                 if not re.search(rb'\b'+str(major).encode()+rb'\.',result.stdout):
                     raise ValueError('Matching PostgreSQL client major required')
+                if options.production or settings.production:
+                    from app.server_security import validate_server_version,validate_pg_dump_version
+                    validate_server_version(server_version)
+                    validate_pg_dump_version(result.stdout)
                 snapshot=db.scalar(text('SELECT pg_export_snapshot()'))
                 files=_files(storage)
                 by_key={}

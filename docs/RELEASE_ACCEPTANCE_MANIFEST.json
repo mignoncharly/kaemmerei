@@ -1,0 +1,994 @@
+{
+  "format": "ohvr-acceptance-consolidation-v1",
+  "reviewed_source": "461e030b015c37e47c6204a5b6c7cf6dc35cd61f",
+  "cross_revision_execution_claimed": false,
+  "evidence": [
+    {
+      "suite": "redesign",
+      "source": "e1f262bbfe4ff4a039afa3a49aad995a5ac3efcf",
+      "status": "passed",
+      "check_count": 373,
+      "evidence": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0",
+      "result_sha256": "bf1e78848ce16c00a61f0f96f8b6e66b241fd56e711313bf3fb7277fbd2c6534",
+      "screenshots": 72,
+      "changes_since_test": [
+        "scripts/Invoke-TargetedBrowserVerification.ps1",
+        "scripts/browser_diagnostics.py",
+        "scripts/browser_focus.py",
+        "scripts/browser_layout.py",
+        "scripts/verify_contract_toolbar.py",
+        "scripts/verify_excel_selection.py",
+        "scripts/verify_integrated_browsers.py",
+        "tests/js/filter_dialog_focus.cjs",
+        "tests/js/poll_predicate.cjs",
+        "tests/test_browser_polling.py",
+        "tests/test_filter_dismissal.py",
+        "tests/test_filter_focus.py",
+        "tests/test_integrated_browser_acceptance.py"
+      ],
+      "runtime_changes_since_test": []
+    },
+    {
+      "suite": "excel",
+      "source": "e163dd50efc61f87bd7ed6d1e4fa4a69f8626625",
+      "status": "passed",
+      "check_count": 383,
+      "evidence": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92",
+      "result_sha256": "1d3281439ba90aefde9c99f215ca050203c5d644320b8b1f1e0cc8b1546c9e35",
+      "screenshots": 50,
+      "changes_since_test": [
+        "scripts/browser_focus.py",
+        "scripts/verify_contract_toolbar.py",
+        "tests/js/filter_dialog_focus.cjs",
+        "tests/test_filter_dismissal.py",
+        "tests/test_filter_focus.py"
+      ],
+      "runtime_changes_since_test": []
+    },
+    {
+      "suite": "toolbar",
+      "source": "461e030b015c37e47c6204a5b6c7cf6dc35cd61f",
+      "status": "passed",
+      "check_count": 356,
+      "evidence": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79",
+      "result_sha256": "e6742cbbd6890c0548018b1d7d9f71ff3131557447825d4bb318d58bcc659067",
+      "screenshots": 76,
+      "changes_since_test": [],
+      "runtime_changes_since_test": []
+    },
+    {
+      "suite": "postgresql",
+      "source": "d5f402d9f93d25231fb40aa843395da70f5267eb",
+      "status": "VERIFIED",
+      "tests": {
+        "collected": 523,
+        "passed": 521,
+        "failure": 0,
+        "error": 0,
+        "skipped": 2,
+        "skips": [
+          {
+            "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+          },
+          {
+            "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+          }
+        ],
+        "passing_subtests": 15,
+        "junit_sha256": "817eb0036cc38c71cc995e4a5ef8a55d5b220a8c033a8251b5460a2367eaf987"
+      },
+      "evidence": ".verification/browser-fix-postgresql-d5f402d",
+      "changes_since_test": [
+        "app/static/interface.js",
+        "scripts/Invoke-TargetedBrowserVerification.ps1",
+        "scripts/browser_diagnostics.py",
+        "scripts/browser_focus.py",
+        "scripts/browser_layout.py",
+        "scripts/verify_contract_toolbar.py",
+        "scripts/verify_excel_selection.py",
+        "scripts/verify_integrated_browsers.py",
+        "tests/js/filter_dialog_focus.cjs",
+        "tests/js/poll_predicate.cjs",
+        "tests/test_browser_polling.py",
+        "tests/test_filter_dismissal.py",
+        "tests/test_filter_focus.py",
+        "tests/test_integrated_browser_acceptance.py",
+        "tests/test_toolbar_geometry.py"
+      ],
+      "runtime_changes_since_test": [
+        "app/static/interface.js"
+      ]
+    }
+  ],
+  "freeze": {
+    "app/static/interface.js": {
+      "git_blob": "bda9e0b87144afdad5820e4e76c8f1a196db0428",
+      "sha256": "cc57a6f5c626288d282eaaf698ed8975ffb52feedb207495c0dec97b3cd417b5"
+    },
+    "app/static/site.css": {
+      "git_blob": "3b0b8b468cb84b7c28d91bb6d65f9ec295e1f443",
+      "sha256": "9d2f6c033e91cd71aa94d41d8ca824e8bade9059a189903532c808f3be526d46"
+    },
+    "app/templates/list.html": {
+      "git_blob": "8aff3735e138379e2773620556636b89102713dd",
+      "sha256": "84824517805e31baafe8bed03285ae6f56154a5740de122593bfcf2f01112c8b"
+    },
+    "scripts/verify_contract_toolbar.py": {
+      "git_blob": "66bd3ce76b05ef97d31845178b16a80f466d60f3",
+      "sha256": "e5527095a7e7914c1238f3c73e572cf5e70f113f49dc131c6aba33aebfe06db0"
+    },
+    "scripts/browser_focus.py": {
+      "git_blob": "72e89cf3795a7eefdab54743b75def2c3002250d",
+      "sha256": "0c37c8d78e848328f59c6c506a14a808709a443c926aac79f0cabed15acd8e5f"
+    },
+    "scripts/browser_layout.py": {
+      "git_blob": "59941d76520f98cf843a2ab2f25799a8465419dd",
+      "sha256": "feacbad7562216ecf2a71d529b954b665cb7e473ce74ac795fbc3c0277ca8a7a"
+    }
+  },
+  "artifacts": [
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/sanitized-report.json",
+      "sha256": "8c4cc4cee652a2880c2cbbe85127fb289672008e49238734c90f94dc1970bce9"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/result.json",
+      "sha256": "bf1e78848ce16c00a61f0f96f8b6e66b241fd56e711313bf3fb7277fbd2c6534"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-dashboard-1440.png",
+      "sha256": "d7701222a48fc72cfb73a94970ae96b4860534f32de01cf86a935945e7f20e9f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-contracts-1440.png",
+      "sha256": "f5fc4e69757636ad60733a6891f80d1ba6cc9a746464c3877d6506a032f066ba"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-detail-1440.png",
+      "sha256": "06ab8309723400530a25e5d5d9e567fb5315dbb54101c84157a3f007be561520"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-inbox-1440.png",
+      "sha256": "031222022647f247ad043518e1ef76889a49341ccdc69c25214ecc855b4320cf"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-reports-1440.png",
+      "sha256": "a6ff35e01809bb7eb9e1dbe2e89e9e8a910a30e51dd0a421b5723df1aa45612f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-password-1440.png",
+      "sha256": "131cadcf5e0c4830e9713407709d9cccf8e9b5d592cd91eaf03cd5cc59fccd6d"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-not-found-1440.png",
+      "sha256": "a63b3461c8734657369001bb674c4296964dcb4ebabcd87b65dc874bc9197961"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-forbidden-1440.png",
+      "sha256": "88ef4fd43cc3e4c345cb950404b8cbb959ee767b952b156874b95e9f9605e79e"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-dashboard-390.png",
+      "sha256": "a0178c963a1c3b5e21fc2a75bdefe7a9bc32417beb41c419aa3b2eca01e872f8"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-contracts-390.png",
+      "sha256": "7fc590136243b86b79dceb42c5fdfaad567a4e405cee1676a63217bc306b09b3"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-detail-390.png",
+      "sha256": "d31ba421a5d5b468859a3e768f902280eca8fa47d41d2cf6e578de9564acffad"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-dashboard-320.png",
+      "sha256": "52e2d005ef38bab6e9d71f2aed3b366af306794b1b598de26a2768ecb8a087bf"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-contracts-320.png",
+      "sha256": "ca1407c36beb7b4b1277c8b0fe43dc4acf8b8d658e7b01ac9054387dd7c976c0"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-detail-320.png",
+      "sha256": "51d0eee8bcf99452fe7c048e83d189a1f394be7702594d0ac987c9254573beb8"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-mobile-navigation.png",
+      "sha256": "fd3cd821dacb2142fd3cfc0e4171193c682f5811d85f6ef67c0615fc02ef9d7a"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/pruefer-empty-results.png",
+      "sha256": "24e052e7a526a81f8645fe313116df7960eb75c1ba90ca8976712ac74b3abd8e"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-dashboard-1440.png",
+      "sha256": "d73e75303edbd1bba86cfbedc9875b82b2e137e9c5700f3a2290e53e68080479"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-contracts-1440.png",
+      "sha256": "880901b99c8498fcf0e5c173a3ae2072acfc27449f410063f566fb06334553b9"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-detail-1440.png",
+      "sha256": "a3916e0547b00bc5412660123bb90a7e63573c5eacebe18b715a511d8f2834af"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-inbox-1440.png",
+      "sha256": "6287d68e6dd02c7719433bfc80bf0f1732f6e2526c2760a660e27d2c284a6ab2"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-reports-1440.png",
+      "sha256": "2f9065db3d118a860e29b9fac3f24b31c842768a5d2c9c89bef2b155965a817f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-password-1440.png",
+      "sha256": "51a5466c0783bff768478be6875f9e52d93deba9d2869d0b7b005071af517198"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-not-found-1440.png",
+      "sha256": "de0e0372d7d05cca80331dd7feb709882cabccd3dce6a53c4ff774bab5c9c192"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-create-1440.png",
+      "sha256": "c7d70673c7fe03853b6e5eb94c9681bea3944f23f8b80db8c7cece6d0ddf176f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-edit-1440.png",
+      "sha256": "59d2a150b6a5bea8fe7a9e99ad77b49be9ec359c0924f7ad54a315571421566f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-forbidden-1440.png",
+      "sha256": "6a5b2ec8ca490e6b716c6354e49473d16e91f1c7a0d789b265fad7b1107a0c58"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-dashboard-390.png",
+      "sha256": "d5e7fe039fda2958db1256a106c1cd05726651c6999cf1aa3608c31e40d25345"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-contracts-390.png",
+      "sha256": "5901461f52d32f389fb2a33d07ebcaa58a1348990655759d3c5f911db2801f42"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-detail-390.png",
+      "sha256": "43c791111c042c09afe638f88da64510efc1b76fb1d7da44d23adca37cfa4110"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-create-390.png",
+      "sha256": "b0da6c8b6651ae3729b0a51be02ac71d19f954ef14684be417783bef9233d461"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-dashboard-320.png",
+      "sha256": "8dac9479c6175efcda39f0b7d0abd1837c7939c115c697b74d706a6f915d822d"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-contracts-320.png",
+      "sha256": "d5580e4231a7c6adcd6857758b99d7dd16f80aa6e4706d39f59cce7b94c90050"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-detail-320.png",
+      "sha256": "7f395b77c48118487ec78d53dfb81c0f395c190528eb8468ab4b382da7fb054d"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-create-320.png",
+      "sha256": "c273877e9127adaaee6a467feb8d77933e63bddc8e756240c2737a75972a2164"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-mobile-navigation.png",
+      "sha256": "8306b59251ea4cf55137f07c7dc193ff51ac4746b1cd5a9ece1ec0826b822261"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/kultur-empty-results.png",
+      "sha256": "c6188e63c874ba874907dfb347e3e7dfee2cf2c4c2e9535649ba315d3140db12"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/login-desktop.png",
+      "sha256": "cb06b55cb29ced86dbe6b4708f56e6b5e3baafda7bc11f704cd193bcc44861d6"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-dashboard-1440.png",
+      "sha256": "df3f0e12ac7e9fa5d0066dace72d578ad62a12867f9e1b4215e0fc2777364489"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-contracts-1440.png",
+      "sha256": "f6014d699e88da77feec79e9595b75ac3d7ba3fe62a189072fc65e7c779057cc"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-detail-1440.png",
+      "sha256": "6cf806059dfa379858f9e0caaee8c14f1c8433c2a4be6973f8e96d95ec2c53d4"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-inbox-1440.png",
+      "sha256": "f211ea86d4daf3df23cf276f49666c1753a49683284b0d77f0e083e2bfb189cc"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-reports-1440.png",
+      "sha256": "b0e729b3c206a441b7f7bcb5e23578807c40d87b1ea53642ac1e23dc53f204ca"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-password-1440.png",
+      "sha256": "57b14b8960231b4fab078a6e61152d679409a8c84ff91345ced8eea9bdd89cf9"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-not-found-1440.png",
+      "sha256": "e4dcf84ba70c399a606138459f2d46715dc603030cdbccf5eae2c33640d45b9c"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-create-1440.png",
+      "sha256": "c9a843c13974e36e4c85501166e4f08915af90300e57b94f49bb685256909509"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-edit-1440.png",
+      "sha256": "a0850cb4a4fa1df33c02a9143e004ad964c3525e067498e4ff028c93561a49e1"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-users-1440.png",
+      "sha256": "f88a6315e56835b88e40d97f8dd0d4f18f0b46b472cfdd30df385f803bbf1beb"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-new-user-1440.png",
+      "sha256": "0c6bc085f21bd38724e7cd3677011d8e0abe25ea5f6f291d3554a08867c57540"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-edit-user-1440.png",
+      "sha256": "1c3b560fc8cf231ebfca1f78148e8582da6e368691bb8a7a1960e94f24cd7910"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-identities-1440.png",
+      "sha256": "5721292c5206da2c7ef68a73ab23be7298642e016932828194da9b819881e7a4"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-integrations-1440.png",
+      "sha256": "1a75c42d40b832afdc81b3409d07f2eccc75e81e682804e2bb7c9b933baadcab"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-dashboard-390.png",
+      "sha256": "3caec199e8664dc0a63f5ae12bdaf4b7d58c7d4db98b9d181b04b01c677dca17"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-contracts-390.png",
+      "sha256": "6f61d5661427bb7c8c97653dd358253ec582eeb36b3b21c2882268f55db7ae3f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-detail-390.png",
+      "sha256": "4d57ec1ae98d0605122f4855bc2c0732903def0b9564360587d1aa1a3e791ef1"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-create-390.png",
+      "sha256": "5b8e9c2cfaa9f962c4beb9c4453cec5d7f4085df213fbb372ce2777a514e73b9"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-identities-390.png",
+      "sha256": "8bb6466e04922ba1e899393b38efbaaca8123e66c21905a6f042b57c65f563fb"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-dashboard-320.png",
+      "sha256": "3919efacd00fbdc1fd276b101a0c5f5b0f64c24162b4f18f7e211e807992cd81"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-contracts-320.png",
+      "sha256": "02ea72ca4bf04fde07e6e87eeb96adfb1dbbefe231c47c6f3e426514d33eedf4"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-detail-320.png",
+      "sha256": "90a10aa0a0e6cfb6e2f1614449befd4c1c34b03b952e4beb4c3614f4089f2668"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-create-320.png",
+      "sha256": "1f493d1603c001723b03701180f9d98b0e4ef55cd79464561dc25c9422c8599e"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-identities-320.png",
+      "sha256": "61c02021092290ade6a354020dd2c0aa573248d87478a611e06243fea684c365"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-mobile-navigation.png",
+      "sha256": "527a150c5f834f99831930fb953a1090bec9590b52611113d956d8f94a3d5f9c"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/admin-empty-results.png",
+      "sha256": "f87a0c06204a01de91ca2d70ee2b7ad74921c367f714c4babbf994c64c69faf8"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/validation-422.png",
+      "sha256": "edb4d2abaa9a1c2799561d3c062efa4ac69a3b8deb78c90fdbef07349917531f"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/server-error-500.png",
+      "sha256": "8df8abd83953e82ab3e80b12e3df9b3b306b24bee5b5fb3151e34746595e76ca"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/import-error.png",
+      "sha256": "477736d5d207006832288adc20ab6b23d32a5328ec3a5a5ba9b1da661c4b071b"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/conflict-409.png",
+      "sha256": "e17bdf7a2580bfc5043f1a54c09f53cd5607d0319e47e1cc67f27026dddc37f3"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/empty-dashboard.png",
+      "sha256": "16dddcd50e182f3d22bd0678d5c0dd93a28e7e61f23f7737ec07c33b138d61b1"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/initial-password.png",
+      "sha256": "55ffcdbd25e9da7c67ce038829389df3c0a95ab08bbecfcbd13bf896b4666ed6"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/mfa-enrollment-start.png",
+      "sha256": "0776c1ee8bc910c3acffbd3633f0ef459c3a0c3cbcf16fdab369174d8ad6f09d"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/mfa-enrollment-masked.png",
+      "sha256": "933592a0a387abd5801fc6478534433d2f1c03e2045b4d29cf25362c2f5dad63"
+    },
+    {
+      "path": ".verification/integrated-browsers-fd66fa456b6d4aa79080a14ffa5c53c0/redesign/mfa-verification.png",
+      "sha256": "70f20753bb728499bc3696bac235335526c701267acfab6049ce76fefe034f4a"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/sanitized-report.json",
+      "sha256": "efa599830a6881f020e50bccc86a346dcbc912e4fade93638728d8097b88706a"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/result.json",
+      "sha256": "1d3281439ba90aefde9c99f215ca050203c5d644320b8b1f1e0cc8b1546c9e35"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-default-390.png",
+      "sha256": "393214e91a88c8ce9b6660474d43761151ca64037ed5571ad2f6ba2631eae579"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-selected-390.png",
+      "sha256": "5f0d52daa2675319d1498039366ca475a7f1528b1ec7652a480f3af461e7cc3b"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-import-390.png",
+      "sha256": "6ca519e30a55b7a3d5c8e33f521790ba583de6ae37aa6a0348215a205cb341e6"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-default-768.png",
+      "sha256": "a46ef981e7f23b60d5f33c063451260506d541e88f9ae210c54e44014c1fc623"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-selected-768.png",
+      "sha256": "4b59164ceffa8aeaa8b3f5bc4634085bacd386af7def7c68c6a035b4c1ad10fc"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-import-768.png",
+      "sha256": "92f63e69861af51d9126f31aa0a155258a2d95cf3fcca49547b9b95cc72428a9"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-default-1280.png",
+      "sha256": "580e31a3cbfc35935fbbeccdaeed1fd7f8dc34a1a56bb2430e498dfec3486e45"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-selected-1280.png",
+      "sha256": "4bc710fa58824eac55a76b3d6587a5aa64b43a3a447c6dc914f8df60fffc1f42"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-import-1280.png",
+      "sha256": "ccf8eb869387ffb7a90b51b5ec78266c52a37440b29ec95a31fb94826dbbe8d7"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-default-1440.png",
+      "sha256": "7ce2fb50c0e6d8199a28ad75cac825ba7e8903be45559434246db3411d795cfc"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-selected-1440.png",
+      "sha256": "06ba707f20895b4230c88e027fc7c3bc05d7ed54c4176df1cee7971b9fc412ad"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-import-1440.png",
+      "sha256": "e2de1b6e12d87c349cb21d859295987874360ccc15a384a9befd6efc89735289"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-import-error.png",
+      "sha256": "477736d5d207006832288adc20ab6b23d32a5328ec3a5a5ba9b1da661c4b071b"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/admin-import-success.png",
+      "sha256": "006d1ea872459dc7ba1f4078916d12260a71c4cb15b4a2dc37fc50691f9ca3f9"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-default-390.png",
+      "sha256": "73bcf4ef705537fade80ef7034cd3474c68373a91a39d3f7df15e2717d8d9a36"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-selected-390.png",
+      "sha256": "52a9fdd0d52b122ee7fe2cfaf6527a5aea01113801d143eba8f5de2e88f689e0"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-import-390.png",
+      "sha256": "da5bbeaebe1550d7c6b27ce754c12a2a1c33638408ab9b7962b33aa5c4cce472"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-default-768.png",
+      "sha256": "333a5c6ee9c0a649c758650c1a145587d3ab1fa6f2666a409f746da3efe90942"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-selected-768.png",
+      "sha256": "cc481d2d01506b3c76d049823b7f7f82b0e1390959a48eafeb04c3c4f65e52d4"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-import-768.png",
+      "sha256": "52db0e6d38bb9da723b6afae9d0b683944467cbe42d2245b5197264ee64a36e6"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-default-1280.png",
+      "sha256": "d52f74e41740a61b23c10e13d268591a9de968296a9ad01dc8d5a5659ffe9c57"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-selected-1280.png",
+      "sha256": "f8cb0ac88ad19fce395be5f67368ad6507c6208aab5eb4600d41d1d6f7b2f23e"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-import-1280.png",
+      "sha256": "38f962091cbf668d0cbdd4fb335f4fa01d93c30d4a2ad160ab769c333f733161"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-default-1440.png",
+      "sha256": "8d3c0d203cfa0d842465fd6c0bb4237cbda8a3200944e020b216a4661222eae0"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-selected-1440.png",
+      "sha256": "dee6bdb432ada8261a80e54e5f1b3f4359f98fcc0a65bc4028708e0d68d444ee"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-import-1440.png",
+      "sha256": "b8ec0036a27c5a394dc7a8395e9a8b69312f9ee41376f955589b03fc2230c269"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-import-error.png",
+      "sha256": "66a8c1ba774c440577b41b5fcc0f1898dee8ff07e4bef139875c7a38e8a03efd"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/kultur-import-success.png",
+      "sha256": "7395b282c79ee8e19a120c591220fd52be50f05d54fe67be9236c93debf9d064"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-default-390.png",
+      "sha256": "e0749a8187a832707a7e3951513b06fd28947c8d61505b0f995a085c9c03ae20"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-selected-390.png",
+      "sha256": "4d717258cc0b03ebf0a49f1d1903a794088d5e60b2db70f5d3a7da7a5555c808"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-import-390.png",
+      "sha256": "8d3f34711e32f9130911be364b6262969532c3253a5007fcc4479bb2feaa2988"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-default-768.png",
+      "sha256": "f1fa192f23603ea9227824319c8e86c960074d723706618b5134a141600a7ce9"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-selected-768.png",
+      "sha256": "cd0e3d44fd207ba92dc934fc50d4d4ce3d4106bbadae420b0d78f77514811385"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-import-768.png",
+      "sha256": "5bdc57ecf873485f1370cf60ff093c43bccba45d6d8ef1875221af6312bf9e77"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-default-1280.png",
+      "sha256": "56c1a8ad89f0daa78c4791bb6ab657ba10e1bdba9d87b07e1e2e59c58202f71c"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-selected-1280.png",
+      "sha256": "b3f36eec7c8b8a2815cebc4f4468099677b5c2037a15f78a31eaf7726aab6241"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-import-1280.png",
+      "sha256": "478d1743e9551288ec8ca6d9894faf4671bb30fd40dc03db511e40547f397a4f"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-default-1440.png",
+      "sha256": "f709c89fe136bb59d4d32b05918fe222039dbc59435782bddf7ecc1d4a2400a9"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-selected-1440.png",
+      "sha256": "5c0a459c554061a900a28e32094c1841852993655ce8a342fbd4df608c275049"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-import-1440.png",
+      "sha256": "60cf30c0913774d637756729ea85a24471195a4ba2abd75af4f1c1ba8449a072"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-import-error.png",
+      "sha256": "15939f658091ca6c4197e71438cb18b9971e0558ae3a441078cd303689eb900d"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/bau-import-success.png",
+      "sha256": "14d27b16bb2f058864a937dd65c3f7f88acbfd5ce441f49f906067eadc513e31"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-default-390.png",
+      "sha256": "34141dcd4137b7eaef49720622e2d41decbae011dc42467701c79d941eb1b6bd"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-selected-390.png",
+      "sha256": "2fbdaf59c48e07be1bfe48d2c116e9ab02618af3e9740f54698a114bad62e0d5"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-default-768.png",
+      "sha256": "6ca5e90982c31d9ab1ce0dca3fc385cf9f6b1a0515292d7cc416b4f62b5a86f4"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-selected-768.png",
+      "sha256": "8910dfdd4c9232e38d77a0106a329be8259a3a0e590d466e19063b55ab83cf3e"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-default-1280.png",
+      "sha256": "fef53d72ecb7f53b27c9b53c20f311263f10268723600fc9a4cce2e9cf5eb0fe"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-selected-1280.png",
+      "sha256": "1391f90fb6076485118515cf2baa34a723579f476753d471788ee4350bb74a59"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-default-1440.png",
+      "sha256": "4e5acb323d78c69ae99731ea4c5685d261e2c717288b6c22ba18eab2670c67d5"
+    },
+    {
+      "path": ".verification/excel-browser-43cef1bdbffc4cddb248b6a5f535fb92/excel/pruefer-selected-1440.png",
+      "sha256": "7a12972e4e8dd1f13f6b91bf89bc299b834db0177d4c28f515d7f8d2f593ad3f"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/sanitized-report.json",
+      "sha256": "4ecbde5e693c4ed2b5bbb950babdefc6e98654bb2b2593901816f9bc35d66eca"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/result.json",
+      "sha256": "e6742cbbd6890c0548018b1d7d9f71ff3131557447825d4bb318d58bcc659067"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/before-390.png",
+      "sha256": "6e953e4a91e273541b385e1141204657a891fbab9b4e7646ca9eab977803bbed"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/before-768.png",
+      "sha256": "24cbda4a5801c1e36a6804a5b0f611654f9c5b7700f756f12ac19b0b83912e04"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/before-1280.png",
+      "sha256": "5bdf242d1c09ea34a34ca37b6c707fc197431bdf217928e4cd657fbdaa49fad8"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/before-1440.png",
+      "sha256": "058fa4758c95a5c2d1d0eab01ca128f8bcd394cdd2332dbf37dd30197a6f43b4"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-admin-390.png",
+      "sha256": "393214e91a88c8ce9b6660474d43761151ca64037ed5571ad2f6ba2631eae579"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-admin-390.png",
+      "sha256": "a98b44f31301112aa2026614180b653ed1bf2a00fd99f2bb098f6842b89a99d1"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-admin-390.png",
+      "sha256": "565138315efc9a454f0202960be6c49eb36b4d61bef97f814be839d7ac9caea6"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-admin-390.png",
+      "sha256": "aee4b502615933d7ec7635abc8deb8fec153c9387ebd00e7f8c800b187800572"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-admin-390.png",
+      "sha256": "894bf878f58bb66b538794b83d9127f6fa8710753fd9657dc9bf1b735e3fbcc8"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-admin-390.png",
+      "sha256": "d93d9df56e8b76912acf78252b2d2ff6b430e8351719e2fe88f53bc58efca7e6"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-admin-768.png",
+      "sha256": "a46ef981e7f23b60d5f33c063451260506d541e88f9ae210c54e44014c1fc623"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-admin-768.png",
+      "sha256": "87c289d9160fab801f6c482e86ef1f6ebb003c143f5cc147a3a57659941c52fc"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-admin-768.png",
+      "sha256": "e09cd2e45cd6095cabf7a4d549fb88325d3dcb480b4483ba0b5bb052be2fc88f"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-admin-768.png",
+      "sha256": "2d3ee6444acc05316f8c2ffe21d90e706ea9d3711bd2d7d6d694cf7e0eb0fb3e"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-admin-768.png",
+      "sha256": "4d913bb60bb8a9a5479eba89fd24998f169af8247c4bfb60c6730e137b970432"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-admin-768.png",
+      "sha256": "08935022bd019d87be61abbe259052ac7966ae125559170045a775dc6b98a4b7"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-admin-1280.png",
+      "sha256": "580e31a3cbfc35935fbbeccdaeed1fd7f8dc34a1a56bb2430e498dfec3486e45"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-admin-1280.png",
+      "sha256": "09f5bcba5a4ea7ec79fbc154a192ca712d0e67a6c4785066b72f6a61ceed6b42"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-admin-1280.png",
+      "sha256": "331a09e8a96250a5fadef139472db3c5dd71c4b0dd30ae10b83764037f7322b3"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-admin-1280.png",
+      "sha256": "6100a6e4039ce380077a98f83bc00013d251f8a15310b5595258b802820e57bf"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-admin-1280.png",
+      "sha256": "0f616bd53a5aae317bed1998d766ed90635bbf509ff30c81c03c3bc1f5fd23ee"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-admin-1280.png",
+      "sha256": "f1d5cf7ac434aa25a0dc48cb28a5c7edb6011941adf1f00fb3cdf12136a337af"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-admin-1440.png",
+      "sha256": "7ce2fb50c0e6d8199a28ad75cac825ba7e8903be45559434246db3411d795cfc"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-admin-1440.png",
+      "sha256": "34125d8221ee62954f488ad8069dfc01bd8083aafe95c07f1c7954daadbf04b1"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-admin-1440.png",
+      "sha256": "f0a724d3bd3fc8646bf8a9bf2f32d5dc5ef8e2cc3dec3fa483ad71cd39056f9b"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-admin-1440.png",
+      "sha256": "2bcffe414f377c2d14dce375a91a0536ef74f3f43d9cd721d37c01ac43fa8219"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-admin-1440.png",
+      "sha256": "77c74a29db070dde6ffe51bef77036d061596420da4d04215826ca446313e5b9"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-admin-1440.png",
+      "sha256": "906fb43a4a17955674e0bbc73e2b1c6e0a30bacf6cb42ab53b329142bb63d774"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-kultur-390.png",
+      "sha256": "0a7287b3a526ed0b6d25cc16223d0ec3089dc1977df8392862ff5f3fc054f02c"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-kultur-390.png",
+      "sha256": "aba90e732ee515ee1966568e118c908454e99cffa96d462994f2689def2b0738"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-kultur-390.png",
+      "sha256": "fb457cabf5776f892363212121889bc37b77b81e89ce1b35e60a9bb94e578d7a"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-kultur-390.png",
+      "sha256": "3932ece33bfc012ce0fbcc37b18ab8dce1871d3557388348df05a8ccb0200a84"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-kultur-390.png",
+      "sha256": "2d75f3fab832fa97d6fa549a9efd81922cd42f8053e20d812c2d52258422e0d9"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-kultur-390.png",
+      "sha256": "2b050845e599e29ee9cf4f8ca9487b8a9cb710447ffbdd72a5ddc25d7899991d"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-kultur-768.png",
+      "sha256": "5b341bac071f59f33ccfad6671e3528ef358688dd7fec2021c483ce79f9b464a"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-kultur-768.png",
+      "sha256": "cf72cfd12787153aca187fae6aa0f80e8902354b8b144a200ca150be6384e03d"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-kultur-768.png",
+      "sha256": "d986430d7ff536eb214124e065faf2b697f61562837e2068642940a33a6027ce"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-kultur-768.png",
+      "sha256": "3c526a8af6151a8070a912763209d10a45355454018feaa7bff12bd1198e1afb"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-kultur-768.png",
+      "sha256": "2edd4545b3057b608df54c55b2707d3b3cf3be832a657c8e7c66c5a55fa0aa2b"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-kultur-768.png",
+      "sha256": "746bb85b8d977799c4e47087fd928390635b03cd85bb51551acc7c094239c103"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-kultur-1280.png",
+      "sha256": "ddcf10531bae6cf6980c2d3baf7ddc44049733587d1683ee7979d4ab161eb702"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-kultur-1280.png",
+      "sha256": "a61987f704298f2a992fb68a41dcb58f64103f8fc037411b2e91979575047773"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-kultur-1280.png",
+      "sha256": "48544f4106f1d09dd71a14fac43218a317bf97391e4e08aad0df7f2717548224"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-kultur-1280.png",
+      "sha256": "2bebc5bca082e0636bf399517baa3aec0805f801524c56ff730e9e2db631d399"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-kultur-1280.png",
+      "sha256": "60ece97a98979c73ff23e0271822551260b88b5b6e8f45ddad4c8fac486aaa9f"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-kultur-1280.png",
+      "sha256": "3d44b27573262dabd5bd908c577c3385cecbaefd730e68e5945bc50a14881c92"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-kultur-1440.png",
+      "sha256": "4825fe267c042dfd3295752054ebd8bbaaf35dc234a2047d962c5451135fb8b4"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-kultur-1440.png",
+      "sha256": "040525269551533236e3dee303613e2833f308a852e316094599984004e42caf"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-kultur-1440.png",
+      "sha256": "715e50ba722deeb6f52d92738f933c48675b5f04726ea4184ace6c5870c75b45"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-kultur-1440.png",
+      "sha256": "09af203438ac82fea2088dc74a7619c55011f8503ca39af0fec5dd3b60a57008"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-kultur-1440.png",
+      "sha256": "a98d4b8690c0a3dc4475de0e6d475ce25efe60d6fbe7356a6483301e864aa948"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-kultur-1440.png",
+      "sha256": "a13b6afa7d6f94d1e4a3b03368825daf100f73cff6d3140887e65cdcc0ee798e"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-pruefer-390.png",
+      "sha256": "d447527185771b46d885d0451b6715794edd7c5088080d3e8d839c8de0c3857b"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-pruefer-390.png",
+      "sha256": "d098e1572917958a62a4d8291adbe4c713681e20fe31326340957aafaf93507a"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-pruefer-390.png",
+      "sha256": "0167e234b49019e0c3d92df25c4173b3059b9fd1cb9eb9fcb671889eede4cd90"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-pruefer-390.png",
+      "sha256": "35899a44444f876f9eb6a373c0d736163bc8bea6dddcfd15e55bd32130aa8bd4"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-pruefer-390.png",
+      "sha256": "5a83d495c8a17f8df14c5d6883e6a80077e699475d726eb3b6b1c9e607636e22"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-pruefer-390.png",
+      "sha256": "2b52b40f27c80b334f0430de235635ec5b2a2faf60da9ef63b95a7a0ed96f4a2"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-pruefer-768.png",
+      "sha256": "75556017f155e783a59da300aeafa524f92e45825844ff92700d620396aa45c5"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-pruefer-768.png",
+      "sha256": "402628b70da37503ca9ef7bc466f9b398e27f8b141029dad8de9e708d79d0bda"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-pruefer-768.png",
+      "sha256": "ea91389798c601a1377181b31f2308fcf5bf05786978c1272ff83bedbe50ef50"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-pruefer-768.png",
+      "sha256": "c479f98c9b78277881f13f06d97adbb65c83c995a8c5e093026c471c1df27583"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-pruefer-768.png",
+      "sha256": "58b1af662385c1adb5310590b739acf5712b2b3bdc9a9c6a7823168fbd6d537f"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-pruefer-768.png",
+      "sha256": "3f7669b7cfd3fca6960f91e23667d80332a640089426ae5b0c90ac3c5e4903f6"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-pruefer-1280.png",
+      "sha256": "6eeb4945d9aa5282e2a70888770c9ab6ab0adebd82c83bcbfe49e80b1f281d9c"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-pruefer-1280.png",
+      "sha256": "51948718146f253cc9da3e53b425ee0fda78bd27a947bd808e211dcbec03c4d0"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-pruefer-1280.png",
+      "sha256": "5fcb2976350b356cb04a0b648986fc360c19ebff60fe0ca857c8abc53901385e"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-pruefer-1280.png",
+      "sha256": "60ff6ce7c258ab614aac55586f01a9677edaaa246ff5f3268c747b1b2f81b43e"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-pruefer-1280.png",
+      "sha256": "cf26d3bd6d6c5d65b58fb7127d10fee90fa462370bc33f0a018c89f4f95dccba"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-pruefer-1280.png",
+      "sha256": "221e31470a635f02972808f47b6b5d898e7dfb3c039171fe787e99515c616fae"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/after-pruefer-1440.png",
+      "sha256": "6b4221e0ab3750a2dd7411c845ad6966980f0a4f6f91e0f82a5199ae024ebb47"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/open-pruefer-1440.png",
+      "sha256": "e11feedf0abd8ab036fbeb75e091213e5f27b4d3cb5d80744ee0eb1b27a13d6a"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/expanded-pruefer-1440.png",
+      "sha256": "708e29677c48f7cc19a35a004b100462b7cb7e83b2a69ef7638e96240c21a603"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/focus-cycle-pruefer-1440.png",
+      "sha256": "adbf905dca48d99cd70fd920687ab930a522b4dc4348da2c08f26d3d24a4626f"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/escape-pruefer-1440.png",
+      "sha256": "634f2f8f4da7febf692ebdadc818ccb9e696390492d2d6e07cbeeb9eb2318fb2"
+    },
+    {
+      "path": ".verification/toolbar-browser-706282027fd4465db3793aaba3afea79/toolbar/active-pruefer-1440.png",
+      "sha256": "2a7bbb0fddaef12f83a123a17fcb1d4baae8489acd3d47d2b5487f042a1f8857"
+    },
+    {
+      "path": ".verification/browser-fix-postgresql-d5f402d/sanitized-report.json",
+      "sha256": "4b5fe57c085548f2a8a1000f29581f8705445b8f81cbf679ea619d506789f10d"
+    },
+    {
+      "path": ".verification/browser-fix-postgresql-d5f402d/junit.xml",
+      "sha256": "817eb0036cc38c71cc995e4a5ef8a55d5b220a8c033a8251b5460a2367eaf987"
+    }
+  ],
+  "targeted_regression": {
+    "source": "461e030b015c37e47c6204a5b6c7cf6dc35cd61f",
+    "passed": 146,
+    "skipped": 0,
+    "junit_path": ".verification/filter-dismissal-461e030-98fec7b125a94e45a69aae2fd3f24fb5/results.xml",
+    "junit_sha256": "2a417e87d1a84ba9aee2446c94eede0878b68471d7289755b6dfea8cc9a5f7e8"
+  },
+  "visual_review": {
+    "date": "2026-10-23",
+    "status": "representative_existing_screenshots_reviewed",
+    "widths": [
+      390,
+      768,
+      1280,
+      1440
+    ],
+    "inspected": [
+      "toolbar/escape-admin-390.png",
+      "toolbar/escape-admin-768.png",
+      "toolbar/escape-admin-1280.png",
+      "toolbar/escape-admin-1440.png",
+      "toolbar/expanded-admin-390.png",
+      "toolbar/expanded-admin-768.png",
+      "toolbar/expanded-admin-1280.png",
+      "toolbar/expanded-admin-1440.png",
+      "excel/admin-import-390.png",
+      "excel/admin-import-768.png",
+      "excel/admin-import-1280.png",
+      "excel/admin-import-1440.png",
+      "toolbar/open-admin-390.png",
+      "toolbar/open-admin-768.png",
+      "toolbar/active-kultur-1280.png",
+      "toolbar/after-pruefer-1440.png",
+      "excel/admin-selected-390.png",
+      "excel/admin-selected-1440.png"
+    ],
+    "new_browser_run": false,
+    "note": "Early opening images capture the existing 120ms animation; settled expanded images are opaque and aligned. No new defect observed."
+  }
+}

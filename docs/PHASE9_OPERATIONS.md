@@ -1,5 +1,164 @@
 # Phase 9 - Availability and operations
 
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+
+U023: [synthetic pilot acceptance package](SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.
+
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
+## U022 local maintenance and monitoring
+
+Verified migration head: `0027_child_read_admission`. The following is the retained
+remediation trail; final passing measurements are linked above. The `db65014` full workload
+removed the timeout and reached 2.926s report p95; every other operation and
+isolation passed, but the 2s target remained unmet. Evidence is retained below.
+`0027` computes readable contract IDs once per statement using the existing
+`read_departments` rule, then replaces only the legacy SELECT-policy predicate
+on child tables. Archive visibility, owner/admin exceptions, NULL behavior and
+all mutation policies remain unchanged. The foreign-key-backed ID set implements
+the same existing `read_contract` relation; there is no new caller-supplied scope.
+Actual PostgreSQL matrix/API/history selection: 39 passed, including global and
+department roles, archived parents, invalid contexts and suspended departments.
+Fresh role configuration is required after migration to grant the new helper;
+production roles are not inferred or created. Full-size latency and frozen-source
+results follow in HANDOFF; permission equivalence does not establish performance.
+
+Native review: [NATIVE_SECURITY_BASELINE](NATIVE_SECURITY_BASELINE.md) records
+official server/client advisories, observed local 18.3 and production-only patch
+floors. R43 remains open until patched host/client verification; local synthetic
+regressions do not close it. No native service, ACL or installed tool was changed.
+
+The first full mixed run at `99b1fcd` is retained in
+[failed workload evidence](evidence/phase9-u022-mixed-before.json). Reports missed
+the 2s target (5.747s p95). Its repeated 60 logins from one IP correctly exceeded
+the unchanged 32/IP budget, then invalidated later page/export/download samples.
+The corrected ordinary workload uses initial login plus one timed reauthentication
+per user, retains authenticated-content checks and never weakens throttling.
+
+Forward migration `0024_history_materialization` makes only the existing history
+CTE materialized. This candidate optimization alone did not resolve the cost;
+population, cutoffs, unknown/zero behavior, principal guards, owner and ACL remain
+unchanged. A real catalog upgrade regression verifies owner/ACL/security/function
+body preservation and repeatability; existing historical transfer/archive and
+restricted-role tests verify behavior. PostgreSQL documents the evaluation-once
+control in [18 §7.8.3](https://www.postgresql.org/docs/18/queries-with.html#QUERIES-WITH-CTE-MATERIALIZATION).
+Final workload and revision-bound regression results are recorded in HANDOFF;
+neither implementation nor a smaller workload substitutes for passing measurements.
+
+The corrected full run at `8ced41b` passed authentication, isolation and eight
+operations, but reports still took 5.690s p95. Retained evidence:
+[interim workload](evidence/phase9-u022-mixed-interim.json). A restricted-department
+[profile](evidence/phase9-u022-report-profile.json) measured 4.658s request time,
+4.392s DB time and 3.602s in five historical queries. The scalar materialization
+was insufficient; this observation supersedes the earlier bottleneck hypothesis.
+
+`0025_history_series` adds a bounded one-to-five-cutoff scoped aggregation that
+parses qualifying history once and selects latest state separately per cutoff
+before applying historical department/archive scope. No raw states or arbitrary
+principal argument are exposed. Future/null/empty/oversized cutoff arrays are
+denied. The same web-only, active-human, non-forced principal conditions apply;
+integration/audit roles cannot execute it. Explicit role configuration must be
+reapplied after migration to grant the web function; no runtime role is inferred
+or created by migration. `inventory_trend` uses one SQL call for the five-year
+series; SQLite keeps its existing internal implementation.
+
+Actual-role regressions compare series output with the scalar function for
+transfer/archive/unknown/zero examples, require exactly one series query and
+verify input/permission denial. `scripts/profile_phase9_report.py` is an opt-in
+guarded 10k/50k profile with fixed operation labels and durations only; it emits
+no SQL text, parameters, credentials or business records.
+
+Current scope/status: [PILOT_DECISIONS](PILOT_DECISIONS.md). Earlier sections below
+are retained history; their evidence does not cover new source.
+
+`events-publish --limit 500` requires the explicit PostgreSQL schema operator. It
+uses the API's `sync_state` sequencing lock, atomically publishes a bounded batch
+of committed outbox rows and preserves every source event. Retry is idempotent;
+normal API snapshots retain their existing barrier. No event/cursor/snapshot/
+audit/backup retention deletion occurs. Expired credentials are denied on access
+and counted for review; no records policy is inferred.
+
+Set `OPS_STATUS_DIRECTORY` to a separately provisioned private local directory for
+scheduled CLI commands. OS locks prevent same-job overlap. Atomic status files
+contain only fixed job/state/UTC timestamps, never exceptions/record IDs/secrets.
+Interrupted runs remain unhealthy; failures replace earlier success. Production
+validates private ACLs. Keep this directory outside served/document paths, writable
+only by the authorized operators; the web/integration identity needs no access.
+
+| Job | Draft schedule | Success freshness |
+|---|---|---|
+| scan-pending | 2 minutes | 10 minutes |
+| purge-sessions | Hourly | 2 hours |
+| document-reconcile | Daily | 25 hours |
+| integration-status | Hourly | 2 hours |
+| events-publish | 2 minutes | 10 minutes |
+| backup-create | 12 hours | 14 hours, plus snapshot age check |
+| operations-health | 2 minutes | Review Task Scheduler LastRunTime/LastTaskResult locally |
+
+All Windows task drafts remain **disabled**, LeastPrivilege, IgnoreNew and retry
+on failure. No registration or service operation was performed. Authentication
+purge uses the existing maintenance-role function; other operator jobs use the
+explicit schema operator, never web/integration credentials. Reconciliation now
+returns exit 2 for missing/mismatched/orphan/unsafe storage; it never deletes files.
+Pending scans are assessed by their queue age/exhaustion separately.
+
+Local read-only health, using private operator configuration:
+
+```powershell
+python -m app.cli operations-health --status-directory 'D:\ohvr-private\ops' --backup-directory 'E:\ohvr-backups' --verifier 'C:\ohvr-private\receipt-verifier.pem'
+```
+
+Exit 0 means current checks pass; exit 2 requires local triage. Redacted JSON
+covers DB/query availability, scan backlog age/exhaustion, unpublished events,
+recent security denials/login-budget rows, disk reserve, failed/stale/interrupted
+jobs and signed fully hashed backup snapshot age (24h). Configurable bounds:
+`--security-threshold`, `--reserve-bytes`, `--maximum-backup-hours`. Counts represent
+events/budget rows, not unique people. Existing HTTP 503/redacted request logs
+expose pool exhaustion; actual host metrics/capacity acceptance remains open.
+
+Backup selection examines at most 4096 directory entries, chooses the newest
+receipt candidate by mtime, then requires its signature, exact ciphertext hash
+and signed snapshot/completion times. mtime is not success evidence; a corrupt
+candidate fails closed without fallback. Review preservation/storage capacity
+before reaching that bound; do not delete artifacts automatically.
+
+The disabled `monitor` role requires private data-only JSON settings
+`MONITOR_BACKUP_DIRECTORY`, `MONITOR_BACKUP_VERIFIER`, `OPS_STATUS_DIRECTORY` and
+common production/operator settings. The wrapper requires explicit local paths,
+rejects unknown keys and removes inherited credentials. Review monitor output
+and its own absence/failure through local Task Scheduler history. No external
+delivery is implemented/activated; tests cannot prove an operator responded.
+
+Representative opt-in workload:
+
+```powershell
+python -m scripts.benchmark_phase9 --mixed --contracts 10000 --documents 50000 --users 10 --rounds 5 --output '.verification/u022-mixed.json'
+```
+
+Only marked disposable PostgreSQL databases are used. Dated/unknown/zero/known
+inputs, 20k revisions, 1k tasks/reviews and 500 inert 64KiB PDFs supplement the
+10k/50k inventory. Timed waves interleave scoped dashboard/report/history detail,
+bounded XLSX, upload/scan, task/review requests, password login and downloads,
+using restricted department accounts and cross-department denial checks.
+`--real-scanner` requires explicit maintained ClamAV configuration and clean
+preflight; otherwise scanner timing is explicitly synthetic. This is not
+TLS/network, MFA-device, production queue or real antivirus throughput evidence.
+Adopted page/export targets remain 2s/15s; other operations use a separately
+labelled 15s engineering cap. Failures return exit 2 and remain evidence.
+
+Representative encrypted recovery verifies 10k contracts/50k document records,
+20k history and 500 inert PDFs alongside existing ID/hash/MFA/restricted-access
+checks. Every restored blob is verified. JUnit records backup/restore/snapshot
+age against 24h/4h targets; off-host scheduling/custody and actual-host RPO/RTO
+acceptance remain separate. [RELEASE_RUNBOOK](RELEASE_RUNBOOK.md) covers rollout,
+stop criteria and the remaining actual-host switching/recovery exercise.
+
+`scripts/inventory_platform.py` records local non-secret OS/tool versions and
+executable hashes without installing/changing software. Missing tools remain
+explicitly unobserved. Local inventory is neither STRATO-host evidence nor an
+advisory clearance; maintain native OS/PostgreSQL/Python/proxy/scanner/age update
+review under provisional operations responsibility, separately from the runtime lock.
+
 2026-10-21, update U017. **In progress, not accepted.** This continues the existing
 ten-phase plan after U016; it does not start Phase 10 or authorize a deployment.
 Implementation base: `b962824`; advisory guards: `1cecc54`; compatible patched dependency source: `1649b15`. Local verification results are recorded below

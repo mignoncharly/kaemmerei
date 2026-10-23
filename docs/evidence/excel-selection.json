@@ -1,0 +1,36 @@
+{
+  "format": "ohvr-excel-selection-evidence-v1",
+  "date": "2026-10-22",
+  "implementation_source": "352b705cd3c0aa5cb07038876e1b7173556b29ae",
+  "synthetic_only": true,
+  "regression": {
+    "passed": 64,
+    "skipped": 1,
+    "seconds": 54.86,
+    "skip_reason": "Actual restricted PostgreSQL history authorization required",
+    "report": ".verification/excel-final-tests.xml"
+  },
+  "additional_checks": {
+    "passed": 2,
+    "seconds": 2.49,
+    "coverage": ["100 selected contracts under unchanged form limits", "localized formula rejection without import"],
+    "report": ".verification/excel-additional-tests.xml"
+  },
+  "live_http": {"status": "passed", "check_count": 32, "roles": ["admin", "kultur", "bau", "pruefer"], "browser_rendering": false, "report": ".verification/excel-http.json"},
+  "static_checks": {"javascript_syntax": "passed", "python_compile": "passed", "git_diff_check": "passed"},
+  "browser": {
+    "status": "blocked",
+    "stage": "automation_driver",
+    "error_code": "automation_driver_permission_denied",
+    "exception_type": "PermissionError",
+    "winerror": 5,
+    "checks": ["server_started"],
+    "report": ".verification/excel-browser/result.json"
+  },
+  "screenshots": [],
+  "visual_inspection": "NOT_PERFORMED",
+  "keyboard_browser_validation": "NOT_PERFORMED",
+  "responsive_widths_pending": [390, 768, 1280, 1440],
+  "postgresql_runtime_export_verification": "NOT_PERFORMED",
+  "push_merge_deploy": false
+}

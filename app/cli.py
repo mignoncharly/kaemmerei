@@ -23,6 +23,18 @@ def ask_password() -> str:
 
 
 def main():
+    import os
+    import sys
+    from app.operational_status import JOBS, tracked_job
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    directory = os.getenv('OPS_STATUS_DIRECTORY')
+    if command in JOBS and directory:
+        with tracked_job(directory, command, production=os.getenv('APP_ENV') == 'production'):
+            return execute()
+    return execute()
+
+
+def execute():
     parser = argparse.ArgumentParser(description="OPEN.HERZ Vertragsregister Verwaltung")
     subs = parser.add_subparsers(dest="command", required=True)
     subs.add_parser("init-db", help="Datenbankschema auf aktuelle Migration bringen")
@@ -30,6 +42,17 @@ def main():
     subs.add_parser('workflow-inventory', help='IDs requiring legacy approval/tax reconciliation')
     subs.add_parser('document-reconcile', help='Read-only IDs/keys for missing, orphan or mismatched storage')
     subs.add_parser('integration-status', help='Read-only outbox, publication, snapshot/cursor and legacy-token counts')
+    events = subs.add_parser('events-publish', help='Bounded owner-only event publication; no retention deletion')
+    events.add_argument('--limit', type=int, default=500)
+    monitor = subs.add_parser('operations-health', help='Local read-only health JSON; no external delivery')
+    for option in ('status-directory', 'verifier'):
+        monitor.add_argument('--'+option, required=True)
+    source = monitor.add_mutually_exclusive_group(required=True)
+    source.add_argument('--receipt')
+    source.add_argument('--backup-directory')
+    monitor.add_argument('--reserve-bytes', type=int, default=256*1024**2)
+    monitor.add_argument('--maximum-backup-hours', type=int, default=24)
+    monitor.add_argument('--security-threshold', type=int, default=100)
     recovery=subs.add_parser('document-recover', help='Retry staged jobs or explicitly review legacy files; no deletion')
     recovery.add_argument('--document-id',required=True,type=int)
     scans=subs.add_parser('scan-pending', help='Bounded durable PostgreSQL scan retries; explicit schema operator')
@@ -116,6 +139,32 @@ def main():
     engine = make_engine(settings)
     SessionFactory = make_session_factory(engine)
     try:
+        if settings.production and args.command != 'operations-health':
+            from app.server_security import validate_server_security
+            try:
+                validate_server_security(engine)
+            except Exception:
+                raise SystemExit('Production database security baseline validation failed; use a reviewed patched server and protected connection configuration') from None
+        if args.command == 'operations-health':
+            from pathlib import Path
+            from app.monitoring import operational_health
+            result = operational_health(engine, settings.document_storage_dir,
+                Path(args.status_directory), Path(args.receipt) if args.receipt else None, Path(args.verifier),
+                reserve_bytes=args.reserve_bytes, maximum_backup_hours=args.maximum_backup_hours,
+                security_threshold=args.security_threshold, production=settings.production,
+                backup_directory=Path(args.backup_directory) if args.backup_directory else None)
+            print(json.dumps(result))
+            if not result['healthy']:
+                raise SystemExit(2)
+            return
+        if args.command == 'events-publish':
+            from app.operations import publish_events
+            try:
+                result = publish_events(engine, limit=args.limit)
+            except Exception:
+                raise SystemExit('Event publication failed; inspect protected operator configuration locally') from None
+            print(json.dumps(result))
+            return
         if args.command=='backup-create':
             from pathlib import Path
             from app.backup import BackupOptions,create_backup
@@ -150,7 +199,10 @@ def main():
         if args.command=='document-reconcile':
             from app.documents import reconcile
             with SessionFactory() as db:
-                print(json.dumps(reconcile(db,settings.document_storage_dir)))
+                result = reconcile(db,settings.document_storage_dir)
+                print(json.dumps(result))
+                if any(result[key] for key in ('missing','mismatched','orphans','unsafe')):
+                    raise SystemExit(2)
             return
         if args.command=='integration-status':
             with engine.connect() as connection:

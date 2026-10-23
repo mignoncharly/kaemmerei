@@ -1,0 +1,45 @@
+{
+  "format": "ohvr-strato-completed-assessment-v1",
+  "evidence_kind": "owner_executed_local_report_inspected",
+  "report": ".verification/strato-readonly-052a35280f3549a79b3f4a876a2af27f/sanitized-report.json",
+  "report_sha256": "6a0e0011352f47e762c4de04cab1cab9a879952be940419c75e069ea46702562",
+  "observed_at": "2026-10-22T16:33:27.441698+00:00",
+  "status": "COMPLETED_READ_ONLY_DISCOVERY",
+  "error_code": null,
+  "failing_stage": null,
+  "repository_base_at_review": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+  "executed_commit_attested_by_remote_report": false,
+  "verified": {
+    "connection_authenticated": true,
+    "sftp_supported": true,
+    "shell_supported": true,
+    "host_key_verified_before_authentication": true,
+    "cached_endpoint_pin_usable": true
+  },
+  "trust_basis": "previously_established_tofu",
+  "provider_identity_independently_verified": false,
+  "remote_changes_performed": false,
+  "application_files_read": false,
+  "credential_material_recorded": false,
+  "os_probe_results": {
+    "os_family": "UNAVAILABLE_OR_RESTRICTED",
+    "windows_os": "UNAVAILABLE_OR_RESTRICTED"
+  },
+  "unverified": [
+    "exact_product_tariff",
+    "operating_system",
+    "administrative_authority",
+    "persistent_application_hosting",
+    "postgresql_capability",
+    "tls_proxy_configuration",
+    "vpn_only_isolation",
+    "storage_quotas",
+    "intended_host_scanner",
+    "encrypted_recovery",
+    "isolated_windows_pilot_suitability"
+  ],
+  "additional_discovery_performed": false,
+  "inspection_tests_rerun": false,
+  "participant_scenarios": "12 NOT_RUN",
+  "deployment_authorized": false
+}

@@ -1,0 +1,103 @@
+{
+  "format": "ohvr-synthetic-pilot-results-v1",
+  "source": null,
+  "synthetic_only": true,
+  "results": [
+    {
+      "id": "PILOT-001",
+      "status": "NOT_RUN",
+      "participant_role": "Kämmerei test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-002",
+      "status": "NOT_RUN",
+      "participant_role": "Fachbereich test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-003",
+      "status": "NOT_RUN",
+      "participant_role": "Fachbereich test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-004",
+      "status": "NOT_RUN",
+      "participant_role": "Kämmerei test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-005",
+      "status": "NOT_RUN",
+      "participant_role": "Fachbereich test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-006",
+      "status": "NOT_RUN",
+      "participant_role": "Fachbereich test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-007",
+      "status": "NOT_RUN",
+      "participant_role": "Project IT operator",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-008",
+      "status": "NOT_RUN",
+      "participant_role": "Responsible Kämmerei representative",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-009",
+      "status": "NOT_RUN",
+      "participant_role": "Fachbereich test user",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-010",
+      "status": "NOT_RUN",
+      "participant_role": "Project IT operator",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-011",
+      "status": "NOT_RUN",
+      "participant_role": "Selected Kämmerei test users",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    },
+    {
+      "id": "PILOT-012",
+      "status": "NOT_RUN",
+      "participant_role": "Product owner/software engineer/project IT operator",
+      "observed_at": null,
+      "evidence_reference": null,
+      "actual": null
+    }
+  ]
+}

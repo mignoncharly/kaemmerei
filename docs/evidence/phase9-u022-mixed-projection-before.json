@@ -1,0 +1,135 @@
+{
+  "dataset": {
+    "contracts": 10000,
+    "documents": 50000,
+    "concurrent_users": 10,
+    "history": 20000,
+    "tasks": 1000,
+    "reviews": 1000,
+    "actual_files": 500,
+    "file_bytes": 32789000
+  },
+  "profile": "Dated synthetic contracts, unknown/zero/known values, 2 historical revisions per contract, 10% tasks/reviews, 500 inert 64KiB PDFs; simultaneous reads/writes/login/download/export",
+  "source_hashes": {
+    "app\\main.py": "06612e5fc6d7249b77e7a5317df4b2cc8ecfcd0043c6ccc6472beeae966b48ad",
+    "app\\models.py": "cbf09f9cb5ceb7bace9aa9336bbc9807312b74572efc8c4bc2528e441686211f",
+    "app\\financial.py": "587881a526c034a711778494e6f2c863b883cd546f98e27a79993fdc9ff02052",
+    "alembic\\versions\\0022_read_admission.py": "05c8ad39d1fb868d69afcfaf4f888e8a9a7fa7a6a1b511ad41a5ddcd4177204d",
+    "alembic\\versions\\0024_history_materialization.py": "e3f90f7e183f3a771ecca243cdc0ecb03b14d6ce87941e53dc158d8ef1c53a12",
+    "alembic\\sql\\0025_history_series.sql": "047358715e1c5247d9f765bd46673174a8f739be91b26c1bff98581ee31a6d7b",
+    "alembic\\sql\\0026_history_projection.sql": "a14b68c5912f44ca43b8e5aa1f14bc2dc9daeb5cd976ee3d22f7249d3bc0e681",
+    "scripts\\synthetic_workload.py": "9bce760b3d566309022b29a50484da10e9a3335302dd9231de498fc00246264f",
+    "scripts\\benchmark_phase9.py": "76ead76d178d9779c1b8e065f37f52d5c494261e22619d44a1e9aef0e194b1c6"
+  },
+  "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+  "targets": {
+    "page_p95_seconds": 2,
+    "export_seconds": 15
+  },
+  "selections": [
+    {
+      "operation": "dashboard",
+      "requests": 50,
+      "p95_seconds": 1.7778500000131316,
+      "max_seconds": 1.9358319000166375,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "reports",
+      "requests": 50,
+      "p95_seconds": 2.926493400009349,
+      "max_seconds": 3.1432917999918573,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": false
+    },
+    {
+      "operation": "history_detail",
+      "requests": 90,
+      "p95_seconds": 1.3047113999782596,
+      "max_seconds": 1.4821840999939013,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 90
+      },
+      "passed": true
+    },
+    {
+      "operation": "bounded_export",
+      "requests": 50,
+      "p95_seconds": 1.475307500018971,
+      "max_seconds": 1.503611499996623,
+      "target_seconds": 15,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "upload_scan",
+      "requests": 50,
+      "p95_seconds": 3.4435427999997046,
+      "max_seconds": 3.5144020000007004,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "task_create",
+      "requests": 50,
+      "p95_seconds": 2.7917962000065017,
+      "max_seconds": 3.4359026000020094,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "review_create",
+      "requests": 50,
+      "p95_seconds": 2.7473308999906294,
+      "max_seconds": 3.2497684999834746,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "login",
+      "requests": 10,
+      "p95_seconds": 1.7822923999920022,
+      "max_seconds": 1.7822923999920022,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 10
+      },
+      "passed": true
+    },
+    {
+      "operation": "download",
+      "requests": 50,
+      "p95_seconds": 1.4069860000163317,
+      "max_seconds": 1.763513799989596,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    }
+  ],
+  "scanner": "synthetic deterministic scanner; no antivirus throughput claim",
+  "isolation_passed": true,
+  "passed": false,
+  "source": "db650144355ae83ea82c2d06452f3f6884f8026b",
+  "disposition": "Retained fourth failure: all operations and isolation pass except reports at 2.926s p95. No timeout/permission/target was relaxed."
+}

@@ -1,0 +1,73 @@
+{
+  "format": "ohvr-domain-requirements-v1",
+  "domain": "finance",
+  "version": 1,
+  "supersedes": null,
+  "state": "pending",
+  "approval": null,
+  "questions": [
+    "Define annual_value and contract_value: recorded inventory, commitments, payments or forecast; currency and precision.",
+    "Which statuses, archive/transfer/effective dates and fiscal periods enter each report?",
+    "How must income/expense, missing vs zero, net/gross/unknown and mixed bases be shown?",
+    "Provide rounding, tax treatment, correction timing and historical restatement examples. No conversions assumed."
+  ],
+  "cases": [
+    {
+      "id": "FINANCE-001",
+      "inputs": {
+        "amount": null,
+        "direction": null,
+        "basis": "unknown"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "FINANCE-002",
+      "inputs": {
+        "amount": "0.00",
+        "direction": "expense",
+        "basis": "net"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "FINANCE-003",
+      "inputs": {
+        "amount": "123.45",
+        "direction": "income",
+        "basis": "gross"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "FINANCE-004",
+      "inputs": {
+        "amount": "123.45",
+        "direction": "expense",
+        "basis": "unknown",
+        "status": "terminated"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "FINANCE-005",
+      "inputs": {
+        "recorded_on": "2026-01-01",
+        "department_transfer_on": "2026-10-01",
+        "archived_on": "2026-10-15",
+        "as_of": "2026-09-30"
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    }
+  ]
+}

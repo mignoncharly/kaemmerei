@@ -1,0 +1,651 @@
+{
+  "format": "ohvr-synthetic-candidate-v1",
+  "source": "af290a445026e99cab6622c056993409ffa7de7e",
+  "prepared_at": "2026-10-22T06:43:49.478090+00:00",
+  "status": "PREPARED_NOT_ACCEPTED",
+  "artifact": {
+    "source_commit": "af290a445026e99cab6622c056993409ffa7de7e",
+    "migration_head": "0027_child_read_admission",
+    "file_count": 128,
+    "artifact_sha256": "7ce079d0f3af9dface7c994362c9833aeae745dfe17bbb239cb2084b97fb2eba",
+    "bytes": 1057338
+  },
+  "requirements_lock_sha256": "8bc5bc12b74b8f327d637e41107fa281579b8320a623cba3fb26162d79f80116",
+  "workflow_sha256": "7f8d196a10928eb24355046c54560dcedfb1c9ed9baed297415a8726ecb3f324",
+  "local_checks": {
+    "postgresql": {
+      "format": "ohvr-revision-verification-v1",
+      "source": "af290a445026e99cab6622c056993409ffa7de7e",
+      "selection": "postgresql",
+      "started_at": "2026-10-22T06:29:44.307040+00:00",
+      "synthetic_only": true,
+      "status": "VERIFIED",
+      "executed": true,
+      "setup_or_installation_changed": false,
+      "exit_code": 0,
+      "tests": {
+        "collected": 364,
+        "passed": 362,
+        "failure": 0,
+        "error": 0,
+        "skipped": 2,
+        "skips": [
+          {
+            "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+          },
+          {
+            "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+          }
+        ],
+        "passing_subtests": 15,
+        "junit_sha256": "e307c1d087207d9e94b42e9c5053d065cdafe6b51d93bdef0fd84abc8e02006b"
+      },
+      "finished_at": "2026-10-22T06:42:30.011808+00:00"
+    },
+    "sqlite": {
+      "format": "ohvr-revision-verification-v1",
+      "source": "af290a445026e99cab6622c056993409ffa7de7e",
+      "selection": "sqlite",
+      "started_at": "2026-10-22T06:14:30.372529+00:00",
+      "synthetic_only": true,
+      "status": "VERIFIED",
+      "executed": true,
+      "setup_or_installation_changed": false,
+      "exit_code": 0,
+      "tests": {
+        "collected": 364,
+        "passed": 328,
+        "failure": 0,
+        "error": 0,
+        "skipped": 36,
+        "skips": [
+          {
+            "test": "tests.test_history_materialization.test_series_projection_upgrade_preserves_owner_acl_and_principal_guards"
+          },
+          {
+            "test": "tests.test_history_materialization.test_series_matches_scalar_history_with_transfer_archive_unknowns_and_permissions"
+          },
+          {
+            "test": "tests.test_history_materialization.test_history_upgrade_preserves_owner_grants_guards_and_repeatability"
+          },
+          {
+            "test": "tests.test_mixed_workload.test_small_actual_mixed_workload_uses_scoped_writes_files_and_history[2-1]"
+          },
+          {
+            "test": "tests.test_mixed_workload.test_small_actual_mixed_workload_uses_scoped_writes_files_and_history[10-5]"
+          },
+          {
+            "test": "tests.test_operational_monitoring.test_publication_bounded_idempotent_and_restricted_role_denied"
+          },
+          {
+            "test": "tests.test_phase3.test_restricted_runtime_application_smoke"
+          },
+          {
+            "test": "tests.test_phase3.test_unscoped_queries_children_joins_and_department_moves_are_enforced"
+          },
+          {
+            "test": "tests.test_phase3.test_guest_invalid_malformed_context_and_readonly_reviewer_default_to_denial"
+          },
+          {
+            "test": "tests.test_phase3.test_integration_role_scoped_api_post_commit_and_credential_denials"
+          },
+          {
+            "test": "tests.test_phase3.test_pool_reuse_commit_and_rollback_never_retain_identity"
+          },
+          {
+            "test": "tests.test_phase3.test_audit_rows_cannot_be_updated_deleted_truncated_or_directly_forged"
+          },
+          {
+            "test": "tests.test_phase3.test_password_rotation_admin_identity_changes_and_review_permissions_under_runtime_role"
+          },
+          {
+            "test": "tests.test_phase3.test_maintenance_is_narrow_and_production_rejects_owner_connection"
+          },
+          {
+            "test": "tests.test_phase3.test_assigned_approval_revocation_and_self_escalation_under_runtime_role"
+          },
+          {
+            "test": "tests.test_phase3.test_context_revalidates_revocation_and_auth_functions_are_hardened"
+          },
+          {
+            "test": "tests.test_phase3.test_operator_cli_uses_explicit_owner_and_maintenance_connections"
+          },
+          {
+            "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+          },
+          {
+            "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+          },
+          {
+            "test": "tests.test_phase6.test_late_committed_outbox_id_is_not_lost_and_raw_scope_columns_are_private"
+          },
+          {
+            "test": "tests.test_phase6.test_snapshot_waits_for_writer_and_includes_its_committed_state"
+          },
+          {
+            "test": "tests.test_phase6.test_explicit_development_owner_uses_application_guards_without_runtime_fallback"
+          },
+          {
+            "test": "tests.test_phase7.test_postgresql_history_function_is_narrow_and_reauthenticates"
+          },
+          {
+            "test": "tests.test_phase9_backup.test_direct_production_backup_rejects_unverified_tls_before_output"
+          },
+          {
+            "test": "tests.test_phase9_backup.test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[small]"
+          },
+          {
+            "test": "tests.test_phase9_backup.test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[10k-contracts-50k-documents]"
+          },
+          {
+            "test": "tests.test_phase9_mfa.test_simultaneous_enrollment_consumes_one_challenge_and_revokes_other"
+          },
+          {
+            "test": "tests.test_phase9_mfa.test_pg_mfa_credentials_policy_and_challenge_have_no_normal_data_access"
+          },
+          {
+            "test": "tests.test_phase9_operations.test_scan_batch_retries_bounded_and_idempotent"
+          },
+          {
+            "test": "tests.test_phase9_operations.test_scan_batch_reservation_survives_crash_and_exhausts_safely"
+          },
+          {
+            "test": "tests.test_phase9_operations.test_scan_coordinator_lock_archive_and_count_limit"
+          },
+          {
+            "test": "tests.test_phase9_operations.test_automated_scan_rechecks_uploader_after_external_scan"
+          },
+          {
+            "test": "tests.test_phase9_queries.test_child_read_population_matches_legacy_predicate_for_live_principals"
+          },
+          {
+            "test": "tests.test_phase9_queries.test_read_department_initplan_is_equivalent_for_live_principals"
+          },
+          {
+            "test": "tests.test_postgresql_integration.test_postgresql_clean_migration_identity_and_cleanup"
+          },
+          {
+            "test": "tests.test_server_security.test_actual_server_version_is_read_only_and_production_guard_is_explicit"
+          }
+        ],
+        "passing_subtests": 15,
+        "junit_sha256": "1f24fc61c97406ee94e7cc872eac4f4a1963ec24ec53ce9826219d2921606bfb"
+      },
+      "finished_at": "2026-10-22T06:17:40.904944+00:00"
+    },
+    "mixed": {
+      "format": "ohvr-revision-verification-v1",
+      "source": "af290a445026e99cab6622c056993409ffa7de7e",
+      "selection": "mixed",
+      "started_at": "2026-10-22T06:09:51.288287+00:00",
+      "synthetic_only": true,
+      "status": "VERIFIED",
+      "executed": true,
+      "setup_or_installation_changed": false,
+      "exit_code": 0,
+      "result_sha256": "5ff96649c30a6b5c1a5eaba1322c7f37be88e310907868ec1745614180ee41f1",
+      "finished_at": "2026-10-22T06:13:18.557078+00:00"
+    },
+    "scanner": {
+      "format": "ohvr-revision-verification-v1",
+      "source": "af290a445026e99cab6622c056993409ffa7de7e",
+      "selection": "scanner",
+      "started_at": "2026-10-22T06:09:40.000421+00:00",
+      "synthetic_only": true,
+      "status": "EXTERNALLY_BLOCKED",
+      "executed": false,
+      "setup_or_installation_changed": false,
+      "reason": "actual_clamav_not_configured",
+      "finished_at": "2026-10-22T06:09:40.496448+00:00"
+    }
+  },
+  "earlier_failed_postgresql": {
+    "format": "ohvr-revision-verification-v1",
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "selection": "postgresql",
+    "started_at": "2026-10-22T06:14:30.453753+00:00",
+    "synthetic_only": true,
+    "status": "IMPLEMENTED BUT UNVERIFIED",
+    "executed": true,
+    "setup_or_installation_changed": false,
+    "exit_code": 1,
+    "tests": {
+      "collected": 365,
+      "passed": 360,
+      "failure": 1,
+      "error": 2,
+      "skipped": 2,
+      "skips": [
+        {
+          "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+        },
+        {
+          "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+        }
+      ],
+      "passing_subtests": 15,
+      "junit_sha256": "ca162a2a33cba549e54ca7c7c5f37e23761b954ad1dcc9ff7e73d63ca64dadb6"
+    },
+    "finished_at": "2026-10-22T06:27:37.814293+00:00",
+    "disposition": "Actual fresh connection timeouts affected test and cleanup; isolated pool recheck passed; full serial rerun required. Not an RLS assertion failure. No timeout relaxed."
+  },
+  "generated_test_role_retirement": {
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "observed_at": "2026-10-22T06:29:42.954722+00:00",
+    "operation": "guarded-retirement-of-four-generated-test-roles",
+    "database_already_absent": true,
+    "role_oid_and_random_marker_verified": true,
+    "cross_database_dependencies": 0,
+    "retired_roles": 4,
+    "journal_sha256": "2ed122ada038bdbf985dcd5c08f591a91d3dd4944a641e432482b50a837b749d",
+    "unrelated_role_service_acl_changes": false
+  },
+  "scanner_provisioning_feasibility": {
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "scope": "official portable scanner feasibility only; no executable download/install/run",
+    "signature_url": "https://www.clamav.net/downloads/production/clamav-1.4.6.win.x64.zip.sig",
+    "gpg_on_path": false,
+    "signature_retrieved": false,
+    "installation_changed": false,
+    "failure_class": "URLError"
+  },
+  "workload": {
+    "dataset": {
+      "contracts": 10000,
+      "documents": 50000,
+      "concurrent_users": 10,
+      "history": 20000,
+      "tasks": 1000,
+      "reviews": 1000,
+      "actual_files": 500,
+      "file_bytes": 32789000,
+      "statuses": [
+        "draft",
+        "in_progress",
+        "terminated",
+        "ended"
+      ]
+    },
+    "profile": "Dated synthetic contracts, unknown/zero/known values, 2 historical revisions per contract, 10% tasks/reviews, 500 inert 64KiB PDFs; simultaneous reads/writes/login/download/export",
+    "source_hashes": {
+      "app\\main.py": "80fd6ed95a35385cc07755a78399b10b3d9a9e879855135593cd104c5e93a355",
+      "app\\models.py": "cbf09f9cb5ceb7bace9aa9336bbc9807312b74572efc8c4bc2528e441686211f",
+      "app\\financial.py": "587881a526c034a711778494e6f2c863b883cd546f98e27a79993fdc9ff02052",
+      "alembic\\versions\\0022_read_admission.py": "05c8ad39d1fb868d69afcfaf4f888e8a9a7fa7a6a1b511ad41a5ddcd4177204d",
+      "alembic\\versions\\0024_history_materialization.py": "e3f90f7e183f3a771ecca243cdc0ecb03b14d6ce87941e53dc158d8ef1c53a12",
+      "alembic\\sql\\0025_history_series.sql": "047358715e1c5247d9f765bd46673174a8f739be91b26c1bff98581ee31a6d7b",
+      "alembic\\sql\\0026_history_projection.sql": "a14b68c5912f44ca43b8e5aa1f14bc2dc9daeb5cd976ee3d22f7249d3bc0e681",
+      "alembic\\versions\\0027_child_read_admission.py": "d758bbb6c770586ac9f03fac3e888f010fe39793854e431347534f8257dbf389",
+      "scripts\\synthetic_workload.py": "aac82a899a4c0b5970d4c76ba5ffa91fb169866c8669ffe5890309bb64bbdb2e",
+      "scripts\\benchmark_phase9.py": "3bce01ed7c363e9c928c134235d2e20003d08c67581fac306914999ec8e4824a"
+    },
+    "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+    "targets": {
+      "page_p95_seconds": 2,
+      "export_seconds": 15
+    },
+    "selections": [
+      {
+        "operation": "dashboard",
+        "requests": 50,
+        "p95_seconds": 0.6679094000137411,
+        "max_seconds": 0.8831780000182334,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "reports",
+        "requests": 50,
+        "p95_seconds": 1.464949399989564,
+        "max_seconds": 1.672237299993867,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "history_detail",
+        "requests": 90,
+        "p95_seconds": 0.6027726999891456,
+        "max_seconds": 0.707504100020742,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 90
+        },
+        "passed": true
+      },
+      {
+        "operation": "bounded_export",
+        "requests": 50,
+        "p95_seconds": 0.5421369000105187,
+        "max_seconds": 0.6709589000092819,
+        "target_seconds": 15,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "upload_scan",
+        "requests": 50,
+        "p95_seconds": 2.2516368000069633,
+        "max_seconds": 2.4483352999959607,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "task_create",
+        "requests": 50,
+        "p95_seconds": 1.5766702000109944,
+        "max_seconds": 2.3460629000037443,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "review_create",
+        "requests": 50,
+        "p95_seconds": 1.4795244999986608,
+        "max_seconds": 1.5109292999841273,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 50
+        },
+        "passed": true
+      },
+      {
+        "operation": "login",
+        "requests": 10,
+        "p95_seconds": 0.900813999993261,
+        "max_seconds": 0.900813999993261,
+        "target_seconds": 15,
+        "statuses": {
+          "303": 10
+        },
+        "passed": true
+      },
+      {
+        "operation": "download",
+        "requests": 50,
+        "p95_seconds": 0.5340768999885768,
+        "max_seconds": 0.8923383999790531,
+        "target_seconds": 2,
+        "statuses": {
+          "200": 50
+        },
+        "passed": true
+      }
+    ],
+    "scanner": "synthetic deterministic scanner; no antivirus throughput claim",
+    "isolation_passed": true,
+    "passed": true
+  },
+  "recovery": [
+    {
+      "case": "test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[small]",
+      "properties": {
+        "backup_seconds": "0.903",
+        "restore_seconds": "3.155",
+        "snapshot_age_seconds": "4.043",
+        "rto_target_seconds": "14400",
+        "rpo_target_seconds": "86400"
+      }
+    },
+    {
+      "case": "test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[10k-contracts-50k-documents]",
+      "properties": {
+        "synthetic_profile": "{\"history\": 20000, \"tasks\": 1000, \"reviews\": 1000, \"actual_files\": 500, \"file_bytes\": 32789000, \"statuses\": [\"draft\", \"in_progress\", \"terminated\", \"ended\"]}",
+        "backup_seconds": "4.412",
+        "restore_seconds": "9.081",
+        "snapshot_age_seconds": "13.515",
+        "rto_target_seconds": "14400",
+        "rpo_target_seconds": "86400"
+      }
+    }
+  ],
+  "native_gate": {
+    "format": "ohvr-native-gate-v1",
+    "components": {
+      "pg_dump": {
+        "binary_sha256": "ef67845c7d08384c6514f4b6f4ea5f997ecb149bf3a78063dab25d0686e421a0",
+        "status": "IMPLEMENTED BUT UNVERIFIED",
+        "version_num": 180003,
+        "reason": "missing_unreviewed_or_below_production_floor"
+      },
+      "pg_restore": {
+        "binary_sha256": "0561ed28de98e32828a59303504d8af8b4371c1ad24dbb764e3453564c28f54d",
+        "status": "IMPLEMENTED BUT UNVERIFIED",
+        "version_num": 180003,
+        "reason": "missing_unreviewed_or_below_production_floor"
+      },
+      "psql": {
+        "binary_sha256": "832f7fdf02c1c592f2df5f8bf48b6cfbc1e2bfd713f0822d1ac6724a312b5895",
+        "status": "IMPLEMENTED BUT UNVERIFIED",
+        "version_num": 180003,
+        "reason": "missing_unreviewed_or_below_production_floor"
+      }
+    },
+    "server": {
+      "status": "IMPLEMENTED BUT UNVERIFIED",
+      "version_num": 180003,
+      "ssl_enabled": false,
+      "reason": "below_reviewed_production_floor"
+    },
+    "libpq_version_num": 180004,
+    "libpq_implementation": "binary",
+    "installation_changed": false,
+    "scope": "read-only versions/settings; no exploit or application acceptance",
+    "client_server_major_match": true,
+    "baseline_passed": false,
+    "r43_closed": false,
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "observed_at": "2026-10-22T06:09:40.283420+00:00"
+  },
+  "browser": {
+    "wrapper": {
+      "format": "ohvr-local-browser-verification-v2",
+      "source": "af290a445026e99cab6622c056993409ffa7de7e",
+      "status": "failed_or_environment_blocked",
+      "exit_code": 2,
+      "synthetic_only": true,
+      "check_count": 0,
+      "result_sha256": null,
+      "error_code": null
+    },
+    "wrapper_report_sha256": "090b1024bee3c4d41708a37584c439fadd69614ed521c7ed08f804bc725946c9",
+    "execution": {
+      "format": "ohvr-revision-verification-v1",
+      "source": "af290a445026e99cab6622c056993409ffa7de7e",
+      "selection": "browser",
+      "started_at": "2026-10-22T06:09:40.732054+00:00",
+      "synthetic_only": true,
+      "status": "IMPLEMENTED BUT UNVERIFIED",
+      "executed": true,
+      "setup_or_installation_changed": false,
+      "exit_code": 1,
+      "finished_at": "2026-10-22T06:09:44.031078+00:00"
+    },
+    "private_log_sha256": "76da51cebdd71d7533d33966b633ca6c5435cde5d0f2b8c4914772a092fef6c1"
+  },
+  "participant_acceptance": {
+    "format": "ohvr-pilot-acceptance-review-v1",
+    "all_scenarios_passed": false,
+    "counts": {
+      "PASSED": 0,
+      "FAILED": 0,
+      "NOT_RUN": 12,
+      "BLOCKED": 0
+    },
+    "formal_authorization_granted": false,
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "observed_at": "2026-10-22T06:11:34.336866+00:00"
+  },
+  "catalog_after": {
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "observed_at": "2026-10-22T06:43:14.394762+00:00",
+    "operation": "read-only-post-test-catalog",
+    "control_attributes": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ],
+    "guarded_databases": 0,
+    "generated_roles": 0,
+    "cluster_left_running": true,
+    "acl_changed": false
+  },
+  "account_evidence_discovery": {
+    "source": "af290a445026e99cab6622c056993409ffa7de7e",
+    "observed_at": "2026-10-22T06:40:34.248102+00:00",
+    "operation": "read-only-account-evidence-discovery",
+    "repository_host_config": "placeholders only; no account secrets read",
+    "workspace_directories": [
+      ".venv",
+      "OPEN_HERZ_Vertragsregister_Phase"
+    ],
+    "strato_connector_available": false,
+    "authorized_browser_surfaces_available": false,
+    "account_product_verified": false,
+    "website_or_account_changed": false
+  },
+  "local_host_inventory": {
+    "format": "ohvr-read-only-windows-host-v1",
+    "observed_at": "2026-10-22T06:15:40.1817528Z",
+    "product_tariff_verified": false,
+    "os": {
+      "status": "read_unavailable"
+    },
+    "administrator_token": false,
+    "tools_found": {
+      "python.exe": true,
+      "pg_dump.exe": false,
+      "pg_restore.exe": false,
+      "psql.exe": false,
+      "clamscan.exe": false,
+      "freshclam.exe": false,
+      "caddy.exe": false,
+      "age.exe": false
+    },
+    "service_counts": {
+      "postgres": 1,
+      "clam": 0,
+      "caddy": 0
+    },
+    "persistent_application_hosting_verified": false,
+    "vpn_firewall_tls_isolation_verified": false,
+    "changes_performed": false,
+    "scope": "Local development only; not STRATO evidence"
+  },
+  "hosted_ci": {
+    "status": "NOT_RUN",
+    "source_required": "af290a445026e99cab6622c056993409ffa7de7e",
+    "jobs": [
+      "locked-release ubuntu-24.04",
+      "locked-release windows-latest",
+      "release-reproducibility",
+      "frontend-browser",
+      "document-scanner",
+      "native-postgresql",
+      "sqlite",
+      "postgresql"
+    ]
+  },
+  "four_statuses": {
+    "development": "VERIFIED locally at source above",
+    "synthetic_pilot": "scope approved; local technical checks verified; actual host/scanner/browser and participant acceptance pending",
+    "real_data_pilot_authorization": "NOT_GRANTED",
+    "broader_production_approval": "NOT_GRANTED"
+  },
+  "remaining": [
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "R43",
+      "owner": "Product owner and authorized system administrator",
+      "action": "Authorize/provision reviewed patched server and matching native clients at 18.6+/17.11+/16.15+; repeat attestation, actual roles/TLS/recovery/workload. Existing installation untouched."
+    },
+    {
+      "status": "IMPLEMENTED BUT UNVERIFIED",
+      "gate": "browser journeys",
+      "owner": "Product owner/local authorized operator; engineering inspects returned report",
+      "action": "Run tracked PowerShell wrapper normally; Windows driver pipe access denied in managed runner. No ACL/browser-security bypass."
+    },
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "actual scanner",
+      "owner": "Authorized host/scan operator and engineering",
+      "action": "Provide maintained clamscan and approved current official signatures to isolated synthetic environment; run required real-engine/HTTP test and heuristic/throughput host acceptance."
+    },
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "STRATO suitability",
+      "owner": "Product owner and authorized host operator",
+      "action": "Supply non-secret tariff/OS entitlement and read-only host inventory; verify isolated native service, VPN/TLS/storage/recovery capability. SFTP alone is insufficient."
+    },
+    {
+      "status": "IMPLEMENTED BUT UNVERIFIED",
+      "gate": "hosted CI",
+      "owner": "Engineering after explicit external authorization",
+      "action": "Run all eight expanded jobs on final candidate commit; no current hosted success claimed."
+    },
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "formal synthetic participant acceptance",
+      "owner": "Responsible K\u00e4mmerei representative, selected users, product owner/operator",
+      "action": "Select Fachbereich and execute/review 12 scenarios with dated evidence; no participant result invented."
+    },
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "municipal business/data approvals",
+      "owner": "K\u00e4mmerei and relevant municipal decision makers",
+      "action": "Written finance/deadline/records decisions and real-data authorization; pending versioned packets preserved, automated disposal disabled."
+    },
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "native symlink creation coverage",
+      "owner": "Engineering/authorized test-host operator",
+      "action": "Run actual filesystem link rejection checks on an already permitted test identity/CI; no Windows permission or security-setting bypass. Validate intended Windows storage separately."
+    },
+    {
+      "status": "EXTERNALLY BLOCKED",
+      "gate": "broader production",
+      "owner": "Independent reviewer and municipality",
+      "action": "Independent security/permission review and formal release authorization; actual-host operating adoption/recovery remains required."
+    }
+  ],
+  "external_actions": {
+    "push": false,
+    "deployment": false,
+    "website_change": false,
+    "notifications": false,
+    "production_escrow": false,
+    "automated_disposal": false
+  },
+  "evidence_files": {
+    "browser.json": "c75b704f4bc88c669dbd87563cb0c68ac6a90c4f86fb94ec06f1d1c4ad027268",
+    "catalog-after.json": "e3ae3813b1cb86f0d348cb9e6cb75b27ad1fc405c9119731a6060912f49b554a",
+    "mixed.json": "9b572c18d202523ac498bc9abe17e41526802e9df2dd72571c744766f018d1a1",
+    "native.json": "e74e0cd1666d62503b2a902d1f94f575b40d16431b5af7e1407d6154e9261574",
+    "packaged-runtime.json": "ec519a895e1d70f8e27248b1bfb200deb7c44d94b4fe0e1d874bed255efb3fa9",
+    "participant-review.json": "a43f5487e7725cb1e38e25d77fe1948ebc125d866b2c1c5b6fdc3bbf592954e5",
+    "postgresql.json": "1a4d463bb089c41b46f983e2b5d77b9a14d97001f3ac00ad91abad6a9d0a3b3b",
+    "scanner.json": "caa043db3965cb40fcf16c5b008a8c5e6d0abea28ea1273ab2f0e1d54a0269d7",
+    "skip-review.json": "7cb3016e4b98bc3c7822e63ea998b4db691d1ba3711637edf490359837625017",
+    "sqlite.json": "945720c195faf163fbbee0de488e9df5529f9b2b8cf331c7ebcb82310591a5f7",
+    "workload.json": "5ff96649c30a6b5c1a5eaba1322c7f37be88e310907868ec1745614180ee41f1"
+  },
+  "native_installation_or_acl_changed": false,
+  "test_role_cleanup_only": true,
+  "pure_runtime_imports": "passed",
+  "pip_check": "passed"
+}

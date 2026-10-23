@@ -90,6 +90,8 @@ def payload(db,token,contract,settings):
         notice_period_months=contract.notice_period_months,automatic_renewal=contract.automatic_renewal,
         renewal_period_months=contract.renewal_period_months,updated_at=stamp(contract.updated_at),archived_at=stamp(contract.archived_at))
     result['calendar_estimate']={k:v.isoformat() if hasattr(v,'isoformat') else v for k,v in contract_dates(contract).items()}
+    result['rule_status']={'version':1,'finance':'pending','deadlines':'pending',
+                           'records':'pending','automated_disposal':False}
     if 'finance' in caps:
         result['finance']={key:format(getattr(contract,key),'f') if getattr(contract,key) is not None else None for key in ('annual_value','contract_value')}
         result['finance'].update({key:getattr(contract,key) for key in ('financial_direction','value_basis','payment_interval','budget_assignment')})

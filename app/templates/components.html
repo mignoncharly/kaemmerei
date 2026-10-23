@@ -1,0 +1,22 @@
+{% macro icon(name) -%}
+<svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+{% if name == 'overview' %}<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+{% elif name == 'contracts' %}<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/>
+{% elif name == 'tasks' %}<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 3h6v4H9zM8 13l2 2 6-6M8 18h8"/>
+{% elif name == 'reports' %}<path d="M4 3v18h17M9 16V9M14 16V5M19 16v-5"/>
+{% elif name == 'users' %}<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"/>
+{% elif name == 'departments' %}<path d="M4 21V4h11v17M15 10h5v11M8 8h3M8 12h3M8 16h3M2 21h20"/>
+{% elif name == 'connections' %}<path d="M8 3v4M16 3v4M6 7h12v4a6 6 0 0 1-12 0zM12 17v4"/>
+{% elif name == 'security' %}<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6zM8 12l3 3 5-6"/>
+{% elif name == 'logout' %}<path d="M9 3H4v18h5M10 12h11m-4-4 4 4-4 4"/>
+{% elif name == 'menu' %}<path d="M4 6h16M4 12h16M4 18h16"/>
+{% elif name == 'close' %}<path d="m6 6 12 12M6 18 18 6"/>
+{% else %}<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>{% endif %}
+</svg>
+{%- endmacro %}
+{% macro nav_link(href, label, symbol, active) -%}
+<a href="{{ href }}" class="nav-link{% if active %} is-current{% endif %}"{% if active %} aria-current="page"{% endif %}>{{ icon(symbol) }}<span>{{ label }}</span></a>
+{%- endmacro %}
+{% macro empty(title, message) -%}
+<div class="empty">{{ icon('contracts') }}<strong>{{ title }}</strong><p>{{ message }}</p></div>
+{%- endmacro %}

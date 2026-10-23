@@ -1,5 +1,20 @@
 # OPEN.HERZ Vertragsregister
 
+Current integrated application: `OPEN_HERZ_Vertragsregister_Phase`, branch `release/redesign-integration`. Separate redesign development is retired. [Integration, exact verification limits and blocked deployment](docs/INTEGRATED_RELEASE.md). The historical evidence below applies only to its stated commits.
+
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](docs/U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+
+U023: [synthetic pilot acceptance package](docs/SYNTHETIC_PILOT_ACCEPTANCE.md) provides tracked revision-bound browser/native/scanner verification, exact R43 remediation, host evidence and participant scenarios. New final-source test evidence follows in HANDOFF; U022 evidence remains bound to 05648ed.
+
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](docs/U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
+U022: [approved synthetic pilot decisions](docs/PILOT_DECISIONS.md),
+[pending versioned domain requirements](docs/DOMAIN_RULE_REQUIREMENTS.md),
+[STRATO investigation](docs/HOSTING_ASSESSMENT.md) and [release runbook](docs/RELEASE_RUNBOOK.md).
+Development, synthetic readiness, real-data pilot authorization and broader
+production approval are separate. Current maintenance/monitoring and mixed-load/
+recovery evidence is in HANDOFF U022; no deployment or external push is authorized.
+
 Phase 9 U017 checkpoint: bounded ingress, shared database throttling, synchronous request workers, capacity/TLS checks and correlation implemented in b962824, with parser/path guards and patched compatible dependencies in 1649b15. [Controls, limits and remaining operations work](docs/PHASE9_OPERATIONS.md). All five hosted jobs passed for 1649b15; Phase 9 exit and production deployment remain open.
 
 Phase 8 U016: frontend/navigation technically verified for 6ebcaad: 178 collected; PG 176 passed + 2 local skips, SQLite 160 passed + 18; eight Phase 8 tests pass on both backends, all five hosted jobs including Chromium passed. [Behavior, browser constraints and evidence](docs/PHASE8_FRONTEND_NAVIGATION.md). Production and usability acceptance remain pending.
@@ -143,7 +158,7 @@ Die Befehle im Projektordner mit derselben Python-Umgebung ausführen:
 .\.venv\Scripts\python.exe -m app.cli purge-sessions
 ```
 
-`init-db` wendet versionierte Alembic-Migrationen an. Vor Migrationen einer vorhandenen Datenbank eine Sicherung anlegen. Aktueller Kopf: `0021_availability`; eine vorhandene Geschäftsdatenbank wurde hier nicht migriert. `schema-inventory` liefert ausschließlich Strukturabweichungen und IDs ungültiger Datensätze. Frühere optionale Fachbereichszuordnungen von Administrator-/Prüferkonten stoppen Migration 0015 und benötigen eine ausdrücklich geprüfte Korrektur. Fachbereichskonten benötigen einen aktiven Fachbereich. Start-/Wiederherstellungspasswörter müssen nach der Anmeldung unter „Passwort ändern“ ersetzt werden. Bei aktivierter Datenbanksicherheit verwenden CLI/Alembic ausschließlich den expliziten Betreiberzugang `MIGRATION_DATABASE_URL`; `purge-sessions` verwendet `MAINTENANCE_DATABASE_URL` und die eng begrenzte Wartungsfunktion. Einrichtung und Grenzen stehen im Phase-3-Bericht.
+`init-db` wendet versionierte Alembic-Migrationen an. Vor Migrationen einer vorhandenen Datenbank eine Sicherung anlegen. Aktueller Kopf: `0027_child_read_admission`; eine vorhandene Geschäftsdatenbank wurde hier nicht migriert. `schema-inventory` liefert ausschließlich Strukturabweichungen und IDs ungültiger Datensätze. Frühere optionale Fachbereichszuordnungen von Administrator-/Prüferkonten stoppen Migration 0015 und benötigen eine ausdrücklich geprüfte Korrektur. Fachbereichskonten benötigen einen aktiven Fachbereich. Start-/Wiederherstellungspasswörter müssen nach der Anmeldung unter „Passwort ändern“ ersetzt werden. Bei aktivierter Datenbanksicherheit verwenden CLI/Alembic ausschließlich den expliziten Betreiberzugang `MIGRATION_DATABASE_URL`; `purge-sessions` verwendet `MAINTENANCE_DATABASE_URL` und die eng begrenzte Wartungsfunktion. Einrichtung und Grenzen stehen im Phase-3-Bericht.
 
 ## Dokumente und Daten
 

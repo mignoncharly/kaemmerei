@@ -1,0 +1,133 @@
+{
+  "dataset": {
+    "contracts": 10000,
+    "documents": 50000,
+    "concurrent_users": 10,
+    "history": 20000,
+    "tasks": 1000,
+    "reviews": 1000,
+    "actual_files": 500,
+    "file_bytes": 32789000
+  },
+  "profile": "Dated synthetic contracts, unknown/zero/known values, 2 historical revisions per contract, 10% tasks/reviews, 500 inert 64KiB PDFs; simultaneous reads/writes/login/download/export",
+  "source_hashes": {
+    "app\\main.py": "40f6775e533aae617a102b036332b5bae1ca74b5bbc2c5603a05d56d0d05477f",
+    "app\\models.py": "cbf09f9cb5ceb7bace9aa9336bbc9807312b74572efc8c4bc2528e441686211f",
+    "app\\financial.py": "ca3411cbd425b2ebee1e4e383b65134a4402fdd54b79eb8760198ac3d1e8e16d",
+    "alembic\\versions\\0022_read_admission.py": "05c8ad39d1fb868d69afcfaf4f888e8a9a7fa7a6a1b511ad41a5ddcd4177204d",
+    "alembic\\versions\\0024_history_materialization.py": "e3f90f7e183f3a771ecca243cdc0ecb03b14d6ce87941e53dc158d8ef1c53a12",
+    "scripts\\synthetic_workload.py": "9bce760b3d566309022b29a50484da10e9a3335302dd9231de498fc00246264f",
+    "scripts\\benchmark_phase9.py": "25c465d87ff46f7e11bc7f76daf9693a3c22bcf26684ff8384b73173763aaa16"
+  },
+  "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+  "targets": {
+    "page_p95_seconds": 2,
+    "export_seconds": 15
+  },
+  "selections": [
+    {
+      "operation": "dashboard",
+      "requests": 50,
+      "p95_seconds": 1.854488399985712,
+      "max_seconds": 1.954515799996443,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "reports",
+      "requests": 50,
+      "p95_seconds": 5.689553400006844,
+      "max_seconds": 5.953322899993509,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": false
+    },
+    {
+      "operation": "history_detail",
+      "requests": 90,
+      "p95_seconds": 1.286982399993576,
+      "max_seconds": 1.4968756999878678,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 90
+      },
+      "passed": true
+    },
+    {
+      "operation": "bounded_export",
+      "requests": 50,
+      "p95_seconds": 1.2734776999859605,
+      "max_seconds": 1.4546885000017937,
+      "target_seconds": 15,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "upload_scan",
+      "requests": 50,
+      "p95_seconds": 3.546654000005219,
+      "max_seconds": 3.662116399995284,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "task_create",
+      "requests": 50,
+      "p95_seconds": 2.7689566999906674,
+      "max_seconds": 3.113670799997635,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "review_create",
+      "requests": 50,
+      "p95_seconds": 2.812925300007919,
+      "max_seconds": 3.576601600012509,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "login",
+      "requests": 10,
+      "p95_seconds": 1.7978765000007115,
+      "max_seconds": 1.7978765000007115,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 10
+      },
+      "passed": true
+    },
+    {
+      "operation": "download",
+      "requests": 50,
+      "p95_seconds": 1.389646299998276,
+      "max_seconds": 1.652773400011938,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    }
+  ],
+  "scanner": "synthetic deterministic scanner; no antivirus throughput claim",
+  "isolation_passed": true,
+  "passed": false,
+  "source": "8ced41b41172d10cd1220b7449cd18119025db35",
+  "disposition": "Retained second failure: authentication/isolation and eight operations pass; reports still exceed 2s p95. One materialized scalar projection was insufficient."
+}

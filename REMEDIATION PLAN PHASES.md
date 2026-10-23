@@ -1,8 +1,21 @@
 # Remediation plan — 10 implementation phases
 
+U026 hosted CI execution **and local artifact preservation VERIFIED** at exact commit `3d4a180297db801293e4b86e42e9f60a55fbca86`: 10/10 jobs in [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267); nine original ZIP/member checks, native-link cases and identical nested releases validated. [Integrity evidence](docs/evidence/u026-artifacts-verified.json), [next operator steps](docs/U026_NEXT_ACTIONS.md). Intended-host R43/scanner/TLS and all twelve participant/municipal gates remain separate and open; no merge, rerun or deployment.
+
+U025: local Microsoft Edge U024 is **VERIFIED**, 32 checks, synthetic only, source
+`d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`, result SHA-256
+`2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+[Validated Edge evidence](docs/evidence/u024-edge-verified.json) and
+[executable 12-scenario acceptance package / engineering progress](docs/U025_SYNTHETIC_ACCEPTANCE_PACKAGE.md).
+No browser rerun, formal pilot acceptance, real-data authorization or production deployment.
+
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](docs/U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, scanner/host and participant gates remain open; no real-data or production authorization.
+
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](docs/U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
 Baseline date: 2026-10-20\
 Project: OPEN.HERZ Vertragsregister\
-Plan status: Phases 1-8 technically verified; Phase 9 in progress (U017, final implementation 1649b15). Operations/identity/recovery, release tooling, earlier owner decisions and production acceptance remain pending.\
+Plan status: Phases 1-8 technically verified; Phase 9 in progress through U022; Phase 10 preparation continues. Approved synthetic pilot decisions are recorded in docs/PILOT_DECISIONS.md. Current-source evidence is in HANDOFF; real-data and production authorization remain separate and ungranted.\
 State and update history: [HANDOFF.md](HANDOFF.md)
 
 ## 1. Purpose and evidence
@@ -84,6 +97,7 @@ IDs stabilize the review findings for implementation tracking. Related findings 
 | R40 | Nice | Temporary package files and duplicate environments in workspace/distribution | 9 |
 | R42 (new U017) | High | Maintainer framework/parser advisories identified U017; compatible patched dependencies and 28-package runtime OSV review verified for 1649b15; broader release checks remain | 9 (P09-T11) |
 | R41 | Nice | Token owner, rotation, and deactivation semantics unspecified | 6 |
+| R43 (new U022) | High release gate | Observed native PostgreSQL 18.3 server/client is in official affected ranges. Production security floors added; actual patched host/client verification and applicability review remain open. No exploit confirmed; see docs/NATIVE_SECURITY_BASELINE.md. | 9, 10 |
 
 Scope gaps become release blockers when required by the accepted release scope. Record that decision rather than assigning them an unsupported vulnerability severity.
 

@@ -1,0 +1,15 @@
+{
+  "format": "ohvr-scanner-engine-baseline-v1",
+  "reviewed_on": "2026-10-22",
+  "review_by": "2026-11-22",
+  "upstream_support_source": "https://docs.clamav.net/faq/faq-eol.html",
+  "approved_upstream_branches": {
+    "1.4": {
+      "minimum_patch": 6
+    },
+    "1.5": {
+      "minimum_patch": 4
+    }
+  },
+  "distribution_backport_exception": "requires explicit reviewed baseline update"
+}

@@ -11,6 +11,38 @@ from tests.test_phase3 import runtime_session
 from app.security import COOKIE_NAME
 
 
+@pytest.mark.postgresql
+def test_child_read_population_matches_legacy_predicate_for_live_principals(request):
+    if request.config.getoption('--database')!='postgresql':
+        pytest.skip('Actual restricted PostgreSQL policies required')
+    from app.models import Department,now_utc
+    from tests.test_phase3 import seeded_contracts
+    with runtime_environment() as runtime:
+        first,second=seeded_contracts(runtime)
+        with runtime.owner.state.session_factory() as db:
+            db.get(Contract,first).archived_at=now_utc();db.commit()
+        for username in ('admin','kultur','bau','pruefer'):
+            runtime.client.cookies.clear()
+            assert login(runtime.client,username).status_code==303
+            with runtime_session(runtime,cookie=runtime.client.cookies.get(COOKIE_NAME)) as db:
+                expected=db.scalars(text('SELECT id FROM contracts WHERE ohvr_security.read_contract(id) ORDER BY id')).all()
+                actual=db.scalar(text('SELECT ohvr_security.read_contract_ids()'))
+                assert sorted(actual)==expected
+                for table in ('contract_documents','contract_tasks','contract_reviews','revisions','document_jobs','security_events'):
+                    children=set(db.scalars(text('SELECT contract_id FROM '+table+' WHERE contract_id IS NOT NULL')))
+                    assert children==set(expected)
+        for cookie in ('','invalid'):
+            with runtime_session(runtime,cookie=cookie) as db:
+                assert db.scalar(text('SELECT ohvr_security.read_contract_ids()'))==[]
+                assert db.scalar(text('SELECT count(*) FROM contract_tasks'))==0
+        with runtime.owner.state.session_factory() as db:
+            db.get(Department,2).is_active=False;db.commit()
+        runtime.client.cookies.clear()
+        assert login(runtime.client,'bau').status_code==401
+        with runtime_session(runtime,cookie=runtime.client.cookies.get(COOKIE_NAME)) as db:
+            assert db.scalar(text('SELECT ohvr_security.read_contract_ids()'))==[]
+
+
 def test_dashboard_does_not_materialize_undated_population(request):
     with environment_context(request.config.getoption('--database')) as (client,app):
         assert login(client,'admin').status_code==303

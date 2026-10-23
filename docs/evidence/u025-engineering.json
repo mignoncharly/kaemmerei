@@ -1,0 +1,203 @@
+{
+  "format": "ohvr-u025-engineering-evidence-v1",
+  "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+  "browser_evidence_source": "d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d",
+  "browser_result_sha256": "2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179",
+  "browser_rerun": false,
+  "formal_pilot_acceptance_complete": false,
+  "real_data_authorized": false,
+  "production_authorized": false,
+  "records_disposal_enabled": false,
+  "hosted_ci_success_claimed": false,
+  "observations": {
+    "regression": {
+      "artifact": ".verification/u025-final-regression-c19550101cfc43158b25694526b63a65/sanitized-report.json",
+      "artifact_sha256": "ccf61610eca2c75365cc564af7d0e17238b4a0a3fb2ab7b21a03c2b52981eb20",
+      "report": {
+        "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+        "exit_code": 0,
+        "source_unchanged": true,
+        "tests": {
+          "collected": 78,
+          "passed": 76,
+          "failure": 0,
+          "error": 0,
+          "skipped": 2,
+          "skips": [
+            {
+              "test": "tests.test_phase5.test_actual_linked_storage_is_rejected"
+            },
+            {
+              "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database"
+            }
+          ],
+          "passing_subtests": 0,
+          "junit_sha256": "864fb121be8c217baeb2da9bc5f63a26c4f8f2641187fb3974deb1af58beb36a"
+        },
+        "selection": [
+          "tests/test_acceptance_package.py",
+          "tests/test_storage_links.py",
+          "tests/test_release_bundle.py",
+          "tests/test_pilot_verification.py",
+          "tests/test_phase5.py"
+        ],
+        "observed_at": "2026-10-22T08:50:33.172106+00:00"
+      }
+    },
+    "acceptance_package": {
+      "artifact": ".verification/u025-acceptance-da60dea/package-summary.json",
+      "artifact_sha256": "4665403a05bb404f03ecd7d5423c4a71a4ffe36f22b3da9f20deff210309ba1e",
+      "report": {
+        "format": "ohvr-synthetic-acceptance-package-v1",
+        "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+        "synthetic_only": true,
+        "formal_acceptance_complete": false,
+        "scenario_count": 12,
+        "participant_results": {
+          "format": "ohvr-pilot-acceptance-review-v1",
+          "all_scenarios_passed": false,
+          "counts": {
+            "PASSED": 0,
+            "FAILED": 0,
+            "NOT_RUN": 12,
+            "BLOCKED": 0
+          },
+          "formal_authorization_granted": false
+        },
+        "browser": {
+          "status": "VERIFIED",
+          "source": "d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d",
+          "result_sha256": "2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179",
+          "check_count": 32,
+          "browser_version": "155.0.4283.62",
+          "candidate_browser_inputs_unchanged": true,
+          "formal_participant_acceptance": false
+        },
+        "files": {
+          "SCENARIOS.md": "e8ccdf4fa5b23aae6b38bf4b4fbb33610ef1842437cca06de1a28771119cc1a0",
+          "SESSION.md": "0b100da7bce864ce45869532df77f293370068ffb1db2c7e126d007bb264d13e",
+          "authorization.json": "b4753f4cc0058445bc5b40474fc5b0d1d81c0c5636de19582879bd57bbf40168",
+          "browser-evidence.json": "291ad2e00d915223e83c69a7e5e045f046ad507f193d9f1a7db1b1b7e12ad33f",
+          "fixtures/synthetic.pdf": "5d7db71d842a545b74845b9eaf0d70ef4b9186d3679ea6112c3c2f8c2e20c56c",
+          "fixtures/synthetic.txt": "009666b9c06280b91ed7869acbb690a3b08fd7aba9170f285797f31315ce6c41",
+          "results.json": "3293d39da17aa5f399c00a2128ac529bd93889ecc8b2a7f26b62bbfb527e1beb",
+          "scenarios.json": "3a9aa57150d178a0cbce1edaf32f28d67e45bc906b748d5032f4224fc509870d"
+        },
+        "archive_sha256": "ffab0034f7b7d0e924501b625a0e318b830402aec8917ac20024796327acc57f"
+      }
+    },
+    "native_gate": {
+      "artifact": ".verification/u025-native-185c888ada004d38b4153f19a590dcc5.json",
+      "artifact_sha256": "08abfc3b5629d6678bc8e3d50ff33acb1365b01e405407986423bd2d6f7c1bde",
+      "report": {
+        "format": "ohvr-native-gate-v1",
+        "components": {
+          "pg_dump": {
+            "binary_sha256": "ef67845c7d08384c6514f4b6f4ea5f997ecb149bf3a78063dab25d0686e421a0",
+            "status": "IMPLEMENTED BUT UNVERIFIED",
+            "version_num": 180003,
+            "reason": "missing_unreviewed_or_below_production_floor"
+          },
+          "pg_restore": {
+            "binary_sha256": "0561ed28de98e32828a59303504d8af8b4371c1ad24dbb764e3453564c28f54d",
+            "status": "IMPLEMENTED BUT UNVERIFIED",
+            "version_num": 180003,
+            "reason": "missing_unreviewed_or_below_production_floor"
+          },
+          "psql": {
+            "binary_sha256": "832f7fdf02c1c592f2df5f8bf48b6cfbc1e2bfd713f0822d1ac6724a312b5895",
+            "status": "IMPLEMENTED BUT UNVERIFIED",
+            "version_num": 180003,
+            "reason": "missing_unreviewed_or_below_production_floor"
+          }
+        },
+        "server": {
+          "status": "EXTERNALLY_BLOCKED",
+          "reason": "read_only_probe_unavailable"
+        },
+        "libpq_version_num": 180004,
+        "libpq_implementation": "binary",
+        "installation_changed": false,
+        "scope": "read-only versions/settings; no exploit or application acceptance",
+        "client_server_major_match": false,
+        "baseline_passed": false,
+        "r43_closed": false,
+        "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+        "observed_at": "2026-10-22T08:50:06.302522+00:00"
+      }
+    },
+    "scanner_gate": {
+      "artifact": ".verification/u025-required-scanner-da60dea/sanitized-report.json",
+      "artifact_sha256": "ad64b538db908d5a4c502d0ed6dda454e508079c8b370897f3429e2c17e5cb5c",
+      "report": {
+        "format": "ohvr-revision-verification-v1",
+        "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+        "selection": "scanner",
+        "started_at": "2026-10-22T08:50:29.407364+00:00",
+        "synthetic_only": true,
+        "status": "EXTERNALLY_BLOCKED",
+        "executed": false,
+        "setup_or_installation_changed": false,
+        "reason": "actual_clamav_not_configured",
+        "finished_at": "2026-10-22T08:50:29.786658+00:00"
+      }
+    },
+    "strict_native_link_gate": {
+      "artifact": ".verification/u025-strict-native-links-da60dea/sanitized-report.json",
+      "artifact_sha256": "b5643d0f35a664821182311f6ff594ddaeeda4a12916abca7ca9dcb69d51606a",
+      "report": {
+        "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+        "exit_code": 1,
+        "status": "EXTERNALLY_BLOCKED",
+        "tests": {
+          "collected": 2,
+          "passed": 1,
+          "failure": 1,
+          "error": 0,
+          "skipped": 0,
+          "skips": [],
+          "passing_subtests": 0,
+          "junit_sha256": "10876745121ae0718076be978859e2123334d28d0d56465fa0b3a19fe9c57ceb"
+        },
+        "required_native_links": true,
+        "permissions_changed": false,
+        "source_unchanged": true
+      }
+    },
+    "acceptance_review": {
+      "artifact": ".verification/u025-acceptance-review-da60dea.json",
+      "artifact_sha256": "b0d20ddc6ebdf5038742f3a973529d2726f0dfa977e6f9865df0e3685a5b6e9a",
+      "report": {
+        "format": "ohvr-pilot-acceptance-review-v1",
+        "all_scenarios_passed": false,
+        "counts": {
+          "PASSED": 0,
+          "FAILED": 0,
+          "NOT_RUN": 12,
+          "BLOCKED": 0
+        },
+        "formal_authorization_granted": false,
+        "source": "da60deaf6cd89a16b2711a5bad9a0fd377b00215",
+        "observed_at": "2026-10-22T08:51:02.574032+00:00"
+      }
+    },
+    "dependency_observation": {
+      "artifact": ".verification/u025-dependencies-e27f8bc82f444134a096c2979957a147/sanitized-report.json",
+      "artifact_sha256": "55d22f8eff2c7946c5a23a4d54dd189aa8096d9274c1897eebef61a141aa0ade",
+      "report": {
+        "scanner": {
+          "executable_configured": false,
+          "definitions_configured": false,
+          "on_path": false,
+          "standard_windows_directory_exists": false
+        },
+        "hosted_ci": {
+          "source": "d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d",
+          "status": "EXTERNALLY_BLOCKED",
+          "workflow_dispatched": false,
+          "error_code": "read_only_api_unreachable"
+        }
+      }
+    }
+  }
+}

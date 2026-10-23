@@ -1,10 +1,24 @@
 # Implementation handoff and current state
 
-Last updated: 2026-10-21\
+Current integrated application: `OPEN_HERZ_Vertragsregister_Phase`, branch `release/redesign-integration`. Separate redesign development is retired. [Integration, exact verification limits and blocked deployment](docs/INTEGRATED_RELEASE.md). The historical evidence below applies only to its stated commits.
+
+Last updated: 2026-10-22\
 Project: OPEN.HERZ Vertragsregister\
 Plan: [REMEDIATION PLAN PHASES.md](REMEDIATION%20PLAN%20PHASES.md)\
 Current stage: Phase 9 remaining operations gates; Phase 10 acceptance/release preparation (U021). P10-T02 matrix prepared; no production release or Phase 9 exit. See docs/PHASE9_OPERATIONS.md and docs/PHASE10_ACCEPTANCE.md.\
 Production readiness: Not established. No release or deployment approval is recorded here.
+
+Latest U026: hosted CI execution **and local artifact preservation VERIFIED** for exact commit 3d4a180297db801293e4b86e42e9f60a55fbca86, [run 39791514267](https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267). Independently validated all nine original ZIPs, required native-link JUnit and both identical nested releases; no CI/browser rerun or artifact recreation. [Preserved integrity evidence](docs/evidence/u026-artifacts-verified.json), [remaining intended-host/participant/municipal actions](docs/U026_NEXT_ACTIONS.md). R43 and scanner verification remain open on the intended host; twelve scenarios NOT_RUN; no merge or deployment.
+
+Latest U026: [review branch, ten pending CI checks, maintained scanner preparation, native observations and tester instructions](docs/U026_REMAINING_GATES.md). Engineering source adca68b: 87 passed/2 environment skips; no publication, installation or browser rerun.
+
+Latest update U025: local Microsoft Edge U024 is **VERIFIED** at exact source
+`d3f5ad2752feb565b5ae74ecbf90fde82ad84e4d`, 32 checks, synthetic only, result
+SHA-256 `2de4e1f138efe1e53f9c73ee902c866840876da6809836fca9cf9b566d69f179`.
+See [evidence](docs/evidence/u024-edge-verified.json). No unnecessary browser rerun.
+U025 adds required native-link CI and an executable, source-bound 12-scenario
+acceptance package builder. Formal participant acceptance remains incomplete;
+real-data and production approvals are not granted. See latest update below.
 
 ## 1. Start here
 
@@ -565,3 +579,103 @@ Final acceptance checklist:
 - [ ] Independent security/usability/departmental pilot/business scope acceptance and production release authorization.
 
 Next ready engineering work remains Phase 9 monitoring/remaining jobs and representative mixed-load/recovery tests. These can proceed in isolation without municipal approval; no production operating model or deployment is presumed.
+
+
+### U022 ? approved synthetic scope and remaining engineering (2026-10-21)
+
+- Product-owner decisions are controlling in docs/PILOT_DECISIONS.md. Empty synthetic-only K?mmerei plus one Fachbereich, internal/VPN, local TOTP; provisional configurable permission baseline, no Judith/business/infrastructure grant. Provisional operations retained. Finance/deadline/records written answers and municipal confirmation remain pending; no automatic disposal, notifications, production escrow or external workflow activated.
+- Added private local OS-locked/atomic job evidence, read-only monitoring and bounded atomic event publication under the existing sequencing lock. Disabled Windows task drafts extended for events/monitoring. Reconciliation failures return exit 2 without deletion. Monitoring covers failures/staleness, queue age/exhaustion, security activity, disk reserve, DB/query availability and signature/hash-verified backup snapshot age. Actual-host/service failure adoption and external response remain unverified.
+- Extended guarded mixed workload to dated/known/unknown/zero inventory, 20k revisions, tasks/reviews, 500 inert PDFs and simultaneous scoped HTTP reads/writes/login/upload/download/export; optional actual scanner requires explicit preflight. Added representative encrypted recovery at 10k contracts/50k documents with every blob verified, preserved IDs/history/MFA/RLS and measured snapshot age/RTO. Execution results will be appended; prepared tests are not passes.
+- Added versioned pending domain decision packets, stable test IDs and strict adoption/provenance validation, with expected results null. UI/HTTP/API mark unconfirmed business-rule status. Manual entry/tasks retained; no accounting or legal interpretation implemented.
+- Read-only public STRATO capability research and repository template inspection cannot establish the existing account product. Windows server products are advertised separately; no entitlement, host acceptance or site change inferred. docs/HOSTING_ASSESSMENT.md records official sources and precise non-secret evidence still required. Local platform inventory records Python/PostgreSQL/age/PowerShell; Caddy and ClamAV unobserved locally.
+- Release documentation curated: domain requirements, pilot decisions, hosting assessment, Phase 10 worksheet and rollout/recovery runbook included in source artifact allowlist. Development, synthetic readiness, real-data pilot authorization and broader production approval remain distinct.
+- Interim SQLite: 310 items, 282 passed/28 explicit skips, 15 passing subtests, 192.95s. Targeted monitoring initially failed because its synthetic artifact name violated the existing strict receipt format; corrected fixture only, then 6 passed/1 PG skip. First command used the project runtime-only venv without pytest; switched to established workspace test interpreter. These preliminary runs precede the final source freeze.
+- Native launcher start initially denied owner-only ACL operation; no bypass attempted. User started the existing native test cluster from an authorized terminal. Read-only agent probe then confirmed reachable 127.0.0.1:55432, expected identity/control attributes and 0 guarded DBs/0 generated roles. No setup re-run, reinitialization, ACL or unrelated service modification. Targeted PostgreSQL verification now running; final revision-bound evidence follows.
+- No external push/deploy/CI dispatch authorized or performed. Existing user Start-TestDatabase.ps1 whitespace edit is preserved outside this change. U021 eight-job CI remains evidence only for 3442ad8.
+
+
+U022 first frozen source 99b1fcd: full native PostgreSQL 309 passed/2 local environment skips, 15 passing subtests (667.88s); final SQLite 282 passed/29 explicit skips, 15 subtests (155.71s), 311 collected. Targeted new-controls/recovery 28 passed. Source artifact built twice identically (114 files plus manifest, 987878 bytes, SHA-256 1434fb2509b76caa93aaad18e8e9736e77fa02b186b2f0a761fcba1012b68bac); pure-runtime packaged migration/startup passed at head 0023. Browser driver could not start because Windows denied pipe creation; no bypass. A syntax-checked local wrapper was prepared for normal-terminal browser evidence; no browser pass claimed.
+
+U022 full-scale mixed workload retained a failure at 99b1fcd: report p95 5.747s exceeds approved 2s. Repeating 60 logins from one IP correctly hit unchanged 32/IP throttling (28 HTTP 429); clearing cookies then invalidated later export/download/isolation samples, despite 200 login-page responses. Corrected workload now models initial login plus one measured reauthentication per user, rejects authentication redirects/content mismatches, and includes a 10-user/five-round regression. No limiter weakened. Source/failed results preserved in phase9-u022-mixed-before.json.
+
+U022 performance remediation: additive 0024_history_materialization forces one evaluation of the existing history JSON projection per latest state. Function signature/owner/ACL/principal guards/population/cutoff semantics are retained; no financial interpretation is changed. Catalog upgrade preservation/repeatability regression added. Existing Phase 7, schema and both small mixed selections: 25 passed (79.77s). Remaining automatic-renewal wording now also explicitly says unconfirmed calendar orientation. New full source freeze, optimized 10k/50k measurement and full suites follow; older green results are not relabeled as current-source passes.
+
+
+U022 second measured checkpoint 8ced41b: catalog preservation/repeatability 1 passed. Corrected full 10k/50k/10-user workload passed authentication/isolation and eight operations, but report p95 remains 5.690s. The first scalar materialization did not fix the bottleneck. Retained interim workload and a guarded profile: 4.658s HTTP, 4.392s DB, 3.602s in five historical queries. No target relaxation or false pass.
+
+U022 series remediation: additive 0025_history_series consolidates up to five cutoffs into one scoped query with materialized parsed source. Latest state selection precedes historical scope; old scalar function, owner/principal semantics and recorded-value interpretation remain. Explicit runtime-role configuration grants web and denies integration/audit execution. Future/null/empty/oversized arrays fail closed. Added equivalence/scope/one-query/invalid-input regressions and a sanitized synthetic report profiler. Phase 7, history and actual role selections: 32 passed in 73.52s; strengthened explicit known-zero assertion is being rechecked. Further full-scale and frozen-source results follow.
+
+
+U022 third failed workload retained at 561bc84: series report p95 17.005s, all 50 reports returned the harness error marker after SQL timeout; other operations and isolation pass. A read-only plan-only diagnostic (no ANALYZE) found an estimate of two latest rows and a nested join-back repeatedly scanning a spilled materialized JSON source. Active-query metadata independently showed BuffileRead. No statement timeout, target or security policy was relaxed. Raw plan/failed workload are retained in phase9-u022-series-plan.json and phase9-u022-mixed-series-before.json.
+
+U022 corrective query: additive 0026_history_projection carries small text projections through latest-state selection and removes the quadratic join-back. Principal/input guards, function owner/ACL/security properties remain unchanged; the real catalog regression verifies them. Scalar/series semantic equivalence, genuine zero/unknown values and historical transfer/archive scope remain normal tests.
+
+U022 native advisory review found observed 18.3 server/client in official affected ranges (CVE-2026-6479, CVE-2026-14666, CVE-2026-19385). No exploit confirmed/attempted and no binary/cluster/ACL/service changed. R43 added as an open production gate. Production startup/operator/server and backup-client floors, redacted monitor failure, and direct-library backup TLS checks implemented; isolated development remains possible. See NATIVE_SECURITY_BASELINE.md. Initial direct-backup regression caught guard placement in the wrong helper; corrected before backup output. Corrected catalog/security/backup selection: 40 passed, 2 representative backup cases deselected (19.27s). Full current source and representative restore checks still follow.
+
+
+U022 fourth full-size workload at db65014: the minimal history projection removed the timeout (all 50 reports HTTP 200), but report p95 2.926s still missed 2s. Every other operation and isolation passed. Retain phase9-u022-mixed-projection-before.json; no false pass. Further 0027_child_read_admission derives statement-scoped readable IDs from the unchanged existing department rule, replacing only child SELECT predicate calls and preserving owner/admin/NULL/archive behavior and all writes. Actual RLS/API/history matrix: 39 passed (137.07s); final full-size workload and full regression verification remain to be recorded. Existing user launcher whitespace remains unstaged. No external push/deploy authorized or performed.
+
+U022 fifth full-size workload at 2aedf75: all requests authenticated and isolated, but reports p95 2.458s still exceeded 2s; retained phase9-u022-mixed-child-before.json. Thin reminder/task projections now avoid full contract hydration, report sections paginate 100 rows while preserving complete scoped totals and dashboard previews show 10 with full-count links. Synthetic fixtures now vary draft/in_progress/terminated/ended, correcting the prior draft-only reminder coverage. PostgreSQL projection/dashboard/pagination/Phase7/8/query regressions: 33 passed in 72.61s. Full representative rerun follows; earlier lighter fixtures are not final acceptance evidence.
+
+
+U022 final local engineering evidence (22 October 2026), implementation `05648eda3ce6ddb9fe7e33082593e294522fbf24`:
+PostgreSQL 343 passed/2 explicit skips; SQLite 309 passed/36 explicit skips; each has 15 passing subtests. No failures/errors.
+Full mixed 10-user/10k-contract/50k-document/20k-revision workload passed all nine operations and department isolation, including varied statuses and dated reminders. Reports p95 1.866s, dashboard 0.972s, bounded export 0.926s; ordinary-page target <2s and export <15s retained. Writes use a separately labelled 15s engineering cap.
+Representative encrypted database/document backup 4.672s; restore 10.915s; measured snapshot age 15.628s. Every restored blob, IDs, history, MFA replay state and restricted access verified. These local observations do not establish off-host scheduled production RPO/RTO.
+Reproducible committed source artifact: 122 files plus manifest, 1014624 bytes, SHA-256 `99af0e49085406c03221b8a11c2107448ff4b7f1eb9cefee7728e80796bc9a08`; packaged runtime head 0027 passed. Pure locked runtime imports and pip check passed. Actual refused-connection monitoring detected unhealthy DB without external delivery. Final catalog contains zero disposable databases/generated roles; user-started cluster left running and ACLs unchanged.
+Current-source browser execution remains unverified after prior Windows driver pipe denial; normal-terminal wrapper prepared. Actual ClamAV and native symlink privilege tests are explicit local skips. Native PostgreSQL 18.3 patch gate R43 remains open. See docs/U022_ENGINEERING_VERIFICATION.md and sanitized docs/evidence/phase9-u022-local.json. Documentation/evidence committed afterward does not change this verified implementation revision. No external CI dispatch/push/deployment, website change, real municipal data, notifications, production escrow or automated disposal.
+
+
+### U023 ? formal synthetic acceptance preparation (22 October 2026)
+
+Preserves 05648ed and documentation follow-up 8ca205c. Added tracked source-bound synthetic runners/browser PowerShell wrapper, expanded browser journeys (MFA/replay, isolation, create/edit, documents, review request, archive/history), sanitized native attestation and read-only Windows host inventory. No installation, service, ACL, website or external infrastructure changes. ClamAV now explicitly accepts official signatures only with heuristic alerts; strict PostgreSQL client version parser rejects trailing/malformed output. Real-engine test extended to actual HTTP clean/infected download gates; availability remains an external dependency. Versioned 12-case participant packet/results template and non-secret STRATO host template prepared; municipal domain/records decisions remain pending, disposal/notifications/escrow inactive.
+
+Initial targeted selection: 62 passed/1 fixture setup error (pytest private tmp_path ACL); used existing guarded scratch fixture without changing ACL, corrected rerun 63 passed. Evidence/control/release selection: 74 passed/1 expected SQLite actual-server skip. These preliminary checks precede final source freeze and do not replace full verification. U022 skip audit hashes match retained JUnit: 34 SQLite backend skips have passing PG counterparts; scanner and native symlink checks are missing locally in both backends. Final current-source tests/build/browser/native/scanner status follows.
+
+U023 first frozen checkpoint 225a607: representative mixed workload passed all nine operations/isolation, reports p95 1.461s. Read-only native attestation confirmed server/tools 18.3 (below floor), loaded binary libpq 18.4 separately; no installation changes. Required scanner execution correctly reports EXTERNALLY_BLOCKED/not executed. Initial wrapper returned generic failure because PowerShell Stop could promote ordinary Python stderr; direct browser attempt independently confirms Windows driver pipe CreateFile WinError 5. Wrapper now delegates child stdout/stderr capture to the Python runner, preserving warning logs and actual exit status. No ACL or browser security bypass. Prepared CI now enforces native floors, real-scanner HTTP behavior under restricted PG roles and full mixed workload; eight expanded jobs must run on final source after separate external authorization. Current hosted CI remains NOT RUN. Final freeze and reruns follow.
+
+
+U023 final implementation freeze af290a445026e99cab6622c056993409ffa7de7e: PostgreSQL serial full 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; no final failures/errors. Earlier full PG run had fresh-connect timeouts affecting test/setup/cleanup (360 passed, one failure, two errors); retained, isolated pool recheck and full serial rerun passed without timeout/security changes. Generated test secret accidentally appeared in one diagnostic; all four leftover roles retired only after OID/marker/attribute/dependency checks with DB already absent. Raw traces private; sanitized candidate contains no credentials. Final catalog zero guarded DBs/generated roles, unchanged control attributes, cluster left running.
+
+Final 10-user/10k/50k/20k mixed workload passed all operations/isolation: reports p95 1.465s, dashboard 0.668s, export 0.542s. Representative encrypted backup 4.412s, restore 9.081s, snapshot age 13.515s; actual hash/history/MFA/role checks executed. Byte-identical source builds: 128 files plus manifest, 1057338 bytes, SHA-256 7ce079d0f3af9dface7c994362c9833aeae745dfe17bbb239cb2084b97fb2eba; pure locked runtime packaged head0027/imports and pip check passed.
+
+Browser wrapper corrected to capture child stderr without PowerShell Stop promotion; actual final-source driver still blocked by Windows CreateFile WinError5, wrapper exits2 and child exits1, no pass. Actual ClamAV unconfigured; required runner reports EXTERNALLY_BLOCKED/not executed; ordinary portable signature retrieval failed and verifier unavailable, no install/bypass. Local host inventory executes/read-denial safely; no STRATO connector/browser surface or account entitlement evidence. Old/current skip review: 34 SQLite backend skips have PG passes, two unique actual scanner/native-link gaps remain in both. Participant validation: 12 NOT_RUN. Native tools/server18.3 below floor; separate runtime libpq18.4 inventory; no installation/service/ACL changes. R43 open.
+
+Auditable local candidate .verification/u023-rc plus sanitized docs/evidence/u023-candidate.json and docs/U023_CANDIDATE_VERIFICATION.md; PREPARED_NOT_ACCEPTED. CI configuration parsed, all eight expanded final-source jobs NOT_RUN. Candidate assembly initially encountered a diagnostic folder with no wrapper report; incomplete output retained, filtered actual reports and reassembled successfully. No external infrastructure mutations or settled decisions re-requested; pending municipal rules/records, real-data/production authorization and independent review remain separate. Existing launcher whitespace preserved unstaged. Subsequent commit is documentation/evidence only.
+
+
+## U024 ? latest local browser diagnosis (2026-10-22)
+
+See [confirmed failure, correction and next command](docs/U024_BROWSER_FAILURE_DIAGNOSIS.md).
+The specified 09:05:22 local run failed a filename assertion after browser startup:
+the exact-text selector ignored a decorative icon. Local engineering revision
+`7d6e82caab258f654d4a310142efba24998919c5` corrects the selector, verifies the upload response,
+and preserves structured browser failure evidence through Python and PowerShell.
+A separate managed-environment run now correctly reports automation-driver WinError 5
+with two fixture checks. Full corrected browser scenarios remain unverified; do not mark
+browser acceptance passed. Existing U023 database/workload evidence remains tied to its
+original source. No deployment, push, database/ACL change or municipal approval occurred.
+The pre-existing uncommitted Start-TestDatabase.ps1 edit is preserved.
+
+
+## U025 ? verified local Edge and executable acceptance preparation
+
+Validated the actual local U024 wrapper, parent and browser artifacts and their
+hashes; the prior managed WinError 5 is historical, not a current local Edge blocker.
+No browser/application/runtime dependency code changed in U025. The package builder
+checks ancestor identity and browser-relevant source equivalence before carrying
+forward the exact U024 source/hash. Automated browser success never populates the
+12 participant result rows: all start NOT_RUN, separate from formal approval.
+
+Actual Windows junction and junction-parent storage rejection passed locally.
+Symbolic-link creation remains unavailable under this managed identity. A new
+Windows/Linux native-storage-links CI matrix requires real links and fails instead
+of skipping when privileges are missing. No privileges or ACLs were changed.
+
+Actual ClamAV is neither configured, on PATH nor present in its standard Windows
+installation directory. R43 requires authorized native patching and repeat checks;
+no installer/service/configuration action is authorized here. A read-only current
+GitHub workflow lookup was unreachable; no push/dispatch or current hosted success
+is claimed. All ten final-source hosted job executions remain required.
+See docs/U025_SYNTHETIC_ACCEPTANCE_PACKAGE.md for executed engineering evidence,
+packet location and the exact remaining owner actions.

@@ -1,5 +1,22 @@
 # Änderungen
 
+U023 local candidate `af290a4`: PostgreSQL 362 passed/2 skips, SQLite 328 passed/36 skips, 15 subtests each; representative mixed load and encrypted recovery passed. [Final evidence and exact remaining actions](docs/U023_CANDIDATE_VERIFICATION.md). Earlier connection-timeout failure retained. Hosted CI/actual native patch, browser/scanner/host and participant gates remain open; no real-data or production authorization.
+
+U022 final local verification: implementation `05648ed`, PostgreSQL 343 passed/2 skips, SQLite 309 passed/36 skips, 15 subtests each; full representative mixed workload and encrypted restore passed. [Exact evidence, scope and remaining release gates](docs/U022_ENGINEERING_VERIFICATION.md). Synthetic scope approval is separate from actual-host/participant acceptance and real-data/production authorization.
+
+## U022 — synthetic pilot engineering continuation
+
+- Record approved scope/permissions/data/participant decisions and four release
+  statuses without assigning Judith or infrastructure privileges.
+- Add private locked job evidence, read-only operational checks, bounded atomic
+  event publication and disabled monitoring/event Windows task drafts.
+- Extend guarded mixed-workload and encrypted recovery exercises to dated/history/
+  file-backed 10k/50k fixtures; retain failed/unexecuted evidence explicitly.
+- Mark provisional business outputs, add versioned pending decision packets and
+  validators; preserve manual input and disabled automated disposal.
+- Investigate public STRATO capabilities without account changes; curate domain,
+  hosting, acceptance and rollout/recovery documents into source release artifacts.
+
 
 ## 2026-10-21 - Phase 9 U021: operator TLS and source release integrity
 

@@ -1,0 +1,132 @@
+{
+  "dataset": {
+    "contracts": 10000,
+    "documents": 50000,
+    "concurrent_users": 10,
+    "history": 20000,
+    "tasks": 1000,
+    "reviews": 1000,
+    "actual_files": 500,
+    "file_bytes": 32789000
+  },
+  "profile": "Dated synthetic contracts, unknown/zero/known values, 2 historical revisions per contract, 10% tasks/reviews, 500 inert 64KiB PDFs; simultaneous reads/writes/login/download/export",
+  "source_hashes": {
+    "app\\main.py": "40f6775e533aae617a102b036332b5bae1ca74b5bbc2c5603a05d56d0d05477f",
+    "app\\models.py": "cbf09f9cb5ceb7bace9aa9336bbc9807312b74572efc8c4bc2528e441686211f",
+    "app\\financial.py": "ca3411cbd425b2ebee1e4e383b65134a4402fdd54b79eb8760198ac3d1e8e16d",
+    "alembic\\versions\\0022_read_admission.py": "05c8ad39d1fb868d69afcfaf4f888e8a9a7fa7a6a1b511ad41a5ddcd4177204d",
+    "scripts\\benchmark_phase9.py": "e3d0d701769791358423e013115f619d82b5fd11eced8d2128395fe4cee709bf"
+  },
+  "scope": "In-process TestClient, actual restricted PostgreSQL logins, synthetic metadata only; not TLS/network/antivirus throughput",
+  "targets": {
+    "page_p95_seconds": 2,
+    "export_seconds": 15
+  },
+  "selections": [
+    {
+      "operation": "dashboard",
+      "requests": 50,
+      "p95_seconds": 1.6447538000065833,
+      "max_seconds": 2.169426200009184,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "reports",
+      "requests": 50,
+      "p95_seconds": 5.746817299979739,
+      "max_seconds": 5.874425100017106,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": false
+    },
+    {
+      "operation": "history_detail",
+      "requests": 50,
+      "p95_seconds": 1.0861505000211764,
+      "max_seconds": 1.2547761999885552,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "bounded_export",
+      "requests": 50,
+      "p95_seconds": 0.6449878000130411,
+      "max_seconds": 1.3536870999960229,
+      "target_seconds": 15,
+      "statuses": {
+        "200": 50
+      },
+      "passed": false
+    },
+    {
+      "operation": "upload_scan",
+      "requests": 50,
+      "p95_seconds": 3.2723281000216957,
+      "max_seconds": 3.383445000014035,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "task_create",
+      "requests": 50,
+      "p95_seconds": 2.726687399990624,
+      "max_seconds": 3.1506864999828395,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "review_create",
+      "requests": 50,
+      "p95_seconds": 2.75715270001092,
+      "max_seconds": 3.114429100009147,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 50
+      },
+      "passed": true
+    },
+    {
+      "operation": "login",
+      "requests": 50,
+      "p95_seconds": 1.3539315999951214,
+      "max_seconds": 1.7388555000070482,
+      "target_seconds": 15,
+      "statuses": {
+        "303": 22,
+        "429": 28
+      },
+      "passed": false
+    },
+    {
+      "operation": "download",
+      "requests": 50,
+      "p95_seconds": 1.1554013999993913,
+      "max_seconds": 1.312025299994275,
+      "target_seconds": 2,
+      "statuses": {
+        "200": 50
+      },
+      "passed": false
+    }
+  ],
+  "scanner": "synthetic deterministic scanner; no antivirus throughput claim",
+  "isolation_passed": false,
+  "passed": false,
+  "source": "99b1fcd9f1e7655ebb0f4222fd3a7c4580b9d02a",
+  "disposition": "Retained failed run: reports miss 2s p95; unrealistic repeated same-IP login exceeds unchanged 32/IP budget, causing later unauthenticated responses. Not an acceptance pass."
+}

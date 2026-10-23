@@ -1,0 +1,69 @@
+{
+  "format": "ohvr-domain-requirements-v1",
+  "domain": "records",
+  "version": 1,
+  "supersedes": null,
+  "state": "pending",
+  "approval": null,
+  "questions": [
+    "Confirm permitted municipal data categories, purpose, access/export restrictions and classification owners.",
+    "For contracts, documents, predecessors, audit, logs, API snapshots/events and backups separately: define retention trigger, period, holds, release authority and applicable written source.",
+    "Confirm backup preservation, off-host destination, encryption/key lifecycle and handling after source erasure requests.",
+    "Define authorized deletion/anonymization review, evidence, failure recovery and municipal confirmation. Automated disposal remains disabled."
+  ],
+  "cases": [
+    {
+      "id": "RECORDS-001",
+      "inputs": {
+        "record_class": "contract_document",
+        "classification": "unclassified",
+        "legal_hold": false
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "RECORDS-002",
+      "inputs": {
+        "record_class": "superseded_document",
+        "legal_hold": true
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "RECORDS-003",
+      "inputs": {
+        "record_class": "audit_event",
+        "classification": null
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "RECORDS-004",
+      "inputs": {
+        "record_class": "backup",
+        "source_disposal_requested": true,
+        "approved_retention": null
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    },
+    {
+      "id": "RECORDS-005",
+      "inputs": {
+        "record_class": "api_snapshot",
+        "expired_cursor": true,
+        "approved_retention": null
+      },
+      "expected": null,
+      "rationale": "Written domain answer pending; synthetic input only.",
+      "evidence": null
+    }
+  ]
+}

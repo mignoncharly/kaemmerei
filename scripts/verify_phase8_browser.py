@@ -6,27 +6,58 @@ import socket
 import sys
 import threading
 import time
+import re
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 # Optional local test-tool wheel extraction; never imported by the application.
 if (ROOT/'.verification/browser-tools/playwright').exists():
     sys.path.insert(0,str(ROOT/'.verification/browser-tools'))
-from playwright.sync_api import sync_playwright
-import uvicorn
-from tests.support import environment_context, login, create_contract, contract_payload, csrf_from, PASSWORD
-from app.models import ContactIdentity
 
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--channel',choices=('chrome','msedge','chromium'),default=None)
+    parser.add_argument('--output',type=Path,default=ROOT/'.verification/phase8-browser')
+    parser.add_argument('--run-id',help='Parent-issued execution identity; not a credential')
     args=parser.parse_args()
-    output=ROOT/'.verification/phase8-browser';output.mkdir(parents=True,exist_ok=True)
-    results={'checks':[],'synthetic_only':True,'screen_reader_manual_test':False}
+    if args.run_id is not None and not re.fullmatch('[a-f0-9]{32}',args.run_id):
+        parser.error('Invalid execution identity')
+    from scripts.pilot_verification import source_identity
+    from app.documents import reject_links
+    source=source_identity()
+    output=args.output.absolute();reject_links(output);output=output.resolve()
+    if not output.is_relative_to(ROOT/'.verification'):raise ValueError('Local verification output required')
+    output.mkdir(parents=True,exist_ok=False)
+    results={'format':'ohvr-browser-verification-v2','source':source,'checks':[],'synthetic_only':True,
+             'backend':'sqlite','scanner':'synthetic','screen_reader_manual_test':False}
+    if args.run_id is not None:results['run_id']=args.run_id
+    try:
+        execute(args,output,results)
+        results['stage']='source_validation'
+        if source_identity(source)!=source:raise RuntimeError('Source changed')
+        results['checks'].append('source_unchanged')
+        results.update(status='passed',stage='complete',error_code=None)
+    except Exception as error:
+        from scripts.browser_diagnostics import failure
+        results.update(status='failed',**failure(error,results['stage'],results.get('failed_check')))
+    (output/'result.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8')
+    print(json.dumps(results))
+    if results['status']!='passed':raise SystemExit(1)
+
+
+def execute(args,output,results):
+    results['stage']='dependencies'
+    from playwright.sync_api import sync_playwright
+    import uvicorn
+    from tests.support import environment_context, login, create_contract, contract_payload, csrf_from, PASSWORD
+    from app.models import ContactIdentity
     def check(name,condition):
-        if not condition:raise AssertionError(name)
+        if not condition:
+            results['failed_check']=name
+            raise AssertionError(name)
         results['checks'].append(name)
+    results['stage']='synthetic_fixture'
     with environment_context('sqlite') as (client,app):
         login(client,'admin');cid=create_contract(client,designation='Langer synthetischer Vertragsname '+('Vereinbarung '*10))
         edit=contract_payload(designation='Synthetischer Vertrag für Browserprüfung')
@@ -44,8 +75,11 @@ def main():
             deadline=time.monotonic()+15
             while not server.started and time.monotonic()<deadline:time.sleep(.05)
             check('server_started',server.started)
+            results['stage']='automation_driver'
             with sync_playwright() as pw:
+                results['stage']='browser_launch'
                 browser=pw.chromium.launch(headless=True,channel=args.channel)
+                results['stage']='browser_scenarios'
                 results['browser_version']=browser.version
                 context=browser.new_context(viewport={'width':1440,'height':1000},locale='de-DE')
                 page=context.new_page();violations=[]
@@ -91,13 +125,12 @@ def main():
                     page.screenshot(path=str(output/f'reports-{width}.png'),full_page=True)
                 check('no_csp_violations',not violations)
                 results['csp_violations']=violations
+                from scripts.pilot_browser_checks import journeys
+                journeys(browser,address,client,app,check,stage=lambda value:results.update(stage=value))
                 browser.close()
         finally:
             server.should_exit=True;thread.join(timeout=15);sock.close()
             if thread.is_alive():raise RuntimeError('Synthetic browser server did not stop')
-    results['status']='passed'
-    (output/'result.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8')
-    print(json.dumps(results))
 
 
 if __name__=='__main__':main()

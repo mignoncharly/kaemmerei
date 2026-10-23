@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import secrets
 from urllib.parse import quote, urlencode
 from urllib.parse import urlsplit
@@ -25,7 +26,7 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
-from app.presentation import safe_values, review_options, FIELD_LABELS
+from app.presentation import safe_values, review_options, listing_toolbar, import_error_message, FIELD_LABELS
 
 from app.workflow import begin_mutation, lock_actor, expected_version, material_change, decide, activation, tax_values, submission, WorkflowConflict, MATERIAL_FIELDS
 from app.documents import ensure_storage, stage_upload, new_document, process_document, download_response, audit_denied, ClamAVScanner, MEDIA
@@ -38,10 +39,10 @@ from app.excel import EXPORT_COLUMNS, MAX_IMPORT_ROWS, excel_date, make_xlsx, re
 from app.logic import ValidationError, active_access, can_read, can_write, snapshot, validate_data
 from app.dates import add_months, calculate_notice_deadline, calculate_next_end_date, contract_dates
 from app.financial import current_groups, inventory_trend
-from app.listing import normalize_filters, filtered_contracts, EXPORT_MAX_ROWS
+from app.listing import normalize_filters, filtered_contracts, selected_export_ids, EXPORT_MAX_ROWS
 from app.models import (ContactIdentity, Contract, ContractDocument, ContractReview, ContractTask, Department,
                         IntegrationToken, LoginAttempt, LoginSession, RecipientTeam, Revision, User, now_utc)
-from app.options import (CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
+from app.options import (BUDGET_ASSIGNMENTS, CONTACT_PERSONS, CONTRACT_STATUSES, CONTRACT_TYPES, FINANCIAL_DIRECTIONS,
                          PAYMENT_INTERVALS, REVIEW_RECIPIENTS, CONTRACT_REVIEW_STATUSES,
                          TASK_KINDS, TASK_STATUSES, TAX_REVIEW_STATUSES)
 from app.security import (COOKIE_NAME, attempt_key, clear_failures, cookie_response,
@@ -55,6 +56,7 @@ REMINDER_WINDOW_DAYS = 90
 DOCUMENT_TYPES = MEDIA
 TEMPLATES = Jinja2Templates(directory=str(BASE / "templates"))
 TEMPLATES.env.globals['recovery_labels']=FIELD_LABELS
+TEMPLATES.env.filters['import_error_message']=import_error_message
 TEMPLATES.env.globals['new_request_id']=lambda: str(uuid4())
 TEMPLATES.env.filters["euro"] = lambda amount: format_euro(amount)
 SUCCESS_NOTICES = {
@@ -72,6 +74,12 @@ SUCCESS_NOTICES = {
     "user_created": "Benutzer wurde angelegt.",
     "user_updated": "Benutzer und Berechtigungen wurden gespeichert.",
     "integration_revoked": "Der API-Zugriff wurde widerrufen.",
+    "identity_updated": "Die Verwaltungsdaten wurden gespeichert. Berechtigungsänderungen beenden betroffene Sitzungen.",
+    "password_updated": "Ihr Passwort wurde geändert. Andere Sitzungen wurden beendet.",
+    "assignment_updated": "Die Prüfungszuweisung wurde gespeichert.",
+    "document_replaced": "Die neue Dokumentversion wurde zur Prüfung übernommen. Den Bearbeitungsstand finden Sie bei den Unterlagen.",
+    "document_link_updated": "Die Dokumentenverknüpfung wurde gespeichert.",
+    "document_hold": "Die Aufbewahrungssperre wurde gesetzt.",
 }
 USER_ROLES = (
     ("department", "Fachbereichsnutzer"),
@@ -113,7 +121,7 @@ def html(request: Request, template: str, context: dict, status_code: int = 200)
         if request.query_params.get("notice") == "imported" and request.query_params.get("imported_count", "").isdigit():
             notice += f" {request.query_params.get('imported_count')} Verträge wurden übernommen."
             if ambiguity.isdigit() and 0 < int(ambiguity[:4]) <= MAX_IMPORT_ROWS:
-                context['import_warning'] = f'{int(ambiguity[:4])} rows match existing descriptions; review the new records. Descriptions are not unique identities.'
+                context['import_warning'] = f'{int(ambiguity[:4])} Zeilen haben übereinstimmende Stammdaten. Bitte prüfen Sie die neu angelegten Verträge. Bezeichnungen allein sind keine eindeutigen Identifikatoren.'
         context = {**context, "notice": notice}
     return TEMPLATES.TemplateResponse(request, template, context, status_code=status_code)
 
@@ -123,6 +131,7 @@ def base_context(request: Request, user: User | None, csrf_token: str = "") -> d
             "contract_types": CONTRACT_TYPES, "contact_persons": CONTACT_PERSONS,
             "contract_statuses": CONTRACT_STATUSES,
             "financial_directions": FINANCIAL_DIRECTIONS,
+            "budget_assignments": BUDGET_ASSIGNMENTS,
             "payment_intervals": PAYMENT_INTERVALS,
             "payment_interval_labels": dict(PAYMENT_INTERVALS),
             "tax_review_statuses": TAX_REVIEW_STATUSES,
@@ -138,6 +147,21 @@ def user_csrf(request: Request, db: Session) -> tuple[User, str]:
     session = get_login_session(request, db)
     assert session is not None
     return user, session.csrf_token
+
+
+def error_context(request: Request) -> dict:
+    """Re-resolve the session for error navigation; never infer access from a URL."""
+    try:
+        for db in get_db(request):
+            user = get_user(request, db)
+            session = get_login_session(request, db) if user else None
+            if user and user.role == 'department':
+                _ = user.department.name
+            return base_context(request, user, session.csrf_token if session else '')
+    except Exception:
+        # A database outage must still have a safe, self-contained error page.
+        return {'user': None}
+    return {'user': None}
 
 
 def require_integration_token(request: Request, db: Session) -> IntegrationToken:
@@ -268,11 +292,11 @@ def contract_reminder(contract: Contract, today: date) -> dict | None:
         return None
     if contract.status != "terminated" and contract.notice_period_months is not None:
         due_date = dates['notice_deadline']
-        label = "Kündigung spätestens"
+        label = "Rechnerischer Kündigungstermin (unbestätigt)"
     else:
         due_date = effective_end
-        label = ("Nächster Verlängerungstermin"
-                 if contract.automatic_renewal and contract.status != "terminated" else "Vertragsende")
+        label = ("Rechnerischer Laufzeitstichtag"
+                 if contract.automatic_renewal and contract.status != "terminated" else "Erfasstes Vertragsende")
     if due_date is None:
         return None
     return {"contract": contract, "due_date": due_date, "label": label,
@@ -295,12 +319,21 @@ def split_deadline_reminders(contracts, today: date) -> tuple[list[dict], list[d
     return overdue, upcoming
 
 
+def read_reminder_contracts(db,statement,departments=None):
+    columns=(Contract.id,Contract.contract_number,Contract.designation,Contract.department_id,
+        Contract.status,Contract.end_date,Contract.notice_period_months,
+        Contract.automatic_renewal,Contract.renewal_period_months)
+    rows=db.execute(statement.with_only_columns(*columns).where(
+        Contract.end_date.is_not(None),Contract.status.not_in(('draft','ended')))).mappings()
+    return [SimpleNamespace(**row,department=(departments or {}).get(row['department_id'])) for row in rows]
+
+
 def listing_spec(db, user, values):
     filters = normalize_filters(values)
     upcoming_ids = []
     if filters['focus'] == 'expiring':
-        population = db.scalars(contract_query(user).where(
-            Contract.archived_at.is_(None), Contract.end_date.is_not(None))).all()
+        population = read_reminder_contracts(db,contract_query(user).where(
+            Contract.archived_at.is_(None)).order_by(Contract.id))
         _, upcoming = split_deadline_reminders(population, date.today())
         upcoming_ids = [item['contract'].id for item in upcoming]
     return filters, filtered_contracts(user, filters, upcoming_ids=upcoming_ids).order_by(Contract.updated_at.desc(), Contract.id.desc())
@@ -505,6 +538,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 from app.db_roles import validate_runtime_engine
                 validate_runtime_engine(engine, 'web')
                 validate_runtime_engine(app.state.integration_engine, 'integration')
+            if settings.production:
+                from app.server_security import validate_server_security
+                for target in {engine,app.state.integration_engine}:
+                    validate_server_security(target)
             if settings.mfa_key_file is not None:
                 from app.mfa_codec import SeedCipher
                 if settings.production:
@@ -535,8 +572,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if request.scope['path'].startswith('/api/'):
             return JSONResponse({'detail':'Changed since this form was loaded'},status_code=409)
         return TEMPLATES.TemplateResponse(request=request, name='workflow_conflict.html', context={
+            **error_context(request),
             'request':request,'submitted':exc.submitted,'current_version':exc.current_version,
-            'reload_url':'/'.join(request.scope['path'].split('/')[:3]),'user':None},status_code=409)
+            'reload_url':'/'.join(request.scope['path'].split('/')[:3])},status_code=409)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request, exc):
@@ -551,7 +589,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             413:'Die Anfrage oder der Export ist zu groß. Bitte den Umfang verkleinern.',
             422:'Bitte die Angaben prüfen und korrigieren.',429:'Zu viele Anfragen. Bitte später erneut versuchen.'}
         return TEMPLATES.TemplateResponse(request=request,name='error.html',context={
-            'user':None,'status_code':exc.status_code,'message':messages.get(exc.status_code,'Der Vorgang konnte nicht abgeschlossen werden.'),
+            **error_context(request),'status_code':exc.status_code,'message':messages.get(exc.status_code,'Der Vorgang konnte nicht abgeschlossen werden.'),
             'submitted':getattr(request.state,'safe_values',{}),
             'reload_url':request.scope['path'] if request.method=='GET' else '/'.join(request.scope['path'].split('/')[:3]) or '/'},
             status_code=exc.status_code,headers=exc.headers)
@@ -565,6 +603,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.exception_handler(PoolTimeout)
     async def database_capacity_error(request, exc):
         return await http_error(request,HTTPException(503,'Database capacity exhausted',headers={'Retry-After':'5'}))
+
+    @app.exception_handler(Exception)
+    async def unexpected_error(request, exc):
+        import logging
+        logging.getLogger(__name__).error('Unhandled application error', exc_info=exc)
+        if request.scope['path'].startswith('/api/'):
+            return JSONResponse({'detail':'Internal server error'}, status_code=500)
+        # No database calls or submitted values during an unexpected failure.
+        response = TEMPLATES.TemplateResponse(request=request, name='error.html', context={
+            'user':None, 'status_code':500, 'message':'Ein technischer Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.',
+            'reload_url':'/', 'submitted':{}}, status_code=500)
+        response.headers.update({'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff',
+            'X-Frame-Options':'DENY', 'Referrer-Policy':'same-origin',
+            'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"})
+        if settings.production:
+            response.headers['Strict-Transport-Security']='max-age=31536000'
+        return response
 
     @app.get('/health/live', include_in_schema=False)
     def live():
@@ -594,6 +649,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
         response = await call_next(request)
+        response.headers['X-OHVR-Business-Rules'] = 'provisional-1; finance=pending; deadlines=pending; disposal=disabled'
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "same-origin"
@@ -677,7 +733,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "tokens": tokens, "departments": departments,
                     "owner_users":db.scalars(select(User).where(User.is_active.is_(True)).order_by(User.username)).all(),
                     "new_token": new_token, "error": error, "now": now_utc(),
-                    "notice": "Der API-Token wurde erstellt. Kopiere ihn aus dem grünen Feld." if new_token else ""}, status_code)
+                    "values": getattr(request.state, 'safe_values', {}) if error else {},
+                    "notice": "Der API-Token wurde erstellt. Kopieren Sie das einmalig angezeigte Geheimnis." if new_token else ""}, status_code)
 
     @app.get("/admin/integrations", response_class=HTMLResponse)
     def integrations_page(request: Request, db: Session = Depends(get_db)):
@@ -715,7 +772,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return render_integrations(request, user, csrf, db, error=error, status_code=422)
         from app.token_service import grant_fields
         try:grant=grant_fields(db,form,user)
-        except ValueError as exc:return render_integrations(request,user,csrf,db,error=str(exc),status_code=422)
+        except ValueError as exc:
+            messages = {
+                'Choose legacy_v1 or explicit v2 capabilities including metadata':'Bitte ein gültiges API-Profil und für v2 mindestens Vertragsmetadaten auswählen.',
+                'document_content requires documents':'Dateiinhalt erfordert zusätzlich das Leserecht für Dokumentmetadaten.',
+                'V2 tokens require finite expiry':'Für v2 ist eine Laufzeit von 90 Tagen oder einem Jahr erforderlich.',
+                'Active accountable owner required':'Bitte ein aktives verantwortliches Konto auswählen.',
+                'Accountable service name required (max 120)':'Bitte einen verantwortlichen Dienst mit höchstens 120 Zeichen angeben.',
+            }
+            return render_integrations(request,user,csrf,db,error=messages.get(str(exc),'Bitte die Schnittstellenangaben prüfen.'),status_code=422)
         raw_token = "ohvr_" + secrets.token_urlsafe(32)
         expires_at = (now_utc() + timedelta(days=int(expires_in))
                       if expires_in != "never" else None)
@@ -931,6 +996,36 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         user, _csrf = user_csrf(request, db)
         _filters, stmt = listing_spec(db, user, locals())
         contracts_to_export = db.scalars(stmt.options(joinedload(Contract.department)).limit(EXPORT_MAX_ROWS+1)).all()
+        return export_response(contracts_to_export)
+
+    @app.post('/contracts/export-selected.xlsx')
+    def export_selected_contracts(request: Request, db: Session = Depends(get_db)):
+        user, _csrf = user_csrf(request, db)
+        form = parsed_form(request, max_files=0, max_fields=2)
+        require_csrf(request, db, str(form.get('csrf_token', '')))
+        if len(form.getlist('contract_ids')) != 1 or len(form.getlist('csrf_token')) != 1:
+            raise HTTPException(422, 'Bitte eine eindeutige Vertragsauswahl übermitteln.')
+        try:
+            ids = selected_export_ids(form.get('contract_ids'), EXPORT_MAX_ROWS)
+        except OverflowError as exc:
+            raise HTTPException(413, str(exc)) from None
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+        # Includes archive records, with exactly the same effective read scope as XLSX.
+        # One scoped query; no per-ID existence checks disclosing foreign records.
+        records = db.scalars(contract_query(user).where(Contract.id.in_(ids))
+            .options(joinedload(Contract.department))
+            .order_by(Contract.updated_at.desc(), Contract.id.desc()).limit(EXPORT_MAX_ROWS+1)).all()
+        if len(records) != len(ids):
+            raise HTTPException(404, 'Die Auswahl enthält nicht verfügbare Verträge. Es wurde keine Datei erstellt. Bitte die Liste neu laden und erneut auswählen.')
+        response = export_response(records)
+        audit(db, user.id, 'contract_selection_export_prepared', 'contracts',
+              record_count=len(records), contract_ids=[record.id for record in records])
+        db.commit()
+        return response
+
+    def export_response(contracts_to_export):
+        # Shared serialization and budgets for both complete-filter and explicit-ID exports.
         if len(contracts_to_export) > EXPORT_MAX_ROWS:
             raise HTTPException(413, 'Der Export ist auf 5000 Verträge begrenzt. Bitte die Filter eingrenzen.')
         payment_labels = dict(PAYMENT_INTERVALS)
@@ -978,7 +1073,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         headers={"Content-Disposition": 'attachment; filename="vertragsregister_export.xlsx"'})
 
     @app.get("/reports", response_class=HTMLResponse)
-    def reports(request: Request, db: Session = Depends(get_db)):
+    def reports(request: Request, overdue_page: int = Query(1,ge=1,le=10000),
+                upcoming_page: int = Query(1,ge=1,le=10000), db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         today = date.today()
         department_filter = ([Contract.department_id == user.department_id]
@@ -989,16 +1085,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         contract_ids = population.with_only_columns(Contract.id)
         # Only dated records can produce contract reminders. All inventory
         # amounts/counts below are database aggregates, not full ORM snapshots.
-        contracts = db.scalars(population.where(Contract.end_date.is_not(None))
-            .options(joinedload(Contract.department)).order_by(Contract.designation)).all()
         departments = db.scalars(select(Department).where(
             *([Department.id == user.department_id] if user.role == "department" else [])
         ).order_by(Department.name)).all()
         department_by_id = {department.id: department for department in departments}
-
-        tasks = (db.scalars(select(ContractTask).where(
+        contracts=read_reminder_contracts(db,population.order_by(Contract.designation,Contract.id),department_by_id)
+        parents={contract.id:contract for contract in contracts}
+        tasks=[]
+        task_rows=db.execute(select(ContractTask.id.label('task_id'),ContractTask.contract_id,
+            ContractTask.title,ContractTask.status,ContractTask.due_date,
+            Contract.department_id,Contract.contract_number,Contract.designation)
+            .select_from(ContractTask).join(Contract,Contract.id==ContractTask.contract_id).where(
             ContractTask.contract_id.in_(contract_ids),ContractTask.status!='done'
-        ).options(joinedload(ContractTask.contract).joinedload(Contract.department))).all())
+        ).order_by(ContractTask.due_date,ContractTask.id)).mappings()
+        for row in task_rows:
+            parent=parents.get(row['contract_id'])
+            if parent is None:
+                parent=SimpleNamespace(id=row['contract_id'],department_id=row['department_id'],
+                    contract_number=row['contract_number'],designation=row['designation'],
+                    department=department_by_id.get(row['department_id']))
+                parents[parent.id]=parent
+            tasks.append(SimpleNamespace(id=row['task_id'],title=row['title'],status=row['status'],
+                due_date=row['due_date'],contract=parent))
         review_counts = db.execute(select(Contract.department_id,func.count(ContractReview.id))
             .join(ContractReview,ContractReview.contract_id==Contract.id).where(
             ContractReview.contract_id.in_(contract_ids),
@@ -1083,12 +1191,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                             "title": item["task"].title} for item in upcoming_tasks]
         overdue_items = sorted(overdue_deadlines + overdue_tasks, key=lambda item: item["due_date"])
         upcoming_items = sorted(upcoming_deadlines + upcoming_tasks, key=lambda item: item["due_date"])
+        def reminder_page(items,requested):
+            total=len(items);pages=max(1,(total+99)//100);page=min(requested,pages)
+            return items[(page-1)*100:page*100],total,page,pages
+        overdue_items,overdue_total,overdue_page,overdue_pages=reminder_page(overdue_items,overdue_page)
+        upcoming_items,upcoming_total,upcoming_page,upcoming_pages=reminder_page(upcoming_items,upcoming_page)
         return html(request, "reports.html", {**base_context(request, user, csrf),
                     "report_rows": list(by_department.values()),
                     "contract_count": sum(row['contract_count'] for row in by_department.values()), "annual_expenses": annual_expenses,
                     "annual_income": annual_income, "total_contract_value": total_contract_value,
                     "open_task_count": open_task_count, "open_review_count": open_review_count,
                     "overdue_items": overdue_items, "upcoming_items": upcoming_items,
+                    "overdue_total":overdue_total,"upcoming_total":upcoming_total,
+                    "overdue_page":overdue_page,"overdue_pages":overdue_pages,
+                    "upcoming_page":upcoming_page,"upcoming_pages":upcoming_pages,
                     "trend": trend, "trend_peak": trend_peak, "financial_groups": financial_groups,
                     "unknown_direction_count": sum(g["record_count"] for g in financial_groups if g["direction"]=="unknown"),
                     "unknown_basis_count": sum(g["record_count"] for g in financial_groups if g["basis"]=="unknown"),
@@ -1137,7 +1253,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 errors.append(f'Row {row_number}: {exc}')
                 continue
             if row.get('contract_number'):
-                errors.append(f'Row {row_number}: create-only import generates contract numbers. Remove Vertragsnummer; use external_reference for source identity.')
+                errors.append(f'Zeile {row_number}: Die Vertragsnummer wird bei der Neuanlage erzeugt und muss leer bleiben. Verwenden Sie bei Bedarf eine externe Referenz.')
                 continue
             for key in ("notice_period_months", "renewal_period_months"):
                 raw = row.get(key, "")
@@ -1177,7 +1293,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             try:
                 values = validate_data(row, user, db)
                 if values["status"]=="active":
-                    raise ValidationError("Imported active status has no verifiable approval; import as draft")
+                    raise ValidationError('Status „Aktiv“ hat keine belegte Freigabe. Bitte als Entwurf importieren.')
                 tax_values(user,None,values)
             except ValidationError as exc:
                 errors.append(f"Zeile {row_number}: {exc}")
@@ -1202,7 +1318,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if reference:
                 key = (values['department_id'], reference)
                 if key in existing_keys or key in imported_keys:
-                    errors.append(f'Row {row_number}: external reference already exists in this department or workbook.')
+                    errors.append(f'Zeile {row_number}: Die externe Referenz ist in diesem Fachbereich oder in der Datei bereits vorhanden.')
                 imported_keys.add(key)
         if errors:
             return html(request, "import_result.html", {**base_context(request, user, csrf),
@@ -1233,6 +1349,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise
         return redirect(f"/?notice=imported&imported_count={len(created)}&ambiguous_rows={len(ambiguous_rows)}")
 
+    @app.get('/dashboard', response_class=HTMLResponse)
     @app.get("/", response_class=HTMLResponse)
     def contracts(request: Request, q: str = "", department: str = "",
                   focus: str = "",
@@ -1242,6 +1359,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                   db: Session = Depends(get_db)):
         user, csrf = user_csrf(request, db)
         filters, stmt = listing_spec(db, user, locals())
+        dashboard_view = request.url.path == '/dashboard' or request.query_params.get('notice') == 'login'
         q, department, focus = filters['q'], filters['department'], filters['focus']
         contract_type, contact_person = filters['contract_type'], filters['contact_person']
         deputy_contact_person, status = filters['deputy_contact_person'], filters['status']
@@ -1258,14 +1376,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             Contract.status,func.count()).group_by(Contract.status)).all())
         # Undated contracts cannot produce a reminder. Do not materialize the
         # whole inventory just to count statuses or paginate fifty list rows.
-        dashboard_contracts = db.scalars(dashboard_stmt.where(Contract.end_date.is_not(None))
-            .order_by(Contract.end_date, Contract.id)).all()
+        dashboard_contracts = read_reminder_contracts(db,dashboard_stmt.order_by(Contract.end_date,Contract.id))
         overdue_reminders, upcoming_reminders = split_deadline_reminders(dashboard_contracts, date.today())
         total_count = db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
         page_count = max(1, (total_count + page_size - 1) // page_size)
         page = min(page, page_count)
         items = db.scalars(stmt.options(joinedload(Contract.department))
-            .limit(page_size).offset((page - 1) * page_size)).all()
+            .limit(min(6, page_size) if dashboard_view else page_size).offset((page - 1) * page_size)).all()
         def page_url(number):
             return '/?' + urlencode({**filters, 'page':number, 'page_size':page_size})
         focus_counts = {
@@ -1284,7 +1401,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                          set(db.scalars(select(Contract.deputy_contact_person).where(*metadata_scope).distinct()).all())) - {""}
         contract_types = list(CONTRACT_TYPES) + sorted(stored_types - set(CONTRACT_TYPES))
         contact_persons = list(CONTACT_PERSONS) + sorted(stored_people - set(CONTACT_PERSONS))
-        return html(request, "list.html", {**base_context(request, user, csrf),
+        return html(request, 'dashboard.html' if dashboard_view else 'list.html', {**base_context(request, user, csrf),
+                    "toolbar": listing_toolbar(filters, page_size, user, departments, focus_labels),
+                    "can_export": active_access(user),
                     "contracts": items, "total_count": total_count, "page":page, "page_size":page_size,
                     "page_count":page_count, "previous_page_url":page_url(page-1) if page>1 else None,
                     "next_page_url":page_url(page+1) if page<page_count else None,
@@ -1297,8 +1416,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "archived": status == "archived",
                     "focus": focus, "focus_label": focus_labels.get(focus, ""),
                     "focus_counts": focus_counts,
-                    "overdue_reminders": overdue_reminders,
-                    "upcoming_reminders": upcoming_reminders,
+                    "overdue_reminder_total":len(overdue_reminders),
+                    "upcoming_reminder_total":len(upcoming_reminders),
+                    "overdue_reminders": overdue_reminders[:10],
+                    "upcoming_reminders": upcoming_reminders[:10],
                     "reminder_window_days": REMINDER_WINDOW_DAYS,
                     "can_create": can_write(user)})
 

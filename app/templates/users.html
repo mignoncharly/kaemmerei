@@ -7,7 +7,7 @@
 </div>
 <section class="panel table-panel">
  <div class="panel-heading"><h2>Benutzerkonten</h2><span class="count">{{ users|length }} Konten</span></div>
- <div class="table-scroll"><table><thead><tr><th scope="col">Benutzername</th><th scope="col">Rolle</th><th scope="col">Fachbereich</th><th scope="col">Status</th><th scope="col"></th></tr></thead>
+ <div class="table-scroll"><table><thead><tr><th scope="col">Benutzername</th><th scope="col">Rolle</th><th scope="col">Fachbereich</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Aktionen</span></th></tr></thead>
  <tbody>{% for account in users %}<tr>
   <td><strong>{{ account.username }}</strong>{% if account.id == user.id %}<small class="contract-id">Ihr Konto</small>{% endif %}</td>
   <td>{{ role_labels.get(account.role, account.role) }}</td>

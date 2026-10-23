@@ -1,0 +1,166 @@
+{
+  "scope": "Plan only; no ANALYZE; existing marked synthetic DB; owner matches SECURITY DEFINER query role",
+  "plan": {
+    "Node Type": "Aggregate",
+    "Startup Cost": 7919.29,
+    "Total Cost": 7977.89,
+    "Plan Rows": 1,
+    "Plans": [
+      {
+        "Node Type": "Seq Scan",
+        "Relation Name": "revisions",
+        "Startup Cost": 11.92,
+        "Total Cost": 7777.42,
+        "Plan Rows": 3334,
+        "Plans": [
+          {
+            "Node Type": "Aggregate",
+            "Startup Cost": 0.07,
+            "Total Cost": 0.07,
+            "Plan Rows": 1,
+            "Plans": [
+              {
+                "Node Type": "Function Scan",
+                "Startup Cost": 0.0,
+                "Total Cost": 0.05,
+                "Plan Rows": 5,
+                "Plans": []
+              }
+            ]
+          },
+          {
+            "Node Type": "Hash Join",
+            "Join Type": "Inner",
+            "Startup Cost": 1.06,
+            "Total Cost": 2.3,
+            "Plan Rows": 1,
+            "Plans": [
+              {
+                "Node Type": "Seq Scan",
+                "Relation Name": "pg_authid",
+                "Startup Cost": 0.0,
+                "Total Cost": 1.18,
+                "Plan Rows": 18,
+                "Plans": []
+              },
+              {
+                "Node Type": "Hash",
+                "Startup Cost": 1.05,
+                "Total Cost": 1.05,
+                "Plan Rows": 1,
+                "Plans": [
+                  {
+                    "Node Type": "Seq Scan",
+                    "Relation Name": "pg_namespace",
+                    "Startup Cost": 0.0,
+                    "Total Cost": 1.05,
+                    "Plan Rows": 1,
+                    "Plans": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "Node Type": "Hash Join",
+            "Join Type": "Inner",
+            "Startup Cost": 8.3,
+            "Total Cost": 9.54,
+            "Plan Rows": 1,
+            "Plans": [
+              {
+                "Node Type": "Seq Scan",
+                "Relation Name": "pg_authid",
+                "Startup Cost": 0.0,
+                "Total Cost": 1.18,
+                "Plan Rows": 18,
+                "Plans": []
+              },
+              {
+                "Node Type": "Hash",
+                "Startup Cost": 8.29,
+                "Total Cost": 8.29,
+                "Plan Rows": 1,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Relation Name": "pg_class",
+                    "Startup Cost": 0.28,
+                    "Total Cost": 8.29,
+                    "Plan Rows": 1,
+                    "Plans": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Node Type": "Incremental Sort",
+        "Startup Cost": 141.88,
+        "Total Cost": 200.35,
+        "Plan Rows": 2,
+        "Plans": [
+          {
+            "Node Type": "Nested Loop",
+            "Join Type": "Inner",
+            "Startup Cost": 83.48,
+            "Total Cost": 200.26,
+            "Plan Rows": 1,
+            "Plans": [
+              {
+                "Node Type": "Unique",
+                "Startup Cost": 83.48,
+                "Total Cost": 83.49,
+                "Plan Rows": 2,
+                "Plans": [
+                  {
+                    "Node Type": "Sort",
+                    "Startup Cost": 83.48,
+                    "Total Cost": 83.48,
+                    "Plan Rows": 2,
+                    "Plans": [
+                      {
+                        "Node Type": "Nested Loop",
+                        "Join Type": "Inner",
+                        "Startup Cost": 0.0,
+                        "Total Cost": 83.47,
+                        "Plan Rows": 2,
+                        "Plans": [
+                          {
+                            "Node Type": "CTE Scan",
+                            "CTE Name": "source",
+                            "Startup Cost": 0.0,
+                            "Total Cost": 83.35,
+                            "Plan Rows": 1,
+                            "Plans": []
+                          },
+                          {
+                            "Node Type": "Function Scan",
+                            "Startup Cost": 0.0,
+                            "Total Cost": 0.05,
+                            "Plan Rows": 5,
+                            "Plans": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "Node Type": "CTE Scan",
+                "CTE Name": "source",
+                "Startup Cost": 0.0,
+                "Total Cost": 116.69,
+                "Plan Rows": 1,
+                "Plans": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

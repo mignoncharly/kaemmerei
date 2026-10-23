@@ -1,0 +1,38 @@
+{
+  "format": "ohvr-strato-read-only-execution-v1",
+  "observed_at": "2026-10-22T15:20:43.424676+00:00",
+  "repository_base": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+  "working_tree_additions_not_hosted_ci_verified": true,
+  "assessment_status": "BLOCKED",
+  "error_code": "CREDENTIAL_FILE_INVALID_JSON",
+  "failing_stage": "credential_validation",
+  "connection_authenticated": false,
+  "remote_capabilities_verified": false,
+  "remote_commands_executed": 0,
+  "credential_contents_recorded": false,
+  "credential_file_modified": false,
+  "local_dependency_installed": false,
+  "paramiko_available_in_inspected_runtime": false,
+  "report": ".verification/strato-readonly-20261022/sanitized-report-final.json",
+  "report_sha256": "cafbf2d5011a3c916d1e253ab6e27a171b13c1f52709ba78d0cc132e35865c91",
+  "targeted_regressions": {
+    "passed": 18,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "kind": "synthetic_only_no_network",
+    "junit": ".verification/strato-readonly-20261022/regression-completed.xml",
+    "junit_sha256": "fb862db0006a892fdd5adabc3672fb04a32072c557f9ecda884f45171773c7f9"
+  },
+  "prior_test_attempts": "Temporary-directory setup denied; final run uses existing workspace scratch helper. No ACL changes.",
+  "source_sha256": {
+    "scripts/assess_strato_readonly.py": "41c28ba87bf422c9e0f8cfd7988f0e4ed3f88ca7e3a4bbfab0c1e8e530197a30",
+    "tests/test_strato_readonly.py": "750206d4a3336678d8e51a24a668ae5e1f9c67a52a2e6d9a43f0be2e605a2192"
+  },
+  "launcher_preserved": true,
+  "main_unchanged": true,
+  "push_merge_deploy_performed": false,
+  "intended_host_r43_closed": false,
+  "intended_host_scanner_verified": false,
+  "participant_scenarios": "12 NOT_RUN"
+}

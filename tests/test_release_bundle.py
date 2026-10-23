@@ -168,6 +168,10 @@ def test_hosted_release_workflow_parses_and_requires_both_platforms():
     names=[step.get('name') for step in release['steps']]
     assert names.index('Build twice and compare exact bytes')<names.index('Verify release and operator regressions')
     assert jobs['release-reproducibility']['needs']=='locked-release'
+    links=jobs['native-storage-links']
+    assert links['strategy']['matrix']['os']==['ubuntu-24.04','windows-latest']
+    assert links['env']['REQUIRE_NATIVE_LINKS']=='1'
+    assert any('actual_linked_storage or junction' in step.get('run','') for step in links['steps'])
     # GitHub's Python shell writes a file outside the checkout. Execute its
     # actual import preamble from an isolated temporary script, not stdin.
     code=next(step['run'] for step in release['steps'] if step.get('name')=='Build twice and compare exact bytes')

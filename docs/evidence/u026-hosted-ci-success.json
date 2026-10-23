@@ -1,0 +1,712 @@
+{
+  "format": "ohvr-u026-hosted-ci-confirmed-v1",
+  "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+  "branch": "review/u026-synthetic-pilot",
+  "workflow": ".github/workflows/phase1-verification.yml",
+  "workflow_sha256": "e535b4fc846684965fbd883b38a856f0df0216cdff024c042d69769bc630c6ae",
+  "run_id": 39791514267,
+  "run_attempt": 1,
+  "run_url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267",
+  "status": "VERIFIED",
+  "conclusion": "success",
+  "duration_seconds": 882,
+  "artifact_count": 9,
+  "created_at": "2026-10-22T13:57:29Z",
+  "completed_at": "2026-10-22T14:12:11Z",
+  "evidence_source": "Fresh public GitHub Actions run/jobs/artifact APIs, retrieved via Firecrawl maxAge 0; operator confirmation agrees",
+  "jobs": [
+    {
+      "id": 119868511637,
+      "name": "document-scanner",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868511637",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install maintained ClamAV engine and current official definitions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Require reviewed maintained scanner engine and official definition inventory",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create restricted scanner verification role on disposable CI service",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify actual clean and infected scans and HTTP gates with restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868511886,
+      "name": "sqlite",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868511886",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database sqlite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database sqlite --junitxml=.verification/sqlite-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868511935,
+      "name": "locked-release (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868511935",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Clean runtime installation with required wheel hashes",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip check",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build twice and compare exact bytes",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify release and operator regressions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868512038,
+      "name": "native-postgresql",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868512038",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native manager unit safety checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Provision hash-pinned native backup encryption tools for required verification",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Provision and verify native PostgreSQL without Docker",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868512044,
+      "name": "native-storage-links (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868512044",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Require actual symbolic links and Windows junction rejection",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868512127,
+      "name": "locked-release (ubuntu-24.04)",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868512127",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Clean runtime installation with required wheel hashes",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip check",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build twice and compare exact bytes",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify release and operator regressions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868512144,
+      "name": "frontend-browser",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868512144",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-browser.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m playwright install --with-deps chromium",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real browser CSP, recovery, keyboard and responsive checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868512158,
+      "name": "native-storage-links (ubuntu-24.04)",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868512158",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Require actual symbolic links and Windows junction rejection",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119868512251,
+      "name": "postgresql",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119868512251",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install matching PostgreSQL 18 backup and restore client",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create restricted disposable-database test role",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Provision hash-pinned native backup encryption tools for required verification",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Require patched matching native server and client tools",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/verify_phase1.py --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q --database postgresql --junitxml=.verification/postgresql-pytest.xml",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q -m postgresql --database postgresql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Actual encrypted/signed backup and guarded restore regression",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 4 workflow and archive races under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 5 document lifecycle and recovery under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 6 snapshots, publication and token regression under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 7 recorded history, calendar and Excel under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 8 frontend contracts under restricted PostgreSQL logins",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Phase 9 ingress and shared availability controls",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Revision-bound representative mixed workload without competing local suites",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 119869164432,
+      "name": "release-reproducibility",
+      "status": "completed",
+      "conclusion": "success",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "url": "https://github.com/mignoncharly/kaemmerei/actions/runs/39791514267/job/119869164432",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Windows and Linux source artifacts are identical",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12433030261,
+      "name": "native-postgresql-verification",
+      "size_in_bytes": 16525,
+      "digest": "sha256:ce07822162f9996544a85c30a2b30c6b7f5fed3ecc9eb37ef959310e4d72095e",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12432211678,
+      "name": "phase8-browser-verification",
+      "size_in_bytes": 934260,
+      "digest": "sha256:6cbaeac63b6f80a4c36870ac5370e6821ddc55b0bba6baccc20f9e08e6dd1713",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12431967012,
+      "name": "postgresql-verification",
+      "size_in_bytes": 18508,
+      "digest": "sha256:30c2d2a2a39ca6296f0c1adab766dd6e7a27701bb2ed4815a6d5bdd9dd692c51",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12431955917,
+      "name": "native-storage-links-windows-latest",
+      "size_in_bytes": 420,
+      "digest": "sha256:b703a3fa1018d469036f02413f38c3635cefb00c7de6c10b6dc326acbf1cacbf",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12431930970,
+      "name": "runtime-release-ubuntu-24.04",
+      "size_in_bytes": 305513,
+      "digest": "sha256:9f893e8e1a334d5f9d8066098dc12812ee71c5c495cd2ed14c40802d77db67a1",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12431482158,
+      "name": "document-scanner-verification",
+      "size_in_bytes": 1363,
+      "digest": "sha256:739bd19e598cea1af30146176095636bb7643bf1bff19ccc364b6b74f7865f79",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12431153776,
+      "name": "native-storage-links-ubuntu-24.04",
+      "size_in_bytes": 493,
+      "digest": "sha256:0ee91f9f37811cb5a902fe3a273715625acc592404915f4e9dba187238ea34c3",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12430304283,
+      "name": "runtime-release-windows-latest",
+      "size_in_bytes": 305533,
+      "digest": "sha256:518ea2ce4715798935d16ebf6649b597d839092290098f38e7ebdfcd8a63fe70",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    },
+    {
+      "id": 12430269423,
+      "name": "sqlite-verification",
+      "size_in_bytes": 10487,
+      "digest": "sha256:5871e48ca4eb21143d44876532e0e76e016d135245b18da9346de23ece05bce9",
+      "expired": false,
+      "expires_at": "2027-01-20T13:57:29Z",
+      "source": "3d4a180297db801293e4b86e42e9f60a55fbca86",
+      "downloaded": true,
+      "contents_verified": true
+    }
+  ],
+  "hosted_native_link_steps_verified": true,
+  "native_link_junit_locally_verified": true,
+  "artifact_bytes_locally_verified": true,
+  "no_rerun_performed": true,
+  "intended_host_r43_closed": false,
+  "intended_host_scanner_verified": false,
+  "formal_pilot_acceptance_complete": false,
+  "real_data_authorized": false,
+  "production_authorized": false,
+  "local_preservation_status": "VERIFIED",
+  "local_preservation_evidence": "docs/evidence/u026-artifacts-verified.json",
+  "local_report_sha256": "98cce9fd325d240cb138ab62e30880ba244f22aa1031c01f01545fb0fd1c582e"
+}

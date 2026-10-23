@@ -1,0 +1,277 @@
+{
+  "format": "ohvr-skip-review-v1",
+  "inputs": {
+    "postgresql": "aa08aae634469189a5ea2b8260085a7104f633857dbef9572a332233e513646c",
+    "sqlite": "9c59c59578f7796d93063a15db7d3838b781432f3be9b0469c8229b560329939"
+  },
+  "skips": [
+    {
+      "backend": "postgresql",
+      "test": "tests.test_phase5.test_actual_linked_storage_is_rejected",
+      "reason": "OS does not permit creating a symlink under this test identity",
+      "classification": "MISSING_LOCAL_ENVIRONMENT_COVERAGE",
+      "counterpart_passed": false
+    },
+    {
+      "backend": "postgresql",
+      "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database",
+      "reason": "ClamAV not installed/configured locally; authoritative scanner CI runs this test",
+      "classification": "MISSING_LOCAL_ENVIRONMENT_COVERAGE",
+      "counterpart_passed": false
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_history_materialization.test_series_projection_upgrade_preserves_owner_acl_and_principal_guards",
+      "reason": "Actual PostgreSQL function catalog required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_history_materialization.test_series_matches_scalar_history_with_transfer_archive_unknowns_and_permissions",
+      "reason": "Actual restricted PostgreSQL history required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_history_materialization.test_history_upgrade_preserves_owner_grants_guards_and_repeatability",
+      "reason": "Actual PostgreSQL function catalog required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_mixed_workload.test_small_actual_mixed_workload_uses_scoped_writes_files_and_history[2-1]",
+      "reason": "Actual restricted PostgreSQL workload required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_mixed_workload.test_small_actual_mixed_workload_uses_scoped_writes_files_and_history[10-5]",
+      "reason": "Actual restricted PostgreSQL workload required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_operational_monitoring.test_publication_bounded_idempotent_and_restricted_role_denied",
+      "reason": "Actual PostgreSQL owner/roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_restricted_runtime_application_smoke",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_unscoped_queries_children_joins_and_department_moves_are_enforced",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_guest_invalid_malformed_context_and_readonly_reviewer_default_to_denial",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_integration_role_scoped_api_post_commit_and_credential_denials",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_pool_reuse_commit_and_rollback_never_retain_identity",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_audit_rows_cannot_be_updated_deleted_truncated_or_directly_forged",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_password_rotation_admin_identity_changes_and_review_permissions_under_runtime_role",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_maintenance_is_narrow_and_production_rejects_owner_connection",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_assigned_approval_revocation_and_self_escalation_under_runtime_role",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_context_revalidates_revocation_and_auth_functions_are_hardened",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase3.test_operator_cli_uses_explicit_owner_and_maintenance_connections",
+      "reason": "Actual restricted PostgreSQL login roles required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase5.test_actual_linked_storage_is_rejected",
+      "reason": "OS does not permit creating a symlink under this test identity",
+      "classification": "MISSING_LOCAL_ENVIRONMENT_COVERAGE",
+      "counterpart_passed": false
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase5.test_real_clamav_engine_with_current_official_database",
+      "reason": "ClamAV not installed/configured locally; authoritative scanner CI runs this test",
+      "classification": "MISSING_LOCAL_ENVIRONMENT_COVERAGE",
+      "counterpart_passed": false
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase6.test_late_committed_outbox_id_is_not_lost_and_raw_scope_columns_are_private",
+      "reason": "Real PostgreSQL concurrent transactions required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase6.test_snapshot_waits_for_writer_and_includes_its_committed_state",
+      "reason": "Real PostgreSQL transaction lock required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase6.test_explicit_development_owner_uses_application_guards_without_runtime_fallback",
+      "reason": "Real PostgreSQL development-owner connection required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase7.test_postgresql_history_function_is_narrow_and_reauthenticates",
+      "reason": "Actual restricted PostgreSQL history authorization required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_backup.test_direct_production_backup_rejects_unverified_tls_before_output",
+      "reason": "Actual named PostgreSQL fixture required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_backup.test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[small]",
+      "reason": "Actual isolated PostgreSQL backup required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_backup.test_actual_encrypted_consistent_backup_and_guarded_new_database_restore[10k-contracts-50k-documents]",
+      "reason": "Actual isolated PostgreSQL backup required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_mfa.test_simultaneous_enrollment_consumes_one_challenge_and_revokes_other",
+      "reason": "Actual PostgreSQL concurrent MFA serialization required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_mfa.test_pg_mfa_credentials_policy_and_challenge_have_no_normal_data_access",
+      "reason": "Actual restricted PostgreSQL MFA/RLS boundary required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_operations.test_scan_batch_retries_bounded_and_idempotent",
+      "reason": "Coordinator requires actual PostgreSQL",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_operations.test_scan_batch_reservation_survives_crash_and_exhausts_safely",
+      "reason": "Coordinator requires actual PostgreSQL",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_operations.test_scan_coordinator_lock_archive_and_count_limit",
+      "reason": "Coordinator requires actual PostgreSQL",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_operations.test_automated_scan_rechecks_uploader_after_external_scan",
+      "reason": "Coordinator requires actual PostgreSQL",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_queries.test_child_read_population_matches_legacy_predicate_for_live_principals",
+      "reason": "Actual restricted PostgreSQL policies required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_phase9_queries.test_read_department_initplan_is_equivalent_for_live_principals",
+      "reason": "Actual restricted PostgreSQL logins required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_postgresql_integration.test_postgresql_clean_migration_identity_and_cleanup",
+      "reason": "Run explicitly with --database postgresql; SQLite is not PostgreSQL evidence",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    },
+    {
+      "backend": "sqlite",
+      "test": "tests.test_server_security.test_actual_server_version_is_read_only_and_production_guard_is_explicit",
+      "reason": "Actual PostgreSQL server identity required",
+      "classification": "EXPECTED_BACKEND_SKIP_COVERED_BY_POSTGRESQL",
+      "counterpart_passed": true
+    }
+  ],
+  "tested_source": "05648eda3ce6ddb9fe7e33082593e294522fbf24",
+  "review": "U023 read-only audit of retained U022 evidence; no current-source test claim"
+}
