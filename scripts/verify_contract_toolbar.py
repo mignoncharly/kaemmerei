@@ -23,7 +23,8 @@ if (ROOT/'.verification/browser-tools/playwright').exists():
 
 def execute(args, output, result):
     result['stage']='dependencies'
-    from scripts.browser_layout import measure_reflow, contract_geometry, geometry_unchanged, focus_filter_for_measurement
+    from scripts.browser_layout import measure_reflow, contract_geometry, geometry_unchanged, focus_filter_for_measurement, table_keyboard_scroll
+    from scripts.browser_diagnostics import browser_operation
     from scripts.browser_focus import focus_snapshot
     from playwright.sync_api import sync_playwright
     from jinja2 import ChoiceLoader, DictLoader
@@ -149,11 +150,11 @@ def execute(args, output, result):
                         region=page.locator('.table-scroll')
                         region.evaluate('(e)=>e.focus({preventScroll:true})')
                         scroll_before=contract_geometry(page,result,f'{role}_before_table_scroll_{width}')
-                        if region.evaluate('(e)=>e.scrollWidth>e.clientWidth+1'):
-                            page.keyboard.press('ArrowRight')
-                            page.wait_for_function('document.querySelector(".table-scroll").scrollLeft>0')
-                            check(f'{role}_table_keyboard_scroll_{width}',region.evaluate('(e)=>e.scrollLeft>0'))
-                        region.evaluate('(e)=>e.scrollTo({left:e.scrollWidth,behavior:"instant"})')
+                        scrolled=table_keyboard_scroll(page,region,result)
+                        if scrolled is not None:
+                            check(f'{role}_table_keyboard_scroll_{width}',scrolled)
+                        with browser_operation(result,'table_scroll_to_end',page):
+                            region.evaluate('(e)=>e.scrollTo({left:e.scrollWidth,behavior:"instant"})')
                         scroll_after=contract_geometry(page,result,f'{role}_after_table_scroll_{width}')
                         check(f'{role}_table_scroll_reflow_{width}',measure_reflow(page,output,result,f'{role}_table_scroll_reflow_{width}'))
                         check(f'{role}_table_scroll_keeps_vertical_position_{width}',all(
@@ -213,7 +214,7 @@ def main():
     args=parser.parse_args()
     from app.documents import reject_links
     from scripts.pilot_verification import source_identity
-    from scripts.browser_diagnostics import failure
+    from scripts.browser_diagnostics import failure, execution_details
     output=args.output.absolute();reject_links(output);output=output.resolve()
     if not output.is_relative_to(ROOT/'.verification'):raise ValueError('Local verification output required')
     output.mkdir(parents=True,exist_ok=False)
@@ -226,7 +227,8 @@ def main():
         result['checks'].append('source_unchanged')
         result.update(status='passed',stage='complete')
     except Exception as error:
-        result.update(status='failed',**failure(error,result['stage'],result.get('failed_check')))
+        result.update(status='failed',**failure(error,result['stage'],result.get('failed_check')),
+                      **execution_details(error,result))
     (output/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result))
     if result['status']!='passed':raise SystemExit(1)

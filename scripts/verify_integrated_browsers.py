@@ -9,7 +9,7 @@ import subprocess
 import sys
 from uuid import uuid4
 
-from scripts.browser_diagnostics import diagnostic, EXCEPTIONS, SUMMARIES
+from scripts.browser_diagnostics import diagnostic, EXCEPTIONS, SUMMARIES, safe_execution_details
 from scripts.pilot_verification import ROOT, source_identity, write_report
 
 SUITES = (
@@ -39,6 +39,7 @@ def validate_result(path, source, run_id, suite, exit_code):
             return True, evidence
         if exit_code != 0 and data['status'] == 'failed' and data.get('error_code') in SUMMARIES:
             evidence.update(diagnostic(data['error_code'], data.get('failing_stage')))
+            evidence.update(safe_execution_details(data, checks))
             if data.get('exception_type') in EXCEPTIONS:
                 evidence['exception_type'] = data['exception_type']
             if type(data.get('winerror')) is int:
@@ -52,15 +53,19 @@ def validate_result(path, source, run_id, suite, exit_code):
     return False, invalid
 
 
-def run_suites(source, channel, output):
-    report = {'format': 'ohvr-integrated-browsers-v1', 'source': source, 'synthetic_only': True,
+def run_suites(source, channel, output, suites=SUITES):
+    if suites not in (SUITES, (SUITES[1],), (SUITES[2],)):
+        raise ValueError('Invalid browser suite selection')
+    targeted = suites != SUITES
+    report = {'format': 'ohvr-targeted-browsers-v1' if targeted else 'ohvr-integrated-browsers-v1',
+              'source': source, 'synthetic_only': True,
               'started_at': datetime.now(timezone.utc).isoformat(), 'status': 'failed',
               'visual_inspection': 'NOT_PERFORMED', 'suites': []}
     code = 2
     stage = 'source_validation'
     try:
         source_identity(source)
-        for suite in SUITES:
+        for suite in suites:
             stage = 'source_validation'
             source_identity(source)
             run_id = uuid4().hex
@@ -89,7 +94,8 @@ def run_suites(source, channel, output):
                                  else 'verification_launcher_failed', stage))
     report.update(exit_code=code, finished_at=datetime.now(timezone.utc).isoformat())
     write_report(output / 'sanitized-report.json', report)
-    print('SUCCESS' if code == 0 else 'FAILED: browser acceptance incomplete; inspect sanitized-report.json.')
+    print(('SUCCESS: selected browser suite only' if targeted else 'SUCCESS') if code == 0
+          else 'FAILED: browser acceptance incomplete; inspect sanitized-report.json.')
     return code
 
 
@@ -97,15 +103,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--expected-source', required=True)
     parser.add_argument('--channel', choices=('msedge', 'chrome', 'chromium'), default='msedge')
+    parser.add_argument('--suite', choices=('toolbar', 'excel'), help='Run one standalone suite; not integrated acceptance')
     args = parser.parse_args()
     if not re.fullmatch('[a-f0-9]{40}', args.expected_source):
         raise SystemExit(2)
     from app.documents import reject_links
-    output = ROOT / '.verification' / ('integrated-browsers-' + uuid4().hex)
+    prefix = args.suite + '-browser-' if args.suite else 'integrated-browsers-'
+    output = ROOT / '.verification' / (prefix + uuid4().hex)
     reject_links(output)
     output.mkdir(parents=True, exist_ok=False)
     print('Evidence: ' + str(output.relative_to(ROOT)))
-    return run_suites(args.expected_source, args.channel, output)
+    suites = tuple(suite for suite in SUITES if suite[0] == args.suite) if args.suite else SUITES
+    return run_suites(args.expected_source, args.channel, output, suites)
 
 
 if __name__ == '__main__':

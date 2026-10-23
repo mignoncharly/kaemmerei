@@ -158,7 +158,7 @@ def main():
     args=parser.parse_args()
     from app.documents import reject_links
     from scripts.pilot_verification import source_identity
-    from scripts.browser_diagnostics import failure
+    from scripts.browser_diagnostics import failure, execution_details
     output=args.output.absolute();reject_links(output);output=output.resolve()
     if not output.is_relative_to(ROOT/'.verification'):raise ValueError('Local verification output required')
     output.mkdir(parents=True,exist_ok=False)
@@ -171,7 +171,8 @@ def main():
         result['checks'].append('source_unchanged')
         result.update(status='passed',stage='complete')
     except Exception as error:
-        result.update(status='failed',**failure(error,result['stage'],result.get('failed_check')))
+        result.update(status='failed',**failure(error,result['stage'],result.get('failed_check')),
+                      **execution_details(error,result))
     (output/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result))
     if result['status']!='passed':raise SystemExit(1)

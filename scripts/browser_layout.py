@@ -47,8 +47,25 @@ def focus_filter_for_measurement(page, toggle, result, name):
     # Focus is a separate user action and may legitimately scroll an offscreen
     # trigger into view. Measure opening only AFTER that action, never before it.
     toggle.focus()
-    page.wait_for_function('document.activeElement === document.querySelector("#filter-toggle")')
+    # Playwright caches a function predicate. A bare expression is re-evaluated
+    # on each animation frame and can hit script-src's unsafe-eval restriction.
+    page.wait_for_function('() => document.activeElement === document.querySelector("#filter-toggle")')
     return contract_geometry(page, result, name)
+
+
+def table_keyboard_scroll(page, region, result):
+    """Exercise real keyboard scrolling; retain the exact failed operation."""
+    from scripts.browser_diagnostics import browser_operation
+    with browser_operation(result, 'table_check_scrollable', page):
+        scrollable = region.evaluate('(e)=>e.scrollWidth>e.clientWidth+1')
+    if not scrollable:
+        return None
+    with browser_operation(result, 'table_press_arrow_right', page):
+        page.keyboard.press('ArrowRight')
+    with browser_operation(result, 'table_wait_scroll', page):
+        page.wait_for_function('() => document.querySelector(".table-scroll").scrollLeft > 0')
+    with browser_operation(result, 'table_read_scroll', page):
+        return region.evaluate('(e)=>e.scrollLeft>0')
 
 
 def measure_reflow(page, output, result, name):

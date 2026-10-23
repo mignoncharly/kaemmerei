@@ -1,5 +1,73 @@
 """Fixed, shareable browser diagnostics: never serialize exception text or URLs."""
 import re
+from contextlib import contextmanager
+from pathlib import Path
+
+OPERATIONS = {'table_check_scrollable', 'table_press_arrow_right', 'table_wait_scroll',
+              'table_read_scroll', 'table_scroll_to_end'}
+ERROR_KINDS = {'csp_eval_blocked', 'target_closed', 'execution_context_destroyed',
+               'element_detached', 'strict_mode_violation', 'timeout', 'unclassified'}
+FRAME_FILES = {'scripts/verify_contract_toolbar.py', 'scripts/verify_excel_selection.py',
+               'scripts/browser_layout.py', 'scripts/browser_focus.py'}
+
+
+@contextmanager
+def browser_operation(result, name, page):
+    if name not in OPERATIONS:
+        raise ValueError('Unknown browser operation')
+    try:
+        yield
+    except Exception:
+        result['failed_operation'] = name
+        # Capture before context-manager teardown closes pages normally.
+        try:
+            result['page_closed_at_failure'] = bool(page.is_closed())
+        except Exception:
+            pass  # An unavailable diagnostic must not replace the original error.
+        raise
+
+
+def safe_execution_details(data, checks):
+    """Whitelist optional child diagnostics, even if a child result is untrusted."""
+    last = checks[-1] if checks else None
+    details = {'last_completed_check': last if isinstance(last, str) and
+               re.fullmatch('[a-z][a-z0-9_]{0,99}', last) else None}
+    for key, choices in [('failed_operation', OPERATIONS), ('browser_error_kind', ERROR_KINDS)]:
+        value = data.get(key)
+        if isinstance(value, str) and value in choices:
+            details[key] = value
+    if type(data.get('page_closed_at_failure')) is bool:
+        details['page_closed_at_failure'] = data['page_closed_at_failure']
+    frames = data.get('source_frames')
+    if isinstance(frames, list):
+        details['source_frames'] = [dict(file=f['file'], line=f['line']) for f in frames[:12]
+            if isinstance(f, dict) and isinstance(f.get('file'), str) and f['file'] in FRAME_FILES
+            and type(f.get('line')) is int and 0 < f['line'] < 100000]
+    return details
+
+
+def execution_details(error, result):
+    """No exception text/stack strings, source lines, locals or absolute paths leave here."""
+    message = str(error).lower()
+    signatures = (
+        ('csp_eval_blocked', ('unsafe-eval',)),
+        ('target_closed', ('target page, context or browser has been closed', 'target closed')),
+        ('execution_context_destroyed', ('execution context was destroyed',)),
+        ('element_detached', ('element is not attached', 'element was detached')),
+        ('strict_mode_violation', ('strict mode violation',)),
+    )
+    kind = next((name for name, parts in signatures if any(part in message for part in parts)),
+                'timeout' if type(error).__name__ == 'TimeoutError' else 'unclassified')
+    frames = []
+    known = {str((Path(__file__).resolve().parents[1] / name).resolve()): name for name in FRAME_FILES}
+    tb = error.__traceback__
+    while tb:
+        name = known.get(str(Path(tb.tb_frame.f_code.co_filename).resolve()))
+        if name:
+            frames.append({'file': name, 'line': tb.tb_lineno})
+        tb = tb.tb_next
+    return safe_execution_details(dict(result, browser_error_kind=kind, source_frames=frames),
+                                  result.get('checks', []))
 
 STAGES={'dependencies','synthetic_fixture','automation_driver','browser_launch',
         'browser_scenarios','document_upload','document_download','review_request',
@@ -72,6 +140,7 @@ def browser_result(path,source,started_at,exit_code,run_id=None):
                          'failing_stage':None,'diagnostic_summary':None,'stage':'complete'}
         if exit_code and data['status']=='failed' and data.get('error_code') in SUMMARIES:
             result=diagnostic(data['error_code'],data.get('failing_stage'))
+            result.update(safe_execution_details(data,checks))
             result['check_count']=len(checks)
             result['failed_check']=None
             if data.get('exception_type') in EXCEPTIONS:result['exception_type']=data['exception_type']

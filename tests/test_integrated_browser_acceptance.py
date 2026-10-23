@@ -148,11 +148,45 @@ def test_coordinator_fail_fast_provenance_and_exit_code(monkeypatch, capsys, fau
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason='Windows PowerShell launcher integration')
-def test_powershell_launcher_preserves_native_failure_exit_code(acceptance_tmp):
+@pytest.mark.parametrize('launcher,extra', [
+    ('Invoke-IntegratedBrowserVerification.ps1', []),
+    ('Invoke-TargetedBrowserVerification.ps1', ['-Suite', 'toolbar'])])
+def test_powershell_launcher_preserves_native_failure_exit_code(acceptance_tmp, launcher, extra):
     fake_python = acceptance_tmp / 'failing-python.cmd'
     fake_python.write_text('@exit /b 37\n')
     child = subprocess.run(['powershell.exe', '-NoProfile', '-File',
-        str(runner.ROOT / 'scripts/Invoke-IntegratedBrowserVerification.ps1'),
-        '-ExpectedSource', 'a' * 40, '-Python', str(fake_python)], capture_output=True)
+        str(runner.ROOT / 'scripts' / launcher),
+        '-ExpectedSource', 'a' * 40, '-Python', str(fake_python), *extra], capture_output=True)
     assert child.returncode == 37
     assert b'SUCCESS' not in child.stdout + child.stderr
+
+
+@pytest.mark.parametrize('selected', [1, 2])
+@pytest.mark.parametrize('exit_code', [0, 37])
+def test_standalone_suite_is_source_bound_and_never_runs_other_suites(monkeypatch, capsys, selected, exit_code):
+    suite = runner.SUITES[selected]
+    calls = []
+    def child(command, **kwargs):
+        calls.append(command)
+        assert command[2].endswith(suite[1])
+        output = Path(command[command.index('--output') + 1]); output.mkdir()
+        nonce = command[command.index('--run-id') + 1]
+        data = child_result(suite, 'a'*40, nonce)
+        if exit_code:
+            data.update(status='failed', error_code='browser_execution_failed', failing_stage='browser_scenarios')
+        (output/'result.json').write_text(json.dumps(data))
+        return SimpleNamespace(returncode=exit_code)
+    monkeypatch.setattr(runner, 'source_identity', lambda expected: expected)
+    monkeypatch.setattr(runner.subprocess, 'run', child)
+    with scratch_directory('ohvr-targeted-runner-') as directory:
+        result_code = runner.run_suites('a'*40, 'msedge', Path(directory), (suite,))
+        report = json.loads((Path(directory)/'sanitized-report.json').read_text())
+    assert result_code == exit_code and len(calls) == 1
+    assert report['format'] == 'ohvr-targeted-browsers-v1'
+    assert [s['suite'] for s in report['suites']] == [suite[0]]
+    assert ('SUCCESS' in capsys.readouterr().out) == (exit_code == 0)
+
+
+def test_empty_suite_selection_cannot_report_success():
+    with pytest.raises(ValueError, match='Invalid browser suite selection'):
+        runner.run_suites('a'*40, 'msedge', None, ())
