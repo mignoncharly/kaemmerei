@@ -23,7 +23,7 @@ if (ROOT/'.verification/browser-tools/playwright').exists():
 
 def execute(args, output, result):
     result['stage']='dependencies'
-    from scripts.browser_layout import measure_reflow
+    from scripts.browser_layout import measure_reflow, contract_geometry, geometry_unchanged, focus_filter_for_measurement
     from playwright.sync_api import sync_playwright
     from jinja2 import ChoiceLoader, DictLoader
     import uvicorn
@@ -71,7 +71,8 @@ def execute(args, output, result):
                 page.route('**/static/interface.js*',lambda route:route.fulfill(body=old_js,content_type='application/javascript'))
                 for width in (390,768,1280,1440):
                     page.set_viewport_size({'width':width,'height':1000});page.goto(address+'/')
-                    positions[str(width)]={'before':page.locator('.table-panel tbody tr').first.bounding_box()['y']}
+                    original=contract_geometry(page,result,f'baseline_closed_{width}')
+                    positions[str(width)]={'before':original['row_document_y']}
                     screenshot(page,f'before-{width}')
                 TEMPLATES.env.loader=loader;TEMPLATES.env.cache.clear();before_context.close()
                 for role in ('admin','kultur','pruefer'):
@@ -83,23 +84,24 @@ def execute(args, output, result):
                         check(f'{role}_collapsed_{width}',toggle.get_attribute('aria-expanded')=='false' and not page.locator('#advanced-filter-panel').is_visible())
                         check(f'{role}_reflow_{width}',measure_reflow(page,output,result,f'{role}_reflow_{width}'))
                         check(f'{role}_table_label_contained_{width}',page.locator('.table-scroll th .visually-hidden').evaluate('(e)=>!!e.offsetParent?.closest(".table-scroll")'))
-                        region=page.locator('.table-scroll')
-                        region.focus();page.keyboard.press('End')
-                        region.evaluate('(e)=>e.scrollLeft=e.scrollWidth')
-                        check(f'{role}_table_scroll_reflow_{width}',measure_reflow(page,output,result,f'{role}_table_scroll_reflow_{width}'))
-                        region.evaluate('(e)=>e.scrollLeft=0')
-                        page.evaluate('window.scrollTo(0,0)')
+                        closed=contract_geometry(page,result,f'{role}_closed_{width}')
                         screenshot(page,f'after-{role}-{width}')
+                        check(f'{role}_closed_scroll_origin_{width}',closed['scroll_x']==0 and closed['scroll_y']==0)
                         if role=='admin':
-                            positions[str(width)]['after']=page.locator('.table-panel tbody tr').first.bounding_box()['y']
+                            positions[str(width)]['after']=closed['row_document_y']
                             check(f'rows_higher_{width}',positions[str(width)]['before']-positions[str(width)]['after']>100)
-                            if width>=1280:check(f'first_row_visible_{width}',positions[str(width)]['after']<900)
-                        row_y=page.locator('.table-panel tbody tr').first.bounding_box()['y']
-                        toggle.focus();page.keyboard.press('Enter')
+                            if width>=1280:check(f'first_row_visible_{width}',0<=closed['row_viewport_y']<900)
+                        focused=focus_filter_for_measurement(page,toggle,result,f'{role}_focused_closed_{width}')
+                        check(f'{role}_visible_trigger_focus_no_shift_{width}',geometry_unchanged(closed,focused))
+                        page.keyboard.press('Enter')
                         dialog=page.locator('.contract-filter-dialog')
+                        opened=contract_geometry(page,result,f'{role}_open_{width}')
+                        # Preserve open-state evidence even when the next check fails.
+                        screenshot(page,f'open-{role}-{width}')
                         check(f'{role}_keyboard_expand_{width}',dialog.is_visible() and toggle.get_attribute('aria-expanded')=='true')
                         check(f'{role}_initial_focus_{width}',page.locator('#q').evaluate('(e)=>document.activeElement===e'))
-                        check(f'{role}_overlay_no_layout_shift_{width}',abs(page.locator('.table-panel tbody tr').first.bounding_box()['y']-row_y)<2)
+                        check(f'{role}_overlay_no_layout_shift_{width}',geometry_unchanged(focused,opened))
+                        check(f'{role}_open_page_reflow_{width}',measure_reflow(page,output,result,f'{role}_open_reflow_{width}'))
                         check(f'{role}_dialog_reflow_{width}',dialog.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1'))
                         page.locator('#status').select_option('draft')
                         screenshot(page,f'expanded-{role}-{width}')
@@ -107,6 +109,8 @@ def execute(args, output, result):
                         check(f'{role}_focus_contained_{width}',dialog.evaluate('(e)=>e.contains(document.activeElement)'))
                         page.keyboard.press('Escape')
                         check(f'{role}_escape_focus_{width}',not dialog.is_visible() and toggle.evaluate('(e)=>document.activeElement===e'))
+                        closed_again=contract_geometry(page,result,f'{role}_closed_again_{width}')
+                        check(f'{role}_close_no_layout_shift_{width}',geometry_unchanged(focused,closed_again))
                         toggle.click()
                         check(f'{role}_reopen_preserves_{width}',page.locator('#status').input_value()=='draft')
                         if width>700:
@@ -119,6 +123,23 @@ def execute(args, output, result):
                         screenshot(page,f'active-{role}-{width}')
                         page.get_by_role('link',name='Alle Filter zurücksetzen',exact=True).click();page.wait_for_load_state('networkidle')
                         check(f'{role}_reset_all_{width}',page.locator('.filter-chip').count()==0 and page.locator('#q').input_value()=='')
+                        # Independent horizontal keyboard test AFTER the overlay checks.
+                        # End can scroll the document vertically and start native smooth
+                        # scrolling; it is not a horizontal table-navigation command.
+                        region=page.locator('.table-scroll')
+                        region.evaluate('(e)=>e.focus({preventScroll:true})')
+                        scroll_before=contract_geometry(page,result,f'{role}_before_table_scroll_{width}')
+                        if region.evaluate('(e)=>e.scrollWidth>e.clientWidth+1'):
+                            page.keyboard.press('ArrowRight')
+                            page.wait_for_function('document.querySelector(".table-scroll").scrollLeft>0')
+                            check(f'{role}_table_keyboard_scroll_{width}',region.evaluate('(e)=>e.scrollLeft>0'))
+                        region.evaluate('(e)=>e.scrollTo({left:e.scrollWidth,behavior:"instant"})')
+                        scroll_after=contract_geometry(page,result,f'{role}_after_table_scroll_{width}')
+                        check(f'{role}_table_scroll_reflow_{width}',measure_reflow(page,output,result,f'{role}_table_scroll_reflow_{width}'))
+                        check(f'{role}_table_scroll_keeps_vertical_position_{width}',all(
+                            abs(scroll_before[key]-scroll_after[key])<2 for key in ('scroll_y','row_document_y','row_viewport_y','page_height')))
+                        # The next width starts a fresh navigation; no pending End animation
+                        # or manual page-scroll reset can contaminate its comparison.
                     page.locator('#filter-toggle').click()
                     page.locator('#q').fill('Synthetic');page.locator('#q').press('Enter');page.wait_for_load_state('networkidle')
                     expected=30 if role=='kultur' else 32
