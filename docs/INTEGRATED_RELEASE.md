@@ -1,8 +1,15 @@
 # Integrierte Hauptanwendung und Release-Status
 
-Stand: 22.10.2026. Ausschließlich synthetische lokale Tests.
+Stand: 23.10.2026. Ausschließlich synthetische lokale Tests.
 
-Fortsetzung der Abnahme: [Browserdiagnose-Korrektur und PostgreSQL-Nachprüfung](BROWSER_DIAGNOSTIC_ACCEPTANCE.md).
+Verbindlicher Abschluss: [Konsolidierte Release-Abnahme und einziges weiteres Verfahren](FINAL_RELEASE_ACCEPTANCE.md).
+Frühere Debuggingaufforderungen sind damit abgelöst; keine erneuten lokalen Einzelläufe erforderlich.
+Vorherige Fortsetzung: [Escape-Abnahme und synchronisierter Dialogabschluss](FILTER_ESCAPE_ACCEPTANCE.md).
+Vorherige Fortsetzung: [Toolbar-Polling und getrennte Browserprüfung](TOOLBAR_POLLING_ACCEPTANCE.md).
+Vorherige Fortsetzung: [Filterdialog-Fokus und Browserabnahme](FILTER_FOCUS_ACCEPTANCE.md).
+Vorherige Fortsetzung: [Toolbar-Overlay und korrigierter Browservergleich](TOOLBAR_OVERLAY_ACCEPTANCE.md).
+Vorherige Fortsetzung: [Korrekturen der integrierten Browserabnahme](INTEGRATED_BROWSER_ACCEPTANCE_FIX.md).
+Vorherige Fortsetzung: [Browserdiagnose-Korrektur und PostgreSQL-Nachprüfung](BROWSER_DIAGNOSTIC_ACCEPTANCE.md).
 Die folgenden Integrationsnachweise bleiben an ihre ursprünglichen Commits gebunden.
 
 ## Verbindlicher Arbeitsort
@@ -19,8 +26,9 @@ integrierten Releases. Ein externer Zielserver ist ausdrücklich **nicht freigeg
 | Status | Tatsächlicher Stand |
 |---|---|
 | INTEGRATED | Ja, vollständige Historie im kanonischen Projekt zusammengeführt. |
-| TESTED | SQLite-Gesamtsuite und Paketstart bestanden; PostgreSQL, echte Scanner- und neue Browserabnahme offen. |
-| RELEASE READY | Nein: neue final-source CI, Branchschutzprüfung und externe Pflichtgates offen. |
+| TESTED | PostgreSQL auf d5f402d: 521 bestanden, 2 Skips, 15 Untertests. Frontend auf e1f262b: 373 Checks. Excel auf e163dd5: 383 Checks. Toolbar auf 461e030: 356 Checks, Exit 0; dort außerdem 146 gezielte Regressionen. Scope-Abgleich und repräsentative Sichtprüfung dokumentiert. Keine erfundene gemeinsame Prüfrevision. |
+| REVIEW PREPARED | Ja, Toolbar eingefroren; Evidenzmanifest, PR-Text und konsolidiertes Abschlussverfahren vorbereitet. |
+| RELEASE READY | Nein: finale Hosted-CI und geltendes Repository-Review/Branchschutz noch ausstehend; GitHub hier nicht erreichbar. Keine neue lokale Browserrunde erforderlich. |
 | DEPLOYED | Nein. Kein externes System verändert. |
 | DEPLOYMENT BLOCKED | Kein identifizierter/freigegebener Windows/PostgreSQL/TLS-Zielserver. |
 
@@ -137,6 +145,11 @@ Diese nutzt ausschließlich temporäre SQLite-Daten und synthetische Testkonten;
 sie ist kein PostgreSQL-/Scanner-/Produktionsnachweis.
 
 ## Final-source GitHub CI und Hauptbranch
+
+Aktuelle Anweisung vom 23.10.2026: **kein Push oder Merge**. Zuerst vollständige
+lokale Abnahme des neuen Kandidaten einschließlich Benutzer-Browserlauf.
+Die nachfolgenden Angaben beschreiben den früher vorbereiteten Workflow und
+keine jetzt ausgeführte oder freigegebene Veröffentlichung.
 
 Fetch, API-Lesezugriffe und Push des Kandidaten wurden versucht, scheiterten aber
 am konfigurierten Netzwerkpfad (GitHub:443 über nicht erreichbaren lokalen Proxy).
