@@ -39,6 +39,14 @@ ARTIFACTS = frozenset(('runtime-release-ubuntu-24.04', 'runtime-release-windows-
     'native-postgresql-verification', 'sqlite-verification', 'postgresql-verification'))
 BROWSER_FORMATS = frozenset(('ohvr-browser-verification-v2', 'ohvr-redesign-browser-v1',
     'ohvr-toolbar-browser-v1', 'ohvr-excel-selection-browser-v1'))
+NATIVE_LINK_CASE = ('tests.test_phase5', 'test_actual_linked_storage_is_rejected')
+WINDOWS_JUNCTION_CASE = ('tests.test_storage_links', 'test_actual_windows_junction_storage_and_parent_are_rejected')
+SCANNER_CASE = ('tests.test_phase5', 'test_real_clamav_engine_with_current_official_database')
+MANDATORY_JUNIT = {
+    'native-storage-links-ubuntu-24.04': ('native-storage-links.xml', (NATIVE_LINK_CASE, WINDOWS_JUNCTION_CASE)),
+    'native-storage-links-windows-latest': ('native-storage-links.xml', (NATIVE_LINK_CASE, WINDOWS_JUNCTION_CASE)),
+    'document-scanner-verification': ('phase5-scanner.xml', (SCANNER_CASE,)),
+}
 
 
 class Blocked(Exception):
@@ -195,6 +203,26 @@ def zip_members(data):
     return archive
 
 
+def mandatory_coverage(name, path, cases):
+    expected_path, expected_cases = MANDATORY_JUNIT[name]
+    require(path == expected_path, 'mandatory_junit_path_mismatch')
+    require(Counter((c.get('classname'), c.get('name')) for c in cases) == Counter(expected_cases),
+        'mandatory_test_inventory_mismatch')
+    allowed_skips = []
+    for case in cases:
+        skips = case.findall('skipped')
+        if not skips:
+            continue
+        identity = (case.get('classname'), case.get('name'))
+        require(name == 'native-storage-links-ubuntu-24.04' and identity == WINDOWS_JUNCTION_CASE
+            and len(skips) == 1 and skips[0].get('type') == 'pytest.skip'
+            and skips[0].get('message') == 'Windows native junction only',
+            'mandatory_native_or_scanner_tests_skipped')
+        allowed_skips.append(dict(classname=identity[0], name=identity[1],
+            classification='not_applicable_windows_junction_on_ubuntu'))
+    return allowed_skips
+
+
 def inspect_artifact(data, name, tested_sha):
     """Read ZIP members without extraction; report identifiers/counts, not failure text."""
     archive = zip_members(data)
@@ -208,6 +236,8 @@ def inspect_artifact(data, name, tested_sha):
             skips = [dict(classname=c.get('classname'), name=(c.get('name') or '').split('[', 1)[0])
                 for c in cases if c.find('skipped') is not None]
             require(failed == 0, 'artifact_contains_failed_tests')
+            if name in MANDATORY_JUNIT:
+                report['allowed_platform_skips'] = mandatory_coverage(name, item.filename, cases)
             report['junit'].append(dict(path=item.filename, cases=len(cases), failed=failed,
                 skipped=skips, sha256=sha256(archive.read(item)).hexdigest()))
         if item.filename.endswith('/result.json') and name == 'phase8-browser-verification':
@@ -226,9 +256,8 @@ def inspect_artifact(data, name, tested_sha):
         manifest = verify_bytes(archive.read('release.zip'), summary['artifact_sha256'])
         require(manifest['source_commit'] == tested_sha, 'release_manifest_source_mismatch')
         report['release'] = summary
-    if name.startswith('native-storage-links-') or name == 'document-scanner-verification':
-        require(report['junit'] and all(r['cases'] > 0 and not r['skipped'] for r in report['junit']),
-            'mandatory_native_or_scanner_tests_skipped')
+    if name in MANDATORY_JUNIT:
+        require(len(report['junit']) == 1, 'mandatory_junit_inventory_mismatch')
     if name == 'phase8-browser-verification':
         require(Counter(r['format'] for r in report['browsers']) == Counter(BROWSER_FORMATS),
             'missing_integrated_browser_results')
@@ -254,9 +283,26 @@ def merged_receipt(source, merge_sha, output):
     raise Blocked('merged_pr_requires_prior_verified_merge_receipt')
 
 
+def publish_review_ref(api, branch, source, pr=None):
+    ref = api.repo('/git/ref/heads/' + branch, missing=True)
+    if ref is not None and ref['object']['sha'] != source:
+        # Updating an explicitly selected existing PR is allowed only by fast-forward.
+        require(pr is not None and pr['state'] == 'open' and not pr['merged']
+            and pr['head']['repo']['full_name'] == REPO and pr['head']['ref'] == branch
+            and pr['head']['sha'] == ref['object']['sha'], 'review_branch_has_different_source')
+        git('fetch', '--no-tags', 'origin', branch)
+        require(git('rev-parse', 'FETCH_HEAD') == ref['object']['sha'], 'review_branch_changed_during_fetch')
+        require(run(['git', 'merge-base', '--is-ancestor', ref['object']['sha'], source],
+            allowed=(0, 1)).returncode == 0, 'review_update_not_fast_forward')
+    if ref is None or ref['object']['sha'] != source:
+        git('push', 'origin', source + ':refs/heads/' + branch)
+    require(api.repo('/git/ref/heads/' + branch)['object']['sha'] == source, 'published_source_mismatch')
+
+
 class Acceptance:
-    def __init__(self, api, source, output, hours):
+    def __init__(self, api, source, output, hours, pull_request=0):
         self.api, self.source, self.output = api, source, output
+        self.pull_request = pull_request
         self.deadline = time.monotonic() + hours * 3600
         self.state = dict(source=source, integrated=True, hosted_ci_verified=False, candidate_ci_verified=False,
             final_source_ci_verified=False,
@@ -361,21 +407,26 @@ class Acceptance:
         policy = protection(self.api, base, self.output, 'initial')
         self.state['base'] = base
         branch = 'review/integrated-release-' + self.source[:12]
+        if self.pull_request:
+            selected = self.api.repo('/pulls/' + str(self.pull_request))
+            require(selected['base']['ref'] == base and selected['base']['repo']['full_name'] == REPO
+                and selected['head']['repo']['full_name'] == REPO
+                and re.fullmatch(r'review/integrated-release-[a-f0-9]{12}', selected['head']['ref']),
+                'unexpected_selected_pr_target')
+            branch = selected['head']['ref']
         self.state['review_branch'] = branch
         git('fetch', '--no-tags', 'origin', base)
         require(git('rev-parse', 'FETCH_HEAD') == policy['base_sha'], 'main_changed_during_preflight')
         existing = self.api.pages('/pulls?' + urllib.parse.urlencode(dict(state='all', head=REPO.split('/')[0] + ':' + branch, base=base)))
         require(len(existing) <= 1, 'ambiguous_review_pr')
         pr = self.api.repo('/pulls/' + str(existing[0]['number'])) if existing else None
+        require(not self.pull_request or (pr and pr['number'] == self.pull_request), 'selected_pr_not_found')
         if not (pr and pr['merged']):
             require(run(['git', 'merge-base', '--is-ancestor', policy['base_sha'], self.source],
                 allowed=(0, 1)).returncode == 0, 'main_has_unintegrated_changes')
-        ref = self.api.repo('/git/ref/heads/' + branch, missing=True)
-        if ref is None:
-            git('push', 'origin', self.source + ':refs/heads/' + branch)
-        else:
-            require(ref['object']['sha'] == self.source, 'review_branch_has_different_source')
-        require(self.api.repo('/git/ref/heads/' + branch)['object']['sha'] == self.source, 'published_source_mismatch')
+        publish_review_ref(self.api, branch, self.source, pr if self.pull_request else None)
+        if pr and self.pull_request:
+            pr = self.api.repo('/pulls/' + str(pr['number']))
         if pr is None:
             body = (ROOT / 'docs/INTEGRATED_RELEASE_PR.md').read_text(encoding='utf-8')
             title, body = body.split('\n', 1)
@@ -387,6 +438,11 @@ class Acceptance:
         self.state.update(pr_number=pr['number'], pr_url=pr['html_url'])
         self.save()
         print('PR: ' + pr['html_url'], flush=True)
+        if self.pull_request:
+            marker = 'OPENHERZ candidate update: ' + self.source
+            if not any(marker in c['body'] for c in self.api.pages(f"/issues/{pr['number']}/comments")):
+                self.api.repo(f"/issues/{pr['number']}/comments", method='POST', payload=dict(body=marker +
+                    '\n\nThis head supersedes the original candidate in the PR description. Final-source CI and independent approval of this exact head are required; no acceptance or deployment is claimed.'))
         self.verify_run(branch, self.source, 'push', self.source)
         if not pr['merged']:
             while True:
@@ -484,18 +540,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--expected-source', required=True)
     parser.add_argument('--wait-hours', type=int, default=24, choices=range(1, 49))
+    parser.add_argument('--pull-request', type=int, default=0)
     args = parser.parse_args()
     output = ROOT / '.verification' / ('github-release-' + uuid4().hex)
     acceptance = None
     try:
         require(re.fullmatch('[a-f0-9]{40}', args.expected_source) is not None, 'invalid_source')
+        require(args.pull_request >= 0, 'invalid_pull_request')
         require(Path.cwd().resolve() == ROOT, 'wrong_working_directory')
         for path in (output.parent, *output.parent.parents):
             require(not path.is_symlink() and not path.is_junction(), 'linked_evidence_directory')
         output.mkdir(parents=True)
         print('Evidence: ' + str(output), flush=True)
         check_source(args.expected_source)
-        acceptance = Acceptance(GitHub(credentials()), args.expected_source, output, args.wait_hours)
+        acceptance = Acceptance(GitHub(credentials()), args.expected_source, output, args.wait_hours, args.pull_request)
         acceptance.save()
         acceptance.execute()
         return 0

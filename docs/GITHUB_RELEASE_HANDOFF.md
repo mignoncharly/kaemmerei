@@ -4,6 +4,13 @@ Stand 23.10.2026. Die Veröffentlichung des integrierten Kandidaten, PR-Erstellu
 und regelkonforme Integration nach erfolgreicher CI und erforderlichen Reviews
 sind ausdrücklich freigegeben. Kein Deployment ist enthalten.
 
+Fortschreibung: PR #1 wurde inzwischen unter dem autorisierten Windows-Konto
+erstellt. Die zehn Jobs des erhaltenen Push-Laufs auf `7ba43ff` sind erfolgreich.
+Die plattformspezifische Korrektur des lokalen Artefakt-Gates und die genaue
+Evidenzzuordnung stehen in [RELEASE_PLATFORM_SKIP_CORRECTION.md](RELEASE_PLATFORM_SKIP_CORRECTION.md).
+Zum Aktualisieren dieses bestehenden PRs wird derselbe Launcher mit
+`-PullRequest 1` und der neuen vollständigen Kandidaten-SHA verwendet.
+
 ## Tatsächlicher Stand
 
 Ausgangspunkt: `d44f6c9f435d07e5b6720c8ff8c2fd1790528c5f`, sauberes Arbeitsverzeichnis
@@ -60,7 +67,11 @@ müssen erfüllt sein. Es gibt keine automatische Review-Freigabe.
    Release-Manifeste sowie identische Windows-/Linux-Pakete. ZIP-Dateien werden
    nicht ins Projekt entpackt oder ausgeführt. JUnit-Zahlen und Skip-Identitäten
    bleiben pro Bericht erhalten, ohne überlappende Suiten als eindeutige Tests
-   zu summieren. Native Link-/Scannerprüfungen dürfen keine Skips enthalten.
+   zu summieren. Alle erwarteten nativen Link-/Scannertests müssen vorhanden und
+   erfolgreich sein. Einzige Ausnahme: der exakt benannte Windows-Junction-Test
+   darf im Ubuntu-Artefakt ausschließlich mit `pytest.skip` und der Begründung
+   `Windows native junction only` übersprungen sein. Windows und Scanner erlauben
+   weiterhin keine Skips; siehe den verknüpften Korrekturbericht.
    Vier Browserberichte (CSP und drei integrierte Suiten) müssen erfolgreich und
    quellenfest sein. Bilder bleiben in den originalen CI-Artefakten verfügbar.
 6. Stellt tatsächliche Run-Links im PR bereit. Prüft unabhängige Freigabe des

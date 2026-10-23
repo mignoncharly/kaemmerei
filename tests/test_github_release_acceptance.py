@@ -3,6 +3,7 @@ from io import BytesIO
 import json
 from types import SimpleNamespace
 import urllib.request
+import xml.etree.ElementTree as ET
 import zipfile
 
 import pytest
@@ -87,15 +88,92 @@ def test_artifact_zip_paths_never_escape_evidence(name):
         release.zip_members(archive({name: b'not extracted'}))
 
 
-def test_native_and_scanner_skips_block_but_ordinary_skips_are_preserved():
+def test_ordinary_suite_skips_are_preserved_without_exception_text():
     xml = '<testsuite><testcase classname="Synthetic" name="requires_platform"><skipped>private exception text</skipped></testcase></testsuite>'
     raw = archive({'results.xml': xml})
-    for name in ('native-storage-links-windows-latest', 'document-scanner-verification'):
-        with pytest.raises(release.Blocked, match='mandatory_native_or_scanner_tests_skipped'):
-            release.inspect_artifact(raw, name, SOURCE)
     report = release.inspect_artifact(raw, 'postgresql-verification', SOURCE)
     assert report['junit'][0]['skipped'] == [dict(classname='Synthetic', name='requires_platform')]
     assert 'private exception text' not in json.dumps(report)
+
+
+def mandatory_xml(artifact):
+    path, identities = release.MANDATORY_JUNIT[artifact]
+    root = ET.Element('testsuite')
+    for classname, name in identities:
+        ET.SubElement(root, 'testcase', classname=classname, name=name)
+    return path, root
+
+
+def inspect_mandatory(artifact, path, root):
+    return release.inspect_artifact(archive({path: ET.tostring(root)}), artifact, SOURCE)
+
+
+@pytest.mark.parametrize('artifact', sorted(release.MANDATORY_JUNIT))
+def test_applicable_mandatory_inventory_all_passed(artifact):
+    path, root = mandatory_xml(artifact)
+    report = inspect_mandatory(artifact, path, root)
+    assert report['allowed_platform_skips'] == []
+
+
+def test_only_exact_ubuntu_junction_platform_skip_is_allowed():
+    artifact = 'native-storage-links-ubuntu-24.04'
+    path, root = mandatory_xml(artifact)
+    ET.SubElement(root[1], 'skipped', type='pytest.skip', message='Windows native junction only')
+    report = inspect_mandatory(artifact, path, root)
+    assert report['junit'][0]['cases'] == 2
+    assert report['allowed_platform_skips'] == [dict(classname=release.WINDOWS_JUNCTION_CASE[0],
+        name=release.WINDOWS_JUNCTION_CASE[1], classification='not_applicable_windows_junction_on_ubuntu')]
+
+
+@pytest.mark.parametrize('artifact,index', [
+    ('native-storage-links-ubuntu-24.04', 0), ('native-storage-links-windows-latest', 0),
+    ('native-storage-links-windows-latest', 1), ('document-scanner-verification', 0)])
+def test_required_native_and_scanner_skips_remain_blocked(artifact, index):
+    path, root = mandatory_xml(artifact)
+    # Even the otherwise approved reason cannot excuse the wrong test/platform.
+    ET.SubElement(root[index], 'skipped', type='pytest.skip', message='Windows native junction only')
+    with pytest.raises(release.Blocked, match='mandatory_native_or_scanner_tests_skipped'):
+        inspect_mandatory(artifact, path, root)
+
+
+@pytest.mark.parametrize('attrs', [dict(type='pytest.skip', message='missing permissions'),
+    dict(type='pytest.skip', message='Windows native junction only '),
+    dict(type='pytest.xfail', message='Windows native junction only'),
+    dict(message='Windows native junction only'), dict(type='pytest.skip')])
+def test_unexpected_junction_skip_classification_is_rejected(attrs):
+    artifact = 'native-storage-links-ubuntu-24.04'
+    path, root = mandatory_xml(artifact)
+    ET.SubElement(root[1], 'skipped', **attrs)
+    with pytest.raises(release.Blocked, match='mandatory_native_or_scanner_tests_skipped'):
+        inspect_mandatory(artifact, path, root)
+
+
+@pytest.mark.parametrize('artifact', sorted(release.MANDATORY_JUNIT))
+@pytest.mark.parametrize('mutation', ['missing', 'empty', 'duplicate', 'unexpected', 'failure', 'error', 'parameterized'])
+def test_mandatory_coverage_cannot_be_satisfied_by_wrong_or_missing_tests(artifact, mutation):
+    path, root = mandatory_xml(artifact)
+    if mutation == 'missing':
+        root.remove(root[0])
+    elif mutation == 'empty':
+        root.clear()
+    elif mutation == 'duplicate':
+        root.append(ET.fromstring(ET.tostring(root[0])))
+    elif mutation == 'unexpected':
+        root[0].set('classname', 'tests.some_other_test')
+    elif mutation == 'parameterized':
+        root[0].set('name', root[0].get('name') + '[unexpected]')
+    else:
+        ET.SubElement(root[0], mutation).text = 'private diagnostic must not escape'
+    with pytest.raises(release.Blocked):
+        inspect_mandatory(artifact, path, root)
+
+
+@pytest.mark.parametrize('artifact', sorted(release.MANDATORY_JUNIT))
+def test_mandatory_junit_file_must_be_present_at_expected_path(artifact):
+    path, root = mandatory_xml(artifact)
+    for files in ({}, {'other.xml': ET.tostring(root)}, {path: ET.tostring(root), 'extra.xml': ET.tostring(root)}):
+        with pytest.raises(release.Blocked):
+            release.inspect_artifact(archive(files), artifact, SOURCE)
 
 
 def test_failed_junit_blocks_without_exposing_exception():
@@ -213,10 +291,12 @@ def test_completed_successful_run_is_reused_without_dispatch(monkeypatch, tmp_pa
 
 
 @pytest.mark.parametrize('problem', [None, 'no_review', 'review_required', 'final_ci_failed', 'changed_merge_tree'])
-def test_full_publication_gate_requires_review_and_new_main_source_ci(monkeypatch, tmp_path, problem):
+@pytest.mark.parametrize('selected_pr', [0, 7])
+def test_full_publication_gate_requires_review_and_new_main_source_ci(monkeypatch, tmp_path, problem, selected_pr):
     base, test_merge, final_merge = 'b'*40, 'c'*40, 'd'*40
     calls = []
-    pr = dict(number=7, head=dict(sha=SOURCE), base=dict(ref='main', sha=base), merged=False,
+    pr = dict(number=7, head=dict(sha=SOURCE, repo=dict(full_name=release.REPO),
+        ref='review/integrated-release-' + SOURCE[:12]), base=dict(ref='main', sha=base, repo=dict(full_name=release.REPO)), merged=False,
         state='open', mergeable=True, mergeable_state='clean', merge_commit_sha=test_merge,
         user=dict(login='author'), html_url='https://github.com/example/pull/7')
     class API:
@@ -261,7 +341,7 @@ def test_full_publication_gate_requires_review_and_new_main_source_ci(monkeypatc
     monkeypatch.setattr(release, 'git', lambda *a: base if a == ('rev-parse', 'FETCH_HEAD') else '')
     monkeypatch.setattr(release, 'run', lambda *a, **kw: SimpleNamespace(returncode=0))
     monkeypatch.setattr(release, 'protection', lambda *a: dict(base_sha=base, classic=None, effective_rules=[]))
-    runner = release.Acceptance(API(), SOURCE, tmp_path, 1)
+    runner = release.Acceptance(API(), SOURCE, tmp_path, 1, pull_request=selected_pr)
     monkeypatch.setattr(runner, 'reviews', lambda *a: [] if problem == 'no_review'
         else [dict(id=1, user=dict(login='independent'))])
     def pause(reason):
@@ -292,3 +372,34 @@ def test_full_publication_gate_requires_review_and_new_main_source_ci(monkeypatc
 def test_unrecorded_external_merge_cannot_be_treated_as_our_approved_merge(tmp_path):
     with pytest.raises(release.Blocked, match='prior_verified_merge_receipt'):
         release.merged_receipt(SOURCE, 'b'*40, tmp_path / 'github-release-current')
+
+
+@pytest.mark.parametrize('problem', [None, 'not_selected', 'diverged', 'ref_changed', 'fork', 'closed'])
+def test_existing_pr_updates_are_explicit_fast_forward_only(monkeypatch, problem):
+    old = 'b'*40
+    branch = 'review/integrated-release-' + old[:12]
+    pr = dict(state='open', merged=False, head=dict(sha=old, ref=branch, repo=dict(full_name=release.REPO)))
+    if problem == 'fork':
+        pr['head']['repo']['full_name'] = 'someone/else'
+    if problem == 'closed':
+        pr['state'] = 'closed'
+    ref = dict(object=dict(sha=old))
+    calls = []
+    def git(*args):
+        calls.append(args)
+        if args == ('rev-parse', 'FETCH_HEAD'):
+            return 'c'*40 if problem == 'ref_changed' else old
+        if args[0] == 'push':
+            assert args == ('push', 'origin', SOURCE + ':refs/heads/' + branch)
+            ref['object']['sha'] = SOURCE
+        return ''
+    monkeypatch.setattr(release, 'git', git)
+    monkeypatch.setattr(release, 'run', lambda *a, **kw: SimpleNamespace(returncode=1 if problem == 'diverged' else 0))
+    api = SimpleNamespace(repo=lambda *a, **kw: dict(object=dict(sha=ref['object']['sha'])))
+    if problem:
+        with pytest.raises(release.Blocked):
+            release.publish_review_ref(api, branch, SOURCE, None if problem == 'not_selected' else pr)
+        assert not any(c[0] == 'push' for c in calls)
+    else:
+        release.publish_review_ref(api, branch, SOURCE, pr)
+        assert ref['object']['sha'] == SOURCE
