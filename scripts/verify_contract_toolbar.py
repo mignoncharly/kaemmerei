@@ -24,6 +24,7 @@ if (ROOT/'.verification/browser-tools/playwright').exists():
 def execute(args, output, result):
     result['stage']='dependencies'
     from scripts.browser_layout import measure_reflow, contract_geometry, geometry_unchanged, focus_filter_for_measurement
+    from scripts.browser_focus import focus_snapshot
     from playwright.sync_api import sync_playwright
     from jinja2 import ChoiceLoader, DictLoader
     import uvicorn
@@ -98,20 +99,39 @@ def execute(args, output, result):
                         opened=contract_geometry(page,result,f'{role}_open_{width}')
                         # Preserve open-state evidence even when the next check fails.
                         screenshot(page,f'open-{role}-{width}')
+                        initial_focus=focus_snapshot(page,result,f'{role}_initial_focus_{width}','search')
                         check(f'{role}_keyboard_expand_{width}',dialog.is_visible() and toggle.get_attribute('aria-expanded')=='true')
-                        check(f'{role}_initial_focus_{width}',page.locator('#q').evaluate('(e)=>document.activeElement===e'))
+                        check(f'{role}_initial_focus_{width}',initial_focus['matches_expected'])
+                        check(f'{role}_modal_semantics_{width}',all(initial_focus[key] for key in ('native_modal','aria_modal','expanded','controls_dialog')))
                         check(f'{role}_overlay_no_layout_shift_{width}',geometry_unchanged(focused,opened))
                         check(f'{role}_open_page_reflow_{width}',measure_reflow(page,output,result,f'{role}_open_reflow_{width}'))
                         check(f'{role}_dialog_reflow_{width}',dialog.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1'))
                         page.locator('#status').select_option('draft')
                         screenshot(page,f'expanded-{role}-{width}')
-                        page.get_by_role('link',name='Zurücksetzen',exact=True).focus();page.keyboard.press('Tab')
-                        check(f'{role}_focus_contained_{width}',dialog.evaluate('(e)=>e.contains(document.activeElement)'))
+                        page.get_by_role('link',name='Zurücksetzen',exact=True).focus()
+                        before_tab=focus_snapshot(page,result,f'{role}_before_tab_{width}','reset')
+                        check(f'{role}_tab_start_{width}',before_tab['matches_expected'])
+                        page.keyboard.press('Tab')
+                        after_tab=focus_snapshot(page,result,f'{role}_after_tab_{width}','close')
+                        page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => resolve()))')
+                        after_frame=focus_snapshot(page,result,f'{role}_after_tab_frame_{width}','close')
+                        screenshot(page,f'focus-cycle-{role}-{width}')
+                        check(f'{role}_focus_contained_{width}',all(s['active_in_dialog'] and s['matches_expected'] for s in (after_tab,after_frame)))
+                        page.keyboard.press('Shift+Tab')
+                        reverse=focus_snapshot(page,result,f'{role}_after_shift_tab_{width}','reset')
+                        check(f'{role}_reverse_focus_contained_{width}',reverse['active_in_dialog'] and reverse['matches_expected'])
+                        # Native modal inertness must reject programmatic background focus.
+                        page.locator('#filter-toggle').evaluate('(e)=>e.focus({preventScroll:true})')
+                        background=focus_snapshot(page,result,f'{role}_background_inert_{width}','reset')
+                        check(f'{role}_background_focus_blocked_{width}',background['active_in_dialog'] and background['matches_expected'])
                         page.keyboard.press('Escape')
-                        check(f'{role}_escape_focus_{width}',not dialog.is_visible() and toggle.evaluate('(e)=>document.activeElement===e'))
+                        escaped=focus_snapshot(page,result,f'{role}_escape_{width}','toggle')
+                        check(f'{role}_escape_focus_{width}',not dialog.is_visible() and escaped['matches_expected'] and not escaped['expanded'] and not escaped['native_modal'])
                         closed_again=contract_geometry(page,result,f'{role}_closed_again_{width}')
                         check(f'{role}_close_no_layout_shift_{width}',geometry_unchanged(focused,closed_again))
                         toggle.click()
+                        reopened=focus_snapshot(page,result,f'{role}_reopened_{width}','search')
+                        check(f'{role}_reopen_focus_{width}',reopened['matches_expected'] and reopened['native_modal'])
                         check(f'{role}_reopen_preserves_{width}',page.locator('#status').input_value()=='draft')
                         if width>700:
                             page.mouse.click(4,4)

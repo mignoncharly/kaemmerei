@@ -46,8 +46,11 @@
     const filterToggle = document.querySelector('#filter-toggle');
     const panel = document.querySelector('#advanced-filter-panel');
     const dialog = document.createElement('dialog');
+    dialog.id = 'contract-filter-dialog';
     dialog.className = 'contract-filter-dialog';
     dialog.setAttribute('aria-labelledby', 'filter-panel-title');
+    dialog.setAttribute('aria-modal', 'true');
+    filterToggle.setAttribute('aria-controls', dialog.id);
     // Move the one existing form into the native modal. No duplicated controls.
     dialog.append(panel);
     disclosure.replaceWith(dialog);
@@ -65,13 +68,32 @@
     function openFilters(focusSearch = true) {
       if (dialog.open) return;
       positionFilters();
-      dialog.showModal(); // Native focus containment and inert background, also on mobile.
+      dialog.showModal(); // Native top layer and inert background, also on mobile.
       dialog.scrollTop = 0;
       document.body.classList.add('contract-filter-open');
       filterToggle.setAttribute('aria-expanded', 'true');
       if (focusSearch) filterForm.querySelector('#q').focus({preventScroll: true});
     }
     function closeFilters() { if (dialog.open) dialog.close(); }
+    dialog.addEventListener('keydown', event => {
+      if (!dialog.open || event.key !== 'Tab' || event.defaultPrevented
+          || event.ctrlKey || event.altKey || event.metaKey) return;
+      // Keep keyboard traversal cyclic inside the modal. Native showModal makes
+      // the background inert but does not provide this boundary cycle everywhere.
+      // Recompute on each keypress so disabled/hidden controls cannot receive focus.
+      const items = [...dialog.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')]
+        .filter(item => item.tabIndex >= 0 && !item.matches(':disabled')
+          && !item.closest('[hidden],[inert]') && item.getClientRects().length
+          && getComputedStyle(item).visibility === 'visible');
+      const first = items[0], last = items[items.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || active === dialog)) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (active === last || active === dialog)) {
+        event.preventDefault(); first.focus();
+      }
+    });
     filterToggle.addEventListener('click', () => dialog.open ? closeFilters() : openFilters());
     panel.querySelector('[data-filter-close]').addEventListener('click', closeFilters);
     dialog.addEventListener('close', () => {
