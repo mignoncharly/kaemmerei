@@ -49,7 +49,9 @@ def test_focus_diagnostics_record_actual_target_without_reading_sensitive_dom(no
     assert state == dict(expected_target='close', actual_target=expected_actual,
         matches_expected=active == 'close', active_in_dialog=contained,
         document_has_focus=True, dialog_open=True, native_modal=True,
-        aria_modal=True, expanded=True, controls_dialog=True)
+        aria_modal=True, expanded=True, controls_dialog=True,
+        trigger_connected=True, trigger_visible=True, trigger_enabled=True, trigger_tabbable=True,
+        trigger_inert=True, navigation_open=False, scroll_locked=True)
 
 
 @pytest.mark.parametrize('name,expected', [('invalid secret', 'close'), ('valid', 'secret-value')])

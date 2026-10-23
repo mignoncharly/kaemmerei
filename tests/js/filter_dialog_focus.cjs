@@ -5,13 +5,16 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../../app/static/interface.js'), 'utf8');
 
-function fixture() {
+function fixture({width = 390, queuedClose = false} = {}) {
   let document;
+  const pending = [];
   class Element {
     constructor() {
       this.attrs = {}; this.listeners = {}; this.tabIndex = 0; this.hidden = false;
-      this.visibility = 'visible'; this.style = {setProperty() {}};
-      this.classList = {add() {}, remove() {}, toggle() {}};
+      this.visibility = 'visible'; this.isConnected = true; this.style = {setProperty() {}};
+      const classes = new Set();
+      this.classList = {add: c => classes.add(c), remove: c => classes.delete(c),
+        toggle: (c, enabled) => enabled ? classes.add(c) : classes.delete(c), contains: c => classes.has(c)};
     }
     // Neither focus logic nor diagnostics may inspect user-entered values or text.
     get value() { throw new Error('Sensitive value accessed'); }
@@ -31,8 +34,14 @@ function fixture() {
     replaceWith() {}
   }
   class Dialog extends Element {
-    showModal() { this.open = true; }
-    close() { this.open = false; this.listeners.close(); }
+    showModal() { this.previousFocus = document.activeElement; this.open = true; }
+    close() {
+      this.open = false;
+      if (queuedClose) {
+        this.previousFocus?.focus(); // Native close precedes the queued close event.
+        pending.push(() => this.listeners.close());
+      } else this.listeners.close();
+    }
     contains(e) { return this.items.includes(e); }
     matches(selector) { return selector === ':modal' && !!this.open; }
     querySelectorAll() { return this.items; }
@@ -55,7 +64,7 @@ function fixture() {
   };
   const context = vm.createContext({document, HTMLDialogElement: Dialog,
     matchMedia: () => ({matches: false}), getComputedStyle: e => ({visibility: e.visibility}),
-    window: {innerWidth: 390, innerHeight: 1000, addEventListener() {}}, location: {hash: ''}});
+    window: {innerWidth: width, innerHeight: 1000, addEventListener() {}}, location: {hash: ''}});
   vm.runInContext(source, context);
   function tab(active, options = {}) {
     active.focus();
@@ -63,10 +72,23 @@ function fixture() {
     dialog.listeners.keydown(event);
     return event.prevented;
   }
-  return {context, document, dialog, toggle, close, search, reset, tab, Element};
+  return {context, document, dialog, toggle, close, search, reset, tab, Element,
+    deliverClose: () => pending.splice(0).forEach(fn => fn())};
 }
 
-if (process.argv[2] === 'diagnostics') {
+if (process.argv[2] === 'dismissal') {
+  const payload = JSON.parse(fs.readFileSync(0, 'utf8'));
+  const f = fixture({width: payload.width, queuedClose: true});
+  const read = vm.runInContext('(' + payload.expression + ')', f.context);
+  const completed = vm.runInContext('(' + payload.waitExpression + ')', f.context);
+  f.toggle.focus(); f.toggle.listeners.click(); f.reset.focus();
+  const before = read({...payload.arguments, expected: 'reset'});
+  f.dialog.close();
+  const immediate = read(payload.arguments), completedImmediately = completed();
+  f.deliverClose();
+  const settled = read(payload.arguments), completedAfterEvent = completed();
+  process.stdout.write(JSON.stringify({before, immediate, settled, completedImmediately, completedAfterEvent}));
+} else if (process.argv[2] === 'diagnostics') {
   const payload = JSON.parse(fs.readFileSync(0, 'utf8'));
   const f = fixture(); f.toggle.listeners.click();
   const active = {close: f.close, reset: f.reset, search: f.search, toggle: f.toggle,

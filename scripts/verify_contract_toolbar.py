@@ -25,7 +25,7 @@ def execute(args, output, result):
     result['stage']='dependencies'
     from scripts.browser_layout import measure_reflow, contract_geometry, geometry_unchanged, focus_filter_for_measurement, table_keyboard_scroll
     from scripts.browser_diagnostics import browser_operation
-    from scripts.browser_focus import focus_snapshot
+    from scripts.browser_focus import focus_snapshot, escape_filter_and_wait, wait_filter_closed, filter_focus_restored
     from playwright.sync_api import sync_playwright
     from jinja2 import ChoiceLoader, DictLoader
     import uvicorn
@@ -125,9 +125,9 @@ def execute(args, output, result):
                         page.locator('#filter-toggle').evaluate('(e)=>e.focus({preventScroll:true})')
                         background=focus_snapshot(page,result,f'{role}_background_inert_{width}','reset')
                         check(f'{role}_background_focus_blocked_{width}',background['active_in_dialog'] and background['matches_expected'])
-                        page.keyboard.press('Escape')
-                        escaped=focus_snapshot(page,result,f'{role}_escape_{width}','toggle')
-                        check(f'{role}_escape_focus_{width}',not dialog.is_visible() and escaped['matches_expected'] and not escaped['expanded'] and not escaped['native_modal'])
+                        escaped=escape_filter_and_wait(page,result,f'{role}_escape_{width}')
+                        screenshot(page,f'escape-{role}-{width}')
+                        check(f'{role}_escape_focus_{width}',not dialog.is_visible() and all(filter_focus_restored(state) for state in escaped))
                         closed_again=contract_geometry(page,result,f'{role}_closed_again_{width}')
                         check(f'{role}_close_no_layout_shift_{width}',geometry_unchanged(focused,closed_again))
                         toggle.click()
@@ -136,7 +136,8 @@ def execute(args, output, result):
                         check(f'{role}_reopen_preserves_{width}',page.locator('#status').input_value()=='draft')
                         if width>700:
                             page.mouse.click(4,4)
-                            check(f'{role}_outside_dismiss_{width}',not dialog.is_visible())
+                            dismissed=wait_filter_closed(page,result,f'{role}_outside_dismiss_{width}')
+                            check(f'{role}_outside_dismiss_{width}',not dialog.is_visible() and all(filter_focus_restored(state) for state in dismissed))
                             toggle.click()
                         page.locator('#q').fill('Synthetic');page.locator('#q').press('Enter');page.wait_for_load_state('networkidle')
                         check(f'{role}_collapsed_after_apply_{width}',not page.locator('.contract-filter-dialog').is_visible())
@@ -193,7 +194,8 @@ def execute(args, output, result):
                     page.emulate_media(reduced_motion='reduce');page.locator('#filter-toggle').click()
                     check(role+'_reduced_motion',page.locator('.contract-filter-dialog').evaluate('(e)=>getComputedStyle(e).animationName')=='none')
                     page.get_by_role('button',name='Suche und Filter schließen').click()
-                    check(role+'_close_button',page.locator('#filter-toggle').get_attribute('aria-expanded')=='false')
+                    dismissed=wait_filter_closed(page,result,role+'_close_button')
+                    check(role+'_close_button',all(filter_focus_restored(state) for state in dismissed))
                     if role=='kultur':check('restricted_contract_denied',page.goto(address+'/contracts/32').status==404)
                     context.close()
                 nojs=browser.new_context(java_script_enabled=False,locale='de-DE');page=nojs.new_page();sign_in(page,'admin')
