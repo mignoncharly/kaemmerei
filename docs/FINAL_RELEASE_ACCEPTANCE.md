@@ -2,6 +2,9 @@
 
 Stand: 23.10.2026. Dieser Bericht ersetzt die **Handlungsaufforderungen** der
 früheren Debuggingnotizen. Deren Ergebnisse und Originaldateien bleiben erhalten.
+Aktuelle freigegebene GitHub-Veröffentlichung und ein einziger Windows-Abschlusslauf:
+[GITHUB_RELEASE_HANDOFF.md](GITHUB_RELEASE_HANDOFF.md). Diese Übergabe ergänzt den
+lokalen Abnahmestand; sie behauptet noch keinen Hosted-Erfolg.
 Kanonischer Arbeitsort: `C:\kämmerei\OPEN_HERZ_Vertragsregister_Phase`, Branch
 `release/redesign-integration`. Keine weitere Redesign- oder Debuggingphase.
 
@@ -93,8 +96,9 @@ die jetzt tatsächlich erfolgte repräsentative Sichtprüfung ist separat dokume
 2. **Repository-Gate:** Über den autorisierten GitHub-Zugang den tatsächlichen
    Default-/Zielbranch, Branchschutz und Rulesets lesen; Remote-Vorsprung gegenüber
    der lokalen Basis prüfen. Keine erzwungenen Pushes, kein Überschreiben neuerer
-   Arbeit. Bestehende Freigaben beachten; diese Konsolidierungsrunde veröffentlicht
-   oder merged nichts. Der [PR-Text](INTEGRATED_RELEASE_PR.md) ist vorbereitet.
+   Arbeit. Veröffentlichung und regelkonformer Merge nach CI und Review sind
+   inzwischen ausdrücklich autorisiert. Der [PR-Text](INTEGRATED_RELEASE_PR.md)
+   ist vorbereitet; die aktuelle GitHub-Übergabe beschreibt den Abschlusslauf.
 3. **Final-source CI:** Kandidat über den bestehenden Review-Workflow bereitstellen,
    sobald Zugang und Freigaben dies erlauben. Unveränderte Workflow-Datei
    `.github/workflows/phase1-verification.yml`: **zehn Jobausführungen** aus acht
