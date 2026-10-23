@@ -1,11 +1,143 @@
 {% extends 'base.html' %}
-{% block title %}Zugewiesene Prüfungen{% endblock %}
+{% block title %}Mein Arbeitskorb{% endblock %}
 {% block content %}
-<div class="page-head"><div><div class="eyebrow">PERSÖNLICHER ARBEITSPLATZ</div><h1>Mein Arbeitskorb</h1><p>Ihre nächsten Aufgaben und ausstehenden Prüfungen.</p></div><a class="button subtle" href="/">Zum Vertragsbestand</a></div>
-<p>Persönlich zugewiesene offene Aufgaben und aktuell entscheidbare Prüfungen zur aktuellen Inhaltsrevision. Bestehende Vertragsrechte bleiben erforderlich. Dies ist keine vollständige Administrationsliste.</p>
-<div class="report-deadline-grid"><section class="panel inbox-section"><div class="panel-heading"><h2>Meine Prüfungen</h2><span class="tag">{{ reviews|length }} offen</span></div>
-<ul>{% for review in reviews %}<li><a href="/contracts/{{ review.contract_id }}">{{ review.subject }}</a> · {{ contract_review_status_labels.get(review.status,review.status) }}{% if review.due_date %} · <span {% if review.due_date < today %}class="inbox-overdue"{% endif %}>{{ review.due_date.strftime('%d.%m.%Y') }}{% if review.due_date < today %} · Überfällig{% endif %}</span>{% endif %}</li>{% else %}<li>Keine zugewiesenen entscheidbaren Prüfungen.</li>{% endfor %}</ul></section>
-<section class="panel inbox-section"><div class="panel-heading"><h2>Meine Aufgaben</h2><span class="tag">{{ tasks|length }} offen</span></div>
-<ul>{% for task in tasks %}<li><a href="/contracts/{{ task.contract_id }}">{{ task.title }}</a>{% if task.due_date %} · <span {% if task.due_date < today %}class="inbox-overdue"{% endif %}>{{ task.due_date.strftime('%d.%m.%Y') }}{% if task.due_date < today %} · Überfällig{% endif %}</span>{% endif %}</li>{% else %}<li>Keine offenen zugewiesenen Aufgaben.</li>{% endfor %}</ul></section>
+{% set due = namespace(overdue=0, today_count=0) %}
+{% for review in reviews %}
+  {% if review.due_date and review.due_date < today %}{% set due.overdue = due.overdue + 1 %}
+  {% elif review.due_date and review.due_date == today %}{% set due.today_count = due.today_count + 1 %}{% endif %}
+{% endfor %}
+{% for task in tasks %}
+  {% if task.due_date and task.due_date < today %}{% set due.overdue = due.overdue + 1 %}
+  {% elif task.due_date and task.due_date == today %}{% set due.today_count = due.today_count + 1 %}{% endif %}
+{% endfor %}
+<div class="work-inbox">
+  <header class="page-head work-inbox-hero">
+    <div>
+      <div class="eyebrow">PERSÖNLICHER ARBEITSPLATZ</div>
+      <h1>Mein Arbeitskorb</h1>
+      <p>Die Aufgaben und Prüfungen, die gerade auf Ihre Bearbeitung warten.</p>
+    </div>
+    <a class="button secondary" href="/">Alle Verträge ansehen →</a>
+  </header>
+
+  <section class="work-inbox-stats" aria-label="Mein Arbeitsstand">
+    <a href="#my-reviews" class="work-inbox-stat">
+      <span class="work-inbox-stat-icon" aria-hidden="true">✓</span>
+      <span class="work-inbox-stat-label">Entscheidbare Prüfungen</span>
+      <strong>{{ reviews|length }}</strong>
+      <small>Mir zugewiesen</small>
+    </a>
+    <a href="#my-tasks" class="work-inbox-stat">
+      <span class="work-inbox-stat-icon" aria-hidden="true">☷</span>
+      <span class="work-inbox-stat-label">Offene Aufgaben</span>
+      <strong>{{ tasks|length }}</strong>
+      <small>Meine Bearbeitung</small>
+    </a>
+    <div class="work-inbox-stat {% if due.overdue %}work-inbox-stat-alert{% endif %}">
+      <span class="work-inbox-stat-icon" aria-hidden="true">!</span>
+      <span class="work-inbox-stat-label">Überfällige Vorgänge</span>
+      <strong>{{ due.overdue }}</strong>
+      <small>Offene Zuweisungen mit überschrittener Frist</small>
+    </div>
+    <div class="work-inbox-stat">
+      <span class="work-inbox-stat-icon" aria-hidden="true">◷</span>
+      <span class="work-inbox-stat-label">Heute fällig</span>
+      <strong>{{ due.today_count }}</strong>
+      <small>Aufgaben und entscheidbare Prüfungen</small>
+    </div>
+  </section>
+
+  {% if not reviews and not tasks %}
+  <div class="work-inbox-done" role="status">
+    <span class="work-inbox-done-icon" aria-hidden="true">✓</span>
+    <div>
+      <strong>Ihr Arbeitskorb ist aktuell leer.</strong>
+      <p>Sie haben derzeit keine persönlich zugewiesenen offenen Aufgaben oder entscheidbaren Prüfungen. Neue Vorgänge erscheinen hier, sobald sie Ihnen zugewiesen werden.</p>
+    </div>
+    <a class="button secondary" href="/">Vertragsbestand öffnen</a>
+  </div>
+  {% endif %}
+
+  <nav class="work-inbox-nav" aria-label="Bereiche des Arbeitskorbs">
+    <a href="#my-reviews">Meine Prüfungen <span>{{ reviews|length }}</span></a>
+    <a href="#my-tasks">Meine Aufgaben <span>{{ tasks|length }}</span></a>
+    <a href="#work-inbox-help">So funktioniert's</a>
+  </nav>
+
+  <div class="work-inbox-columns">
+    <section class="panel work-inbox-panel" id="my-reviews" aria-labelledby="my-reviews-title">
+      <div class="panel-heading">
+        <div><h2 id="my-reviews-title">Meine Prüfungen</h2><p>Aktuelle Vorgänge, über die Sie entscheiden dürfen.</p></div>
+        <span class="work-inbox-count">{{ reviews|length }}</span>
+      </div>
+      {% if reviews %}
+      <ul class="work-inbox-list">
+        {% for review in reviews %}
+        <li>
+          <div class="work-inbox-item-main">
+            <div class="work-inbox-item-topline"><span class="work-inbox-type">Prüfung</span>
+              {% if review.due_date %}
+              <span class="work-inbox-due {% if review.due_date < today %}is-overdue{% elif review.due_date == today %}is-today{% endif %}">
+                {% if review.due_date < today %}Überfällig · {% elif review.due_date == today %}Heute fällig · {% endif %}{{ review.due_date.strftime('%d.%m.%Y') }}
+              </span>
+              {% else %}<span class="work-inbox-due">Keine Frist</span>{% endif %}
+            </div>
+            <a class="work-inbox-item-title" href="/contracts/{{ review.contract_id }}">{{ review.subject }}</a>
+            <span class="work-inbox-item-subtitle">{{ contract_review_status_labels.get(review.status,review.status) }} · {{ review.recipient }}</span>
+          </div>
+          <a href="/contracts/{{ review.contract_id }}" class="work-inbox-item-action" aria-label="Prüfung {{ review.subject }} öffnen">Öffnen →</a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="work-inbox-empty">
+        <span class="work-inbox-empty-icon" aria-hidden="true">✓</span>
+        <strong>Keine Prüfungen ausstehend</strong>
+        <p>Derzeit ist Ihnen keine Prüfung zugewiesen, die Sie entscheiden dürfen.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="panel work-inbox-panel" id="my-tasks" aria-labelledby="my-tasks-title">
+      <div class="panel-heading">
+        <div><h2 id="my-tasks-title">Meine Aufgaben</h2><p>Offene oder bereits begonnene Arbeiten.</p></div>
+        <span class="work-inbox-count">{{ tasks|length }}</span>
+      </div>
+      {% if tasks %}
+      <ul class="work-inbox-list">
+        {% for task in tasks %}
+        <li>
+          <div class="work-inbox-item-main">
+            <div class="work-inbox-item-topline"><span class="work-inbox-type">Aufgabe</span>
+              {% if task.due_date %}
+              <span class="work-inbox-due {% if task.due_date < today %}is-overdue{% elif task.due_date == today %}is-today{% endif %}">
+                {% if task.due_date < today %}Überfällig · {% elif task.due_date == today %}Heute fällig · {% endif %}{{ task.due_date.strftime('%d.%m.%Y') }}
+              </span>
+              {% else %}<span class="work-inbox-due">Keine Frist</span>{% endif %}
+            </div>
+            <a class="work-inbox-item-title" href="/contracts/{{ task.contract_id }}">{{ task.title }}</a>
+            <span class="work-inbox-item-subtitle">{{ {'open':'Offen','in_progress':'In Bearbeitung'}.get(task.status,task.status) }}</span>
+          </div>
+          <a href="/contracts/{{ task.contract_id }}" class="work-inbox-item-action" aria-label="Aufgabe {{ task.title }} öffnen">Öffnen →</a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="work-inbox-empty">
+        <span class="work-inbox-empty-icon" aria-hidden="true">☷</span>
+        <strong>Keine offenen Aufgaben</strong>
+        <p>Sobald Ihnen eine Aufgabe zugewiesen wird, erscheint sie mit ihrer Frist hier.</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <details class="work-inbox-help" id="work-inbox-help">
+    <summary>Welche Vorgänge erscheinen in meinem Arbeitskorb?</summary>
+    <div>
+      <p>Hier werden ausschließlich persönlich zugewiesene offene Aufgaben und aktuell entscheidbare Prüfungen angezeigt. Bei Prüfungen muss die Zuweisung zur aktuellen Inhaltsrevision passen. Ihr bestehender Vertragszugriff und Ihre Freigabeberechtigung bleiben erforderlich.</p>
+      <p>Dies ist keine vollständige Administrationsliste. Andere Vorgänge finden Sie im jeweiligen Vertrag oder, soweit berechtigt, in der Vertragsübersicht.</p>
+    </div>
+  </details>
 </div>
 {% endblock %}
