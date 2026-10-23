@@ -1,30 +1,221 @@
 {% extends 'base.html' %}
-{% block title %}Fachbereiche und Identitäten{% endblock %}
+{% block title %}Fachbereiche &amp; Teams{% endblock %}
 {% block content %}
-<div class="page-head"><div><div class="eyebrow">VERWALTUNG</div><h1>Fachbereiche &amp; Identitäten</h1><p>Organisation, Kontakte und Empfängerteams pflegen.</p></div></div>
-<p>Identitäten bleiben erhalten. Deaktivierung löscht keine Verträge oder historischen Anzeigenamen. Kontakte und Teambezeichnungen erteilen keine Zugriffsrechte.</p>
-{% for entity, label, records in [('departments','Fachbereiche',departments),('contacts','Kontakte',contacts),('teams','Empfängerteams',teams)] %}
-<section class="panel identity-panel" id="{{ entity }}"><div class="panel-heading"><h2>{{ label }}</h2><span class="count">{{ records|length }} Einträge</span></div>
-{% for item in records + [none] %}
-<form class="identity-row {% if not item %}is-new{% endif %}" method="post" action="/admin/identities/{{ entity }}/{{ item.id if item else 0 }}">
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label>{{ 'Identität #' ~ item.id if item else 'Neu anlegen' }} <input name="name" aria-label="Name {{ label }}" value="{{ item.display_name if entity == 'contacts' and item else item.name if item else '' }}" maxlength="{{ 160 if entity == 'contacts' else 150 }}" required></label>
-{% if entity == 'contacts' %}
-<label>Geltungsbereich (nach Anlage unveränderlich) <select name="department_id" aria-label="Geltungsbereich Kontakt" {% if item %}disabled{% endif %}><option value="">Bewusst global geteilt</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if item and item.department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select></label>{% if item %}<input type="hidden" name="department_id" value="{{ item.department_id or '' }}">{% endif %}
-<label>Optional verknüpftes Konto <select name="user_id" aria-label="Verknüpftes Konto"><option value="">Keines</option>{% for account in accounts %}<option value="{{ account.id }}" {% if item and item.user_id == account.id %}selected{% endif %}>{{ account.username }}</option>{% endfor %}</select></label>
-{% endif %}
-<label><input type="checkbox" name="is_active" value="1" {% if not item or item.is_active %}checked{% endif %}> Aktiv</label>
-<button class="button secondary" type="submit">{{ 'Speichern' if item else 'Anlegen' }}</button>
-</form>
-{% endfor %}</section>
-{% endfor %}
-<section class="panel panel-body"><h2>Teammitgliedschaft</h2>
-<p>Mitgliedschaft allein erlaubt keine Freigabe. Zusätzlich sind Freigabefähigkeit, konkrete Zuweisung und bereits vorhandener Vertragszugriff erforderlich. Änderungen beenden die Sitzungen des Kontos.</p>
-<ul>{% for member in memberships %}<li>Team #{{ member.team_id }} · Konto #{{ member.user_id }}</li>{% else %}<li>Keine Mitgliedschaften.</li>{% endfor %}</ul>
-<form method="post" action="/admin/recipient-memberships"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label>Team <select name="team_id" required>{% for team in teams %}<option value="{{ team.id }}">{{ team.name }}{% if not team.is_active %} (inaktiv; nur entfernen){% endif %}</option>{% endfor %}</select></label>
-<label>Konto <select name="user_id" required>{% for account in accounts %}<option value="{{ account.id }}">{{ account.username }}</option>{% endfor %}</select></label>
-<label><input type="checkbox" name="is_active" value="1" checked> Mitgliedschaft aktiv (abwählen zum Entfernen)</label><button class="button secondary" type="submit">Mitgliedschaft speichern</button></form>
-</section>
-<section class="panel panel-body"><h2>Letzte Identitätsänderungen</h2><ul class="audit-list">{% for event in events %}<li>{{ event.created_at.strftime("%d.%m.%Y %H:%M") }} UTC · {{ event.action }} · {{ event.target }} · Akteur {{ event.actor_id or 'lokale Administration' }} · {{ event.details }}</li>{% else %}<li>Keine Ereignisse.</li>{% endfor %}</ul></section>
+<div class="identity-admin">
+  <header class="page-head identity-hero">
+    <div>
+      <div class="eyebrow">VERWALTUNG · ORGANISATION</div>
+      <h1>Fachbereiche &amp; Teams</h1>
+      <p>Organisation, Ansprechpartner und Prüfteams an einem Ort verwalten.</p>
+    </div>
+  </header>
+
+  <div class="identity-stats" aria-label="Überblick der Verwaltungseinträge">
+    <a href="#departments" class="identity-stat"><span>Fachbereiche</span><strong>{{ departments|length }}</strong><small>Organisationseinheiten</small></a>
+    <a href="#teams" class="identity-stat"><span>Empfängerteams</span><strong>{{ teams|length }}</strong><small>Prüfstellen und Gruppen</small></a>
+    <a href="#contacts" class="identity-stat"><span>Kontakte</span><strong>{{ contacts|length }}</strong><small>Ansprechpartner</small></a>
+    <a href="#memberships" class="identity-stat"><span>Teamzuordnungen</span><strong>{{ memberships|length }}</strong><small>Mitgliedschaften</small></a>
+  </div>
+
+  <nav class="identity-sections" aria-label="Abschnitte der Verwaltung">
+    <a href="#departments">Fachbereiche</a>
+    <a href="#teams">Teams</a>
+    <a href="#contacts">Kontakte</a>
+    <a href="#memberships">Mitgliedschaften</a>
+    <a href="#activity">Änderungsverlauf</a>
+  </nav>
+
+  <p class="identity-guidance">Einträge werden nicht gelöscht, sondern bei Bedarf deaktiviert. Verträge und historische Bezeichnungen bleiben erhalten. Kontakte und Teamnamen vergeben keine Zugriffsrechte.</p>
+
+  {% set catalogs = [
+    ('departments', 'Fachbereiche', 'Fachbereich', departments),
+    ('teams', 'Empfängerteams', 'Team', teams),
+    ('contacts', 'Kontakte', 'Kontakt', contacts)
+  ] %}
+  <div class="identity-catalog-layout">
+    {% for entity, label, singular, records in catalogs %}
+    <section class="panel identity-catalog identity-catalog--{{ entity }}" id="{{ entity }}" aria-labelledby="heading-{{ entity }}">
+      <div class="panel-heading identity-area-heading">
+        <div>
+          <h2 id="heading-{{ entity }}">{{ label }}</h2>
+          <p>{% if entity == 'departments' %}Fachbereiche verwalten und bei Bedarf deaktivieren.{% elif entity == 'teams' %}Empfänger für Prüf- und Freigabevorgänge organisieren.{% else %}Kontakte mit eindeutigem Geltungsbereich pflegen.{% endif %}</p>
+        </div>
+        <span class="identity-count">{{ records|length }}</span>
+      </div>
+
+      <div class="identity-records">
+        {% for item in records %}
+        <details class="identity-record">
+          <summary class="identity-record-summary">
+            <span class="identity-record-description">
+              <strong>{{ item.display_name if entity == 'contacts' else item.name }}</strong>
+              <small>{% if entity == 'contacts' %}
+                {% if item.department_id %}
+                  {% for dept in departments %}{% if dept.id == item.department_id %}{{ dept.name }}{% endif %}{% endfor %}
+                {% else %}Globaler Kontakt{% endif %}
+                {% if item.user_id %} · Konto verknüpft{% endif %}
+              {% else %}{{ singular }} · Nr. {{ item.id }}{% endif %}</small>
+            </span>
+            <span class="identity-state {% if not item.is_active %}is-inactive{% endif %}">{{ 'Aktiv' if item.is_active else 'Inaktiv' }}</span>
+            <span class="identity-edit-label">Bearbeiten</span>
+          </summary>
+          <form class="identity-editor" method="post" action="/admin/identities/{{ entity }}/{{ item.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="identity-editor-grid">
+              <label>Bezeichnung
+                <input name="name" value="{{ item.display_name if entity == 'contacts' else item.name }}" maxlength="{{ 160 if entity == 'contacts' else 150 }}" required>
+              </label>
+              {% if entity == 'contacts' %}
+              <label>Geltungsbereich (nach Anlage unveränderlich)
+                <select name="department_id" aria-label="Geltungsbereich Kontakt" disabled>
+                  <option value="" {% if not item.department_id %}selected{% endif %}>Bewusst global geteilt</option>
+                  {% for dept in departments %}<option value="{{ dept.id }}" {% if item.department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}
+                </select>
+                <input type="hidden" name="department_id" value="{{ item.department_id or '' }}">
+              </label>
+              <label>Verknüpftes Konto
+                <select name="user_id" aria-label="Verknüpftes Konto">
+                  <option value="">Keines</option>
+                  {% for account in accounts %}<option value="{{ account.id }}" {% if item.user_id == account.id %}selected{% endif %}>{{ account.username }}</option>{% endfor %}
+                </select>
+              </label>
+              {% endif %}
+            </div>
+            <div class="identity-editor-footer">
+              <label class="identity-check"><input type="checkbox" name="is_active" value="1" {% if item.is_active %}checked{% endif %}> Eintrag aktiv</label>
+              <button type="submit" class="button primary">Änderungen speichern</button>
+            </div>
+          </form>
+        </details>
+        {% else %}
+        <p class="identity-empty">Noch keine Einträge vorhanden.</p>
+        {% endfor %}
+      </div>
+
+      <details class="identity-create">
+        <summary>{{ singular }} neu anlegen</summary>
+        <form class="identity-editor" method="post" action="/admin/identities/{{ entity }}/0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <div class="identity-editor-grid">
+            <label>Bezeichnung
+              <input name="name" placeholder="{{ singular }} benennen" maxlength="{{ 160 if entity == 'contacts' else 150 }}" required>
+            </label>
+            {% if entity == 'contacts' %}
+            <label>Geltungsbereich (nach Anlage unveränderlich)
+              <select name="department_id" aria-label="Geltungsbereich Kontakt">
+                <option value="">Bewusst global geteilt</option>
+                {% for dept in departments %}<option value="{{ dept.id }}">{{ dept.name }}</option>{% endfor %}
+              </select>
+            </label>
+            <label>Optional verknüpftes Konto
+              <select name="user_id" aria-label="Verknüpftes Konto">
+                <option value="">Keines</option>
+                {% for account in accounts %}<option value="{{ account.id }}">{{ account.username }}</option>{% endfor %}
+              </select>
+            </label>
+            {% endif %}
+          </div>
+          <div class="identity-editor-footer">
+            <label class="identity-check"><input type="checkbox" name="is_active" value="1" checked> Von Beginn an aktiv</label>
+            <button class="button primary" type="submit">Anlegen</button>
+          </div>
+        </form>
+      </details>
+    </section>
+    {% endfor %}
+  </div>
+
+  <section class="panel identity-memberships" id="memberships" aria-labelledby="heading-memberships">
+    <div class="panel-heading identity-area-heading">
+      <div><h2 id="heading-memberships">Teammitgliedschaft</h2><p>Wer gehört zu welcher Prüfstelle?</p></div>
+      <span class="identity-count">{{ memberships|length }}</span>
+    </div>
+    <div class="identity-membership-body">
+      <p class="identity-membership-note">Eine Mitgliedschaft allein erlaubt keine Freigabe. Dafür sind außerdem Freigabefähigkeit, eine konkrete Zuweisung und bestehender Vertragszugriff erforderlich. Änderungen beenden die Sitzungen des betroffenen Kontos.</p>
+      {% if memberships %}
+      <ul class="identity-member-list">
+        {% for member in memberships %}
+        {% set team = (teams|selectattr('id', 'equalto', member.team_id)|first)|default(none) %}
+        {% set account = (accounts|selectattr('id', 'equalto', member.user_id)|first)|default(none) %}
+        <li>
+          <span class="identity-member-avatar" aria-hidden="true">{{ (account.username[:2] if account else '??')|upper }}</span>
+          <span class="identity-member-info"><strong>{{ account.username if account else 'Konto #' ~ member.user_id }}</strong><small>{{ team.name if team else 'Team #' ~ member.team_id }}</small></span>
+          <details class="identity-member-remove">
+            <summary>Entfernen</summary>
+            <form method="post" action="/admin/recipient-memberships">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="team_id" value="{{ member.team_id }}">
+              <input type="hidden" name="user_id" value="{{ member.user_id }}">
+              <p>Die Teamzuordnung wird entfernt und die Sitzung dieses Kontos beendet.</p>
+              <button class="button danger" type="submit">Entfernung bestätigen</button>
+            </form>
+          </details>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="identity-empty identity-empty-members">Noch keine Teammitgliedschaften vorhanden. Über das Formular unten kannst du ein Konto zuordnen.</div>
+      {% endif %}
+      <div class="identity-membership-add">
+        <h3>Mitgliedschaft hinzufügen</h3>
+        <form method="post" action="/admin/recipient-memberships">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="is_active" value="1">
+          <label>Team
+            <select name="team_id" required>
+              <option value="" selected disabled>Team auswählen</option>
+              {% for team in teams %}{% if team.is_active %}<option value="{{ team.id }}">{{ team.name }}</option>{% endif %}{% endfor %}
+            </select>
+          </label>
+          <label>Konto
+            <select name="user_id" required>
+              <option value="" selected disabled>Konto auswählen</option>
+              {% for account in accounts %}<option value="{{ account.id }}">{{ account.username }}</option>{% endfor %}
+            </select>
+          </label>
+          <button class="button primary" type="submit">Mitgliedschaft speichern</button>
+        </form>
+        {% if not teams %}<p class="field-hint">Bitte zuerst ein Empfängerteam anlegen.</p>{% endif %}
+      </div>
+    </div>
+  </section>
+
+  {% set action_labels = {
+    'password_changed': 'Passwort geändert',
+    'user_created': 'Benutzer angelegt',
+    'user_updated': 'Benutzer geändert',
+    'departments_created': 'Fachbereich angelegt',
+    'departments_updated': 'Fachbereich geändert',
+    'contacts_created': 'Kontakt angelegt',
+    'contacts_updated': 'Kontakt geändert',
+    'teams_created': 'Team angelegt',
+    'teams_updated': 'Team geändert',
+    'recipient_membership_changed': 'Teammitgliedschaft geändert'
+  } %}
+  <details class="panel identity-activity" id="activity">
+    <summary class="identity-activity-toggle">
+      <span><strong>Letzte Identitätsänderungen</strong><small>Nachvollziehbare Änderungen an Konten, Fachbereichen und Teams</small></span>
+      <span class="identity-activity-meta">{{ events|length }} Einträge · Anzeigen</span>
+    </summary>
+    <div class="identity-activity-body">
+      <ul class="audit-list identity-activity-list">
+        {% for event in events %}
+        <li>
+          <span class="identity-activity-time">{{ event.created_at.strftime('%d.%m.%Y · %H:%M') }} UTC</span>
+          <div class="identity-activity-description">
+            <strong>{{ action_labels.get(event.action, event.action.replace('_', ' ')|capitalize) }}</strong>
+            <span>{{ event.target }} · {{ 'Benutzer #' ~ event.actor_id if event.actor_id else 'Lokale Administration' }}</span>
+            <details class="identity-event-details">
+              <summary>Technische Details</summary>
+              <pre>{{ event.details }}</pre>
+            </details>
+          </div>
+        </li>
+        {% else %}
+        <li>Keine Ereignisse vorhanden.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </details>
+</div>
 {% endblock %}
