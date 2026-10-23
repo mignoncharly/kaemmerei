@@ -13,43 +13,57 @@ import socket
 import sys
 import threading
 import time
+from uuid import UUID
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 if (ROOT/'.verification/browser-tools/playwright').exists():
     sys.path.insert(0,str(ROOT/'.verification/browser-tools'))
 
+def seed_extended(client, app):
+    """Valid migrated metadata for unavailable documents; never mark it scan-clean."""
+    from uuid import uuid4
+    from tests.support import login, create_contract
+    from app.models import Contract, ContractDocument, ContractReview, ContactIdentity, Department, RecipientTeam, RecipientMembership, User
+    from sqlalchemy import select
+    login(client,'admin')
+    cid=create_contract(client,designation='SYNTHETISCH | Nutzung der Sporthalle')
+    create_contract(client,'2',designation='PRIVATE_SYNTHETIC_OTHER_DEPARTMENT')
+    with app.state.session_factory() as db:
+        empty_department=Department(name='Synthetischer Leerbestand');db.add(empty_department);db.flush()
+        db.add(User(username='leer',role='department',department_id=empty_department.id,password_hash=db.get(User,1).password_hash))
+        db.add(ContactIdentity(display_name='Synthetic Browser Contact',department_id=1,scope_key=1,is_active=True))
+        reviewer=db.scalar(select(User).where(User.username=='pruefer'));reviewer.can_approve=True
+        team=RecipientTeam(name='Synthetische Prüfstelle');db.add(team);db.flush()
+        db.add(RecipientMembership(team_id=team.id,user_id=reviewer.id))
+        contract=db.get(Contract,cid)
+        db.add(ContractReview(contract_id=cid,recipient=team.name,subject='Synthetische Dokumentenprüfung',
+            status='open',request_text='Vollständigkeit prüfen.',result_text='',created_by_id=1,
+            team_id=team.id,assigned_user_id=reviewer.id,content_revision=contract.content_revision,
+            due_date=date.today()+timedelta(days=5)))
+        for state in ('pending','rejected','legacy_unverified'):
+            db.add(ContractDocument(contract_id=cid,uploaded_by_id=1,original_filename=f'synthetic-{state}.txt',
+                storage_key=uuid4().hex,content_type='text/plain',size_bytes=12,state=state,scan_result='pending' if state=='pending' else 'unverified'))
+        db.commit()
+    return cid
+
+
 def extended(args, output, result):
+    result['stage']='dependencies'
+    from scripts.browser_layout import measure_reflow
     from playwright.sync_api import sync_playwright
     import uvicorn
-    from tests.support import environment_context, login, create_contract, csrf_from, PASSWORD, contract_payload
-    from app.models import Contract, ContractDocument, ContractReview, ContactIdentity, Department, RecipientTeam, RecipientMembership, User
+    from tests.support import environment_context, csrf_from, PASSWORD, contract_payload
+    from app.models import User
     from sqlalchemy import select
     def check(name, condition):
         if not condition:
             result['failed_check']=name
             raise AssertionError(name)
         result['checks'].append(name)
+    result['stage']='synthetic_fixture'
     with environment_context('sqlite') as (client, app):
-        login(client,'admin')
-        cid=create_contract(client,designation='SYNTHETISCH | Nutzung der Sporthalle')
-        create_contract(client,'2',designation='PRIVATE_SYNTHETIC_OTHER_DEPARTMENT')
-        with app.state.session_factory() as db:
-            empty_department=Department(name='Synthetischer Leerbestand');db.add(empty_department);db.flush()
-            db.add(User(username='leer',role='department',department_id=empty_department.id,password_hash=db.get(User,1).password_hash))
-            db.add(ContactIdentity(display_name='Synthetic Browser Contact',department_id=1,scope_key=1,is_active=True))
-            reviewer=db.scalar(select(User).where(User.username=='pruefer'));reviewer.can_approve=True
-            team=RecipientTeam(name='Synthetische Prüfstelle');db.add(team);db.flush()
-            db.add(RecipientMembership(team_id=team.id,user_id=reviewer.id))
-            contract=db.get(Contract,cid)
-            db.add(ContractReview(contract_id=cid,recipient=team.name,subject='Synthetische Dokumentenprüfung',
-                status='open',request_text='Vollständigkeit prüfen.',result_text='',created_by_id=1,
-                team_id=team.id,assigned_user_id=reviewer.id,content_revision=contract.content_revision,
-                due_date=date.today()+timedelta(days=5)))
-            for state in ('pending','rejected','legacy_unverified'):
-                db.add(ContractDocument(contract_id=cid,uploaded_by_id=1,original_filename=f'synthetic-{state}.txt',
-                    content_type='text/plain',size_bytes=12,state=state,scan_result='pending' if state=='pending' else 'unverified'))
-            db.commit()
+        cid=seed_extended(client,app)
         @app.get('/__synthetic_error_500')
         def simulated_failure():
             raise RuntimeError('Synthetic failure for safe error-page verification')
@@ -67,7 +81,7 @@ def extended(args, output, result):
                 browser=pw.chromium.launch(headless=True,channel=args.channel)
                 result['browser_version']=browser.version
                 result['stage']='browser_scenarios'
-                captures=[];csp=[]
+                captures=result.setdefault('screenshots',[]);csp=[]
                 def sign_in(page, name):
                     page.goto(address+'/login')
                     page.locator('#username').fill(name);page.locator('#password').fill(PASSWORD)
@@ -95,7 +109,7 @@ def extended(args, output, result):
                         page.set_viewport_size({'width':width,'height':1000})
                         for name,path in paths:
                             page.goto(address+path)
-                            check(f'{role}_{name.replace("-","_")}_reflow_{width}',page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
+                            check(f'{role}_{name.replace("-","_")}_reflow_{width}',measure_reflow(page,output,result,f'{role}_{name.replace("-","_")}_reflow_{width}'))
                             check(f'{role}_{name.replace("-","_")}_main_{width}',page.locator('main h1').count()==1)
                             if width==1440 or (width in (390,320) and name in ('dashboard','contracts','create','detail','identities')):
                                 capture(page,f'{role}-{name}-{width}')
@@ -145,6 +159,7 @@ def extended(args, output, result):
                 page.goto(address+'/dashboard')
                 check('empty_scoped_dashboard','Ihr Vertragsregister ist bereit.' in page.content())
                 capture(page,'empty-dashboard');context.close()
+                result['stage']='mfa'
                 # Initial password and MFA use dedicated synthetic accounts.
                 with app.state.session_factory() as db:
                     user=db.scalar(select(User).where(User.username=='bau'));user.must_change_password=True;db.commit()
@@ -178,6 +193,7 @@ def extended(args, output, result):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--channel',choices=('msedge','chrome','chromium'),default='msedge')
     parser.add_argument('--output',type=Path,default=ROOT/'.verification/redesign-browser')
+    parser.add_argument('--run-id',type=lambda value: UUID(hex=value).hex)
     args=parser.parse_args()
     from scripts.pilot_verification import source_identity
     from scripts.browser_diagnostics import failure
@@ -187,6 +203,7 @@ def main():
     output.mkdir(parents=True,exist_ok=False)
     result={'format':'ohvr-redesign-browser-v1','synthetic_only':True,'scanner':'synthetic',
             'checks':[],'stage':'source_validation','visual_inspection':'NOT_PERFORMED','screen_reader':'NOT_PERFORMED'}
+    result['run_id']=args.run_id
     try:
         result['source']=source_identity()
         # Retain the original tested journeys: create/edit, upload/download,
@@ -195,6 +212,7 @@ def main():
         execute(args,output,result)
         extended(args,output,result)
         result['stage']='source_validation';source_identity(result['source'])
+        result['checks'].append('source_unchanged')
         result.update(status='passed',stage='complete')
     except Exception as exc:
         result.update(status='failed',**failure(exc,result['stage'],result.get('failed_check')))

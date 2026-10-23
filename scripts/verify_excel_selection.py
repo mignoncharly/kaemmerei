@@ -7,6 +7,7 @@ import socket
 import sys
 import threading
 import time
+from uuid import UUID
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
@@ -15,6 +16,8 @@ if (ROOT/'.verification/browser-tools/playwright').exists():
 
 
 def execute(args,output,result):
+    result['stage']='dependencies'
+    from scripts.browser_layout import measure_reflow
     from playwright.sync_api import sync_playwright
     import uvicorn
     from app.excel import read_xlsx
@@ -26,6 +29,7 @@ def execute(args,output,result):
             result['failed_check']=name
             raise AssertionError(name)
         result['checks'].append(name)
+    result['stage']='synthetic_fixture'
     with environment_context('sqlite') as (_,app):
         seed(app)
         sock=socket.socket();sock.bind(('127.0.0.1',0));sock.listen(128)
@@ -56,13 +60,14 @@ def execute(args,output,result):
                         page.set_viewport_size({'width':width,'height':1000});page.goto(address+'/')
                         boxes=page.locator('.select-contract');all_box=page.locator('#select-page')
                         check(f'{role}_empty_selection_{width}',not page.locator('#selection-export-form').is_visible() and page.locator('#export-selection').is_disabled())
-                        check(f'{role}_reflow_{width}',page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
+                        check(f'{role}_reflow_{width}',measure_reflow(page,output,result,f'{role}_reflow_{width}'))
                         capture(f'default-{width}')
                         boxes.first.focus();page.keyboard.press('Space')
                         check(f'{role}_keyboard_selection_{width}',boxes.first.is_checked() and all_box.evaluate('(e)=>e.indeterminate'))
                         check(f'{role}_single_export_{width}',download_selection(1))
                         boxes.nth(1).check()
                         check(f'{role}_multiple_export_{width}',download_selection(2))
+                        check(f'{role}_selected_reflow_{width}',measure_reflow(page,output,result,f'{role}_selected_reflow_{width}'))
                         capture(f'selected-{width}')
                         all_box.check()
                         check(f'{role}_select_page_{width}',page.locator('.select-contract:checked').count()==boxes.count() and not all_box.evaluate('(e)=>e.indeterminate'))
@@ -149,6 +154,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--channel',choices=('msedge','chrome','chromium'),default='msedge')
     parser.add_argument('--output',type=Path,default=ROOT/'.verification/excel-selection-browser')
+    parser.add_argument('--run-id',type=lambda value: UUID(hex=value).hex)
     args=parser.parse_args()
     from app.documents import reject_links
     from scripts.pilot_verification import source_identity
@@ -158,9 +164,11 @@ def main():
     output.mkdir(parents=True,exist_ok=False)
     result={'format':'ohvr-excel-selection-browser-v1','synthetic_only':True,'checks':[],
             'screenshots':[],'visual_inspection':'NOT_PERFORMED','stage':'source_validation'}
+    result['run_id']=args.run_id
     try:
         result['source']=source_identity();execute(args,output,result)
         result['stage']='source_validation';source_identity(result['source'])
+        result['checks'].append('source_unchanged')
         result.update(status='passed',stage='complete')
     except Exception as error:
         result.update(status='failed',**failure(error,result['stage'],result.get('failed_check')))

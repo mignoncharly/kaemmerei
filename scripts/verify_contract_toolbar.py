@@ -12,6 +12,7 @@ import subprocess
 import sys
 import threading
 import time
+from uuid import UUID
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
@@ -21,6 +22,8 @@ if (ROOT/'.verification/browser-tools/playwright').exists():
     sys.path.insert(0,str(ROOT/'.verification/browser-tools'))
 
 def execute(args, output, result):
+    result['stage']='dependencies'
+    from scripts.browser_layout import measure_reflow
     from playwright.sync_api import sync_playwright
     from jinja2 import ChoiceLoader, DictLoader
     import uvicorn
@@ -78,7 +81,14 @@ def execute(args, output, result):
                         page.set_viewport_size({'width':width,'height':1000});page.goto(address+'/')
                         toggle=page.locator('#filter-toggle')
                         check(f'{role}_collapsed_{width}',toggle.get_attribute('aria-expanded')=='false' and not page.locator('#advanced-filter-panel').is_visible())
-                        check(f'{role}_reflow_{width}',page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
+                        check(f'{role}_reflow_{width}',measure_reflow(page,output,result,f'{role}_reflow_{width}'))
+                        check(f'{role}_table_label_contained_{width}',page.locator('.table-scroll th .visually-hidden').evaluate('(e)=>!!e.offsetParent?.closest(".table-scroll")'))
+                        region=page.locator('.table-scroll')
+                        region.focus();page.keyboard.press('End')
+                        region.evaluate('(e)=>e.scrollLeft=e.scrollWidth')
+                        check(f'{role}_table_scroll_reflow_{width}',measure_reflow(page,output,result,f'{role}_table_scroll_reflow_{width}'))
+                        region.evaluate('(e)=>e.scrollLeft=0')
+                        page.evaluate('window.scrollTo(0,0)')
                         screenshot(page,f'after-{role}-{width}')
                         if role=='admin':
                             positions[str(width)]['after']=page.locator('.table-panel tbody tr').first.bounding_box()['y']
@@ -158,6 +168,7 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--channel',default='msedge',choices=('msedge','chrome','chromium'))
     parser.add_argument('--baseline-ref',default='a36fb93')
     parser.add_argument('--output',type=Path,default=ROOT/'.verification/filter-popover-browser')
+    parser.add_argument('--run-id',type=lambda value: UUID(hex=value).hex)
     args=parser.parse_args()
     from app.documents import reject_links
     from scripts.pilot_verification import source_identity
@@ -167,9 +178,12 @@ def main():
     output.mkdir(parents=True,exist_ok=False)
     result={'format':'ohvr-toolbar-browser-v1','checks':[],'screenshots':[],'synthetic_only':True,
             'stage':'source_validation','visual_inspection':'NOT_PERFORMED'}
+    result['run_id']=args.run_id
     try:
         result['source']=source_identity();execute(args,output,result)
-        result['stage']='source_validation';source_identity(result['source']);result.update(status='passed',stage='complete')
+        result['stage']='source_validation';source_identity(result['source'])
+        result['checks'].append('source_unchanged')
+        result.update(status='passed',stage='complete')
     except Exception as error:
         result.update(status='failed',**failure(error,result['stage'],result.get('failed_check')))
     (output/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
