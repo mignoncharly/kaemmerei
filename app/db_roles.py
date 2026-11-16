@@ -91,6 +91,14 @@ def configure_runtime_roles(connection, *, web, integration, maintenance, audit_
         connection.exec_driver_sql(f'ALTER TABLE public.{table} OWNER TO {a}')
     connection.exec_driver_sql(f'ALTER FUNCTION ohvr_security.capture_event() OWNER TO {a}')
     connection.exec_driver_sql(f'ALTER FUNCTION ohvr_security.audit_identity() OWNER TO {a}')
+    connection.exec_driver_sql(f'ALTER FUNCTION ohvr_security.append_operator_audit(text,text,jsonb) OWNER TO {a}')
+    # Object ownership transfers rewrite owner ACLs. Grant the operator only
+    # after transfer, using its explicit SET membership for this DDL alone.
+    previous_role=connection.scalar(text('SELECT current_user'))
+    connection.exec_driver_sql(f'SET LOCAL ROLE {a}')
+    connection.exec_driver_sql(f'REVOKE ALL ON FUNCTION ohvr_security.append_operator_audit(text,text,jsonb) FROM {w},{i},{m}')
+    connection.exec_driver_sql(f'GRANT EXECUTE ON FUNCTION ohvr_security.append_operator_audit(text,text,jsonb) TO {quote(owner)}')
+    connection.exec_driver_sql(f'SET LOCAL ROLE {quote(previous_role)}')
 
 
 def validate_runtime_engine(engine, expected_kind):

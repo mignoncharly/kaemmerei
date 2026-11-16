@@ -53,7 +53,7 @@ def bootstrap_connection(admin_url, database='postgres'):
 
 
 @contextmanager
-def runtime_environment():
+def runtime_environment(*, noninherit_audit=False):
     with environment_context('postgresql') as (_owner_client,owner):
         owner_url=owner.state.engine.url
         db_name=owner_url.database
@@ -82,7 +82,8 @@ def runtime_environment():
                     created.append((name,oid))
                     journal.write_text(json.dumps({'database':db_name,'database_identity':identity,'marker':marker,'roles':created}),encoding='utf-8')
                     urls[kind]=owner_url.set(username=name,password=password).render_as_string(hide_password=False)
-                control.execute(sql.SQL('GRANT {} TO {}').format(sql.Identifier(names['audit']),sql.Identifier(owner_url.username)))
+                membership = ' WITH INHERIT FALSE, SET TRUE' if noninherit_audit else ''
+                control.execute(sql.SQL('GRANT {} TO {}' + membership).format(sql.Identifier(names['audit']),sql.Identifier(owner_url.username)))
                 with owner.state.engine.begin() as connection:
                     configure_runtime_roles(connection,web=names['web'],integration=names['integration'],
                                             maintenance=names['maintenance'],audit_owner=names['audit'])

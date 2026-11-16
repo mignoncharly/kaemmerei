@@ -129,7 +129,8 @@ def execute():
         return
     settings = get_settings()
     # Privileged operator credentials are never inherited by the web engine.
-    # Provisioning remains an explicit owner operation, not an RLS bypass grant.
+    # Provisioning uses the schema owner; audit appends use the restricted
+    # audit-owner definer function in the same transaction.
     if settings.enforce_database_security:
         selected = settings.maintenance_database_url if args.command == 'purge-sessions' else settings.migration_database_url
         if not selected or not selected.startswith('postgresql+psycopg://'):

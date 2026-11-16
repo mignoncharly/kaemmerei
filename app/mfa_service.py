@@ -1,7 +1,8 @@
 """Transactional human MFA state. Callers hold the identity guard and commit.
 
 PostgreSQL web callers use scoped definer functions; owner-only CLI recovery
-uses protected tables directly. SQLite provides application checks only.
+uses protected state tables and the operator audit append function. SQLite
+provides application checks only.
 """
 from datetime import timedelta
 import re

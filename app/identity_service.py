@@ -2,7 +2,9 @@
 
 Callers commit once after mutation and audit. Never put secrets in audit details.
 """
-from sqlalchemy import delete, select, update
+import json
+
+from sqlalchemy import delete, select, text, update
 from app.logic import active_access
 from app.models import Department, IdentityAudit, IdentityGuard, LoginSession, User
 from app.security import ph
@@ -18,6 +20,13 @@ def lock_identities(db):
 
 
 def audit(db, actor_id, action, target, **details):
+    if actor_id is None and db.get_bind().dialect.name == 'postgresql':
+        # Flush mutations before the append, without committing either. The
+        # definer accepts only the direct schema-owner operator connection.
+        db.flush()
+        db.execute(text('SELECT ohvr_security.append_operator_audit(:action,:target,CAST(:details AS jsonb))'),
+                   {'action': action, 'target': str(target), 'details': json.dumps(details)})
+        return
     db.add(IdentityAudit(actor_id=actor_id, principal='user' if actor_id else 'operator',
                          action=action, target=str(target), details=details,
                          outcome='denied' if action.endswith('_denied') else 'success'))
